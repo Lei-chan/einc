@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { RocknRoll_One } from "next/font/google";
+import { Sawarabi_Gothic } from "next/font/google";
 import "./globals.css";
 
-const rockenRollOne = RocknRoll_One({
+const sawarabiGothic = Sawarabi_Gothic({
   weight: "400",
-  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -19,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={rockenRollOne.className}>{children}</body>
+      <body className={sawarabiGothic.className}>{children}</body>
     </html>
   );
 }

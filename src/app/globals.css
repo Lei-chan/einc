@@ -9,8 +9,8 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fffee3;
+  --foreground: #830000;
 }
 
 html,
@@ -30,4 +30,11 @@ li {
 
 a {
   color: inherit;
+}
+
+input {
+  border: solid thin rgba(0, 0, 0, 0.192);
+  padding: 0 5px;
+  border-radius: 5px;
+  color: black;
 }
