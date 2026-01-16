@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Logo from "../Components/Logo";
+import Link from "next/link";
+import ButtonPlus from "../Components/ButtonPlus";
 
 export default function Main() {
   return (
@@ -13,24 +15,30 @@ export default function Main() {
 }
 
 function Top() {
-  const btnClassName = "w-fit h-full bg-top bg-no-repeat text-xs";
+  const btnClassName = "h-full bg-top bg-no-repeat text-xs";
 
   return (
     <div className="relative w-full flex flex-row items-center flex-1">
       <Logo />
-      <div className="absolute w-1/3 h-[70%] flex flex-row items-center justify-center gap-4 right-3">
-        <button
-          type="button"
-          className={`${btnClassName} bg-[url('/icons/dictionary.svg')] bg-[length:60%] pt-[30%]`}
+      <div className="absolute w-[55%] h-[70%] flex flex-row items-center justify-center gap-[6%] right-2 text-center">
+        <Link
+          href="/main/dictionary"
+          className={`${btnClassName} w-[30%] bg-[url('/icons/dictionary.svg')] bg-[length:60%] pt-[20%]`}
         >
           Dictionary
-        </button>
-        <button
-          type="button"
-          className={`${btnClassName} bg-[url('/icons/plus.svg')] bg-[length:80%] pt-[20%] mt-[10%]`}
+        </Link>
+        <Link
+          href="/main/add"
+          className={`${btnClassName} w-[20%] bg-[url('/icons/plus.svg')] bg-[length:65%] mt-[4%] pt-[18%]`}
         >
           Add
-        </button>
+        </Link>
+        <Link
+          href="/account"
+          className={`${btnClassName} w-[28%] aspect-square bg-[url('/icons/account.svg')] bg-[length:63%] mt-[1%] pt-[20%]`}
+        >
+          Account
+        </Link>
       </div>
     </div>
   );
@@ -51,6 +59,8 @@ function FolderContainer() {
     setIsAllSelected(!isAllSelected);
   }
 
+  function handleClickAdd() {}
+
   return (
     <div className="w-full flex-[4.5] p-[5%] flex flex-col items-center">
       <Selector
@@ -68,12 +78,7 @@ function FolderContainer() {
         <Folder isSelected={isSelected} isAllSelected={isAllSelected} />
         <Folder isSelected={isSelected} isAllSelected={isAllSelected} />
         <Folder isSelected={isSelected} isAllSelected={isAllSelected} />
-        <button
-          type="button"
-          className="h-10 aspect-square text-3xl text-white bg-red-400 rounded-[50%] pb-1 shadow-sm shadow-black/30"
-        >
-          +
-        </button>
+        <ButtonPlus onClickButton={handleClickAdd} />
       </ul>
     </div>
   );
