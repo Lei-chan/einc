@@ -124,6 +124,7 @@ function Vocabulary({
           example: formData.get("example"),
           imageWordName,
           imageDefinition,
+          folder: formData.get("folder"),
         };
 
         collectAllData(vocabData);
@@ -138,7 +139,7 @@ function Vocabulary({
   return (
     <form
       ref={formRef}
-      className="relative w-[90%] h-fit bg-gradient-to-l from-red-500 to-yellow-500 rounded-md shadow-md shadow-black/20 p-3 flex flex-col gap-2"
+      className="relative w-[90%] h-fit bg-gradient-to-l from-red-500 to-yellow-500 rounded-md shadow-md shadow-black/20 p-3"
     >
       <button
         type="button"
@@ -147,28 +148,41 @@ function Vocabulary({
       >
         &times;
       </button>
-      <label>
-        Word: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <input name="word" placeholder="word name" className="w-[55%]"></input>
-      </label>
-      <label>
-        Definition:{" "}
-        <textarea
-          name="definition"
-          placeholder="definition"
-          className={`${textareaClassName} resize-none`}
-        ></textarea>
-      </label>
-      <label>
-        Examples:{" "}
-        <textarea
-          name="example"
-          placeholder="example sentences"
-          className={`${textareaClassName} resize-none`}
-        ></textarea>
-      </label>
-      <ImageVocab type="word name" />
-      <ImageVocab type="definition" />
+      <div className="flex flex-col gap-2 pb-3">
+        <label>
+          Word: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <input
+            name="word"
+            placeholder="word name"
+            className="w-[55%]"
+          ></input>
+        </label>
+        <label>
+          Definition:{" "}
+          <textarea
+            name="definition"
+            placeholder="definition"
+            className={`${textareaClassName} resize-none`}
+          ></textarea>
+        </label>
+        <label>
+          Examples:{" "}
+          <textarea
+            name="example"
+            placeholder="example sentences"
+            className={`${textareaClassName} resize-none`}
+          ></textarea>
+        </label>
+        <ImageVocab type="word name" />
+        <ImageVocab type="definition" />
+        <label>
+          Add this word to:{" "}
+          <select name="folder" className="text-sm">
+            <option value="all">All</option>
+            {/* more options are gonna come here depending on user's number of folders */}
+          </select>
+        </label>
+      </div>
       <div className="w-full h-full border-t-2 border-solid border-orange-700/90 text-center flex flex-col justify-center pt-4">
         <button
           type="button"
