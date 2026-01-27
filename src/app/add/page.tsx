@@ -1,6 +1,5 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import ButtonPlus from "@/app/Components/ButtonPlus";
 import { nanoid } from "nanoid";
 import Resizer from "react-image-file-resizer";
