@@ -1,7 +1,9 @@
-import Logo from "../Components/Logo";
+// next.js
 import Link from "next/link";
-import FolderPagination from "../Components/FolderPagination";
+// components
+import Logo from "../Components/Logo";
 import LinkAddVocab from "../Components/LinkAddVocab";
+import FolderPagination from "../Components/FolderPagination";
 
 export default function Main() {
   return (

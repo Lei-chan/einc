@@ -1,7 +1,14 @@
 "use client";
-import { useEffect, useState } from "react";
+// react
+import { useEffect, useReducer, useState } from "react";
+// components
 import CreateFolder from "./CreateFolder";
 import ButtonPlus from "./ButtonPlus";
+import ButtonPagination from "./ButtonPagination";
+// reducer
+import { paginationReducer } from "../lib/config/reducers";
+// type
+import { TYPE_ACTION_PAGINATION } from "../lib/config/type";
 
 // For dev
 const userCollections = [
@@ -44,18 +51,18 @@ export default function FolderPagination({
   const [numberOfColumns, setNumberOfColumns] = useState(2);
   const [numberOfPages, setNumberOfPages] = useState(1);
   const [numberOfCollectionsPage, setNumberOfCollectionPage] = useState(10);
-  const [curPage, setCurPage] = useState(1);
+  const [state, dispatch] = useReducer(paginationReducer, 1);
   const [isFolderCreated, setIsFolderCreated] = useState(false);
 
   const getCurCollections = () =>
     userCollections.slice(
-      (curPage - 1) * numberOfCollectionsPage,
-      curPage * numberOfCollectionsPage,
+      (state - 1) * numberOfCollectionsPage,
+      state * numberOfCollectionsPage,
     );
 
-  const handleGoToPrevPage = () => setCurPage((prev) => prev - 1);
-
-  const handleGoToNextPage = () => setCurPage((prev) => prev + 1);
+  function handleClickPagination(type: TYPE_ACTION_PAGINATION) {
+    dispatch(type);
+  }
 
   function handleToggleCreateFolder() {
     setIsFolderCreated(!isFolderCreated);
@@ -105,11 +112,10 @@ export default function FolderPagination({
         displayError={displayError}
         displayMessage={displayMessage}
       />
-      <Pagination
+      <ButtonPagination
         numberOfPages={numberOfPages}
-        curPage={curPage}
-        onClickPrev={handleGoToPrevPage}
-        onClickNext={handleGoToNextPage}
+        curPage={state}
+        onClickPagination={handleClickPagination}
       />
       <CreateFolder
         widthClassName="w-full"
@@ -155,8 +161,9 @@ function FolderContainer({
     });
   }
 
-  function handleChangeSelectAll() {
-    setIsAllSelected(!isAllSelected);
+  function handleChangeSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
+    const isChecked = e.currentTarget.checked;
+    setIsAllSelected(isChecked);
   }
 
   function handleToggleDelete() {
@@ -217,7 +224,7 @@ function Selector({
   isSelected: boolean;
   isEdited: boolean;
   onClickSelected: () => void;
-  onChangeSelectAll: () => void;
+  onChangeSelectAll: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClickDelete: () => void;
   onClickEdit: () => void;
 }) {
@@ -353,43 +360,6 @@ function Folder({
           </span>
         )}
       </li>
-    </div>
-  );
-}
-
-function Pagination({
-  numberOfPages,
-  curPage,
-  onClickPrev,
-  onClickNext,
-}: {
-  numberOfPages: number;
-  curPage: number;
-  onClickPrev: () => void;
-  onClickNext: () => void;
-}) {
-  const btnClassName =
-    "w-9 absolute bg-gradient-to-l from-orange-700 to-orange-700/80 p-1 rounded-[50%] text-sm";
-  return (
-    <div className="flex-[0.5] text-white">
-      {curPage > 1 && (
-        <button
-          type="button"
-          className={`${btnClassName} left-7`}
-          onClick={onClickPrev}
-        >
-          ←{curPage - 1}
-        </button>
-      )}
-      {numberOfPages > curPage && (
-        <button
-          type="button"
-          className={`${btnClassName} right-7`}
-          onClick={onClickNext}
-        >
-          {curPage + 1}→
-        </button>
-      )}
     </div>
   );
 }

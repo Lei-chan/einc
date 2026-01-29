@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import { TYPE_DICTIONARY } from "../lib/config/type";
 
 export default function Dictionary({
   widthClassName,
@@ -68,17 +69,7 @@ function Word({ name, id }: { name: string; id: string }) {
   const btnPlusRef = useRef<HTMLButtonElement>(null);
   const btnAudioRef = useRef<HTMLButtonElement>(null);
 
-  const [data, setData] = useState<
-    | {
-        name: string;
-        pronunciationString: string;
-        pronunciationAudio: string;
-        definitions: string[];
-        examples: string[];
-        synonyms: string[];
-      }
-    | undefined
-  >(undefined);
+  const [data, setData] = useState<TYPE_DICTIONARY | undefined>(undefined);
   const [isPlusHovered, setIsPlusHovered] = useState(false);
 
   async function handleClickWord(e: React.MouseEvent<HTMLLIElement>) {
