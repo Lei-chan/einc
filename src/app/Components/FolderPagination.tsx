@@ -6,9 +6,10 @@ import CreateFolder from "./CreateFolder";
 import ButtonPlus from "./ButtonPlus";
 import ButtonPagination from "./ButtonPagination";
 // reducer
-import { paginationReducer } from "../lib/config/reducers";
+import { checkboxReducer, paginationReducer } from "../lib/reducers";
 // type
 import { TYPE_ACTION_PAGINATION } from "../lib/config/type";
+import { getNumberOfPages } from "../lib/helper";
 
 // For dev
 const userCollections = [
@@ -76,11 +77,6 @@ export default function FolderPagination({
       if (width < lg) return 4;
       return 5;
     };
-
-    const getNumberOfPages = (
-      numCollectionsPage: number,
-      numUserCollections: number,
-    ) => Math.ceil(numUserCollections / numCollectionsPage);
 
     const handleResize = () => {
       const clientWidth = document.documentElement.clientWidth;
@@ -284,11 +280,11 @@ function Folder({
   displayError?: (msg: string) => void;
   displayMessage?: (msg: string) => void;
 }) {
-  const [isChecked, setIsChecked] = useState(false);
+  const [isChecked, dispatch] = useReducer(checkboxReducer, false);
   const [name, setName] = useState(data.name);
 
   function handleToggleChecked() {
-    setIsChecked(!isChecked);
+    dispatch("toggle");
   }
 
   function handleChangeName(e: React.ChangeEvent<HTMLInputElement>) {
@@ -306,11 +302,11 @@ function Folder({
 
   // Reset isChecked when user finished selecting
   useEffect(() => {
-    if (!isSelected) setIsChecked(false);
+    if (!isSelected) dispatch(false);
   }, [isSelected]);
 
   useEffect(() => {
-    setIsChecked(isAllSelected);
+    dispatch(isAllSelected);
   }, [isAllSelected]);
 
   // If user clicks delete button and this folder is checked, delete

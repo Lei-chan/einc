@@ -1,8 +1,9 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ButtonPlus from "@/app/Components/ButtonPlus";
 import { nanoid } from "nanoid";
-import Resizer from "react-image-file-resizer";
+import { ImageWord } from "../Components/ImageWord";
+import { getSubmittedWordData, resizeImage } from "../lib/helper";
 
 export default function Add() {
   const [vocabKeys, setVocabKeys] = useState([{ id: nanoid() }]);
@@ -84,49 +85,14 @@ function Vocabulary({
   const formRef = useRef<HTMLFormElement>(null);
   const textareaClassName = "w-[65%]";
 
-  const resizeImage = (imageFile: File) =>
-    new Promise((resolve) => {
-      if (!imageFile || !imageFile.name) {
-        resolve(undefined);
-        return;
-      }
-
-      Resizer.imageFileResizer(
-        imageFile,
-        500,
-        400,
-        "WEBP",
-        100,
-        0,
-        (uri) => resolve(uri),
-        "base64",
-      );
-    });
-
   useEffect(() => {
     async function sendDataToParent() {
       try {
         const target = formRef.current;
-        if (!target) return;
+        const wordData = await getSubmittedWordData(target);
+        if(!wordData) return;
 
-        const formData = new FormData(target);
-        const imageWordName = await resizeImage(
-          formData.get("imageWordName") as File,
-        );
-        const imageDefinition = await resizeImage(
-          formData.get("imageDefinition") as File,
-        );
-
-        const vocabData = {
-          word: formData.get("word"),
-          definition: formData.get("definition"),
-          example: formData.get("example"),
-          imageWordName,
-          imageDefinition,
-          folder: formData.get("folder"),
-        };
-
-        collectAllData(vocabData);
+        collectAllData(wordData);
       } catch (err: unknown) {
         console.error("Error", err);
       }
@@ -151,29 +117,33 @@ function Vocabulary({
         <label>
           Word: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <input
-            name="word"
+            name="name"
             placeholder="word name"
             className="w-[55%]"
           ></input>
         </label>
         <label>
+          Audio:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <input name="audio" placeholder="audio" className="w-[55%]"></input>
+        </label>
+        <label>
           Definition:{" "}
           <textarea
-            name="definition"
-            placeholder="definition"
+            name="definitions"
+            placeholder="definitions"
             className={`${textareaClassName} resize-none`}
           ></textarea>
         </label>
         <label>
           Examples:{" "}
           <textarea
-            name="example"
+            name="examples"
             placeholder="example sentences"
             className={`${textareaClassName} resize-none`}
           ></textarea>
         </label>
-        <ImageVocab type="word name" />
-        <ImageVocab type="definition" />
+        <ImageWord type="word name" imageName="" />
+        <ImageWord type="definitions" imageName="" />
         <label>
           Add this word to:{" "}
           <select name="folder" className="text-sm">
@@ -192,50 +162,5 @@ function Vocabulary({
         </button>
       </div>
     </form>
-  );
-}
-
-function ImageVocab({ type }: { type: string }) {
-  const [inputValue, setInputValue] = useState("");
-
-  const getImageName = (words: string) =>
-    `image ${words}`
-      .split(" ")
-      .map((word, i) =>
-        i !== 0 ? word.at(0)?.toUpperCase() + word.slice(1) : word,
-      )
-      .join("");
-
-  function handleChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
-    setInputValue(e.currentTarget.value);
-  }
-
-  function handleRemoveImage() {
-    setInputValue("");
-  }
-
-  return (
-    <>
-      <span>Image for the {type}: </span>
-      <div className="w-fit flex flex-row gap-2 items-center">
-        <input
-          type="file"
-          value={inputValue}
-          name={getImageName(type)}
-          accept="image/*"
-          className="w-[75%] border-none my-1 p-0 text-sm cursor-pointer"
-          onChange={handleChangeInput}
-        ></input>
-        {inputValue && (
-          <button
-            type="button"
-            className="h-fit bg-purple-800 text-white px-1 py-[2px] rounded text-xs"
-            onClick={handleRemoveImage}
-          >
-            Remove
-          </button>
-        )}
-      </div>
-    </>
   );
 }

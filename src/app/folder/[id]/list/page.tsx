@@ -1,9 +1,18 @@
 "use client";
 import ButtonPagination from "@/app/Components/ButtonPagination";
-import { paginationReducer } from "@/app/lib/config/reducers";
+import { checkboxReducer, paginationReducer } from "@/app/lib/reducers";
 import { TYPE_ACTION_PAGINATION, TYPE_WORD } from "@/app/lib/config/type";
 import Image from "next/image";
-import { use, useReducer, useState } from "react";
+import {
+  use,
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import { getSubmittedWordData, joinWithLineBreaks } from "@/app/lib/helper";
+import { ImageWord } from "@/app/Components/ImageWord";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -12,27 +21,27 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
   const wordData: TYPE_WORD[] | [] = [
     {
       name: "Hey",
-      pronunciationAudio: "",
+      audio: "",
       definitions: ["jsksk aka"],
       examples: ["ajka", "jaka"],
-      imageName: "",
-      imageDefinitions: "",
+      imageName: { name: "aa", data: "" },
+      imageDefinitions: { name: "bb", data: "" },
     },
     {
       name: "Hey",
-      pronunciationAudio: "",
+      audio: "",
       definitions: ["jsksk aka"],
       examples: ["ajka", "jaka"],
-      imageName: "",
-      imageDefinitions: "",
+      imageName: { name: "aa", data: "" },
+      imageDefinitions: { name: "aa", data: "" },
     },
     {
       name: "Hey",
-      pronunciationAudio: "",
+      audio: "",
       definitions: ["s aka"],
       examples: ["jaka"],
-      imageName: "",
-      imageDefinitions: "",
+      imageName: { name: "", data: "" },
+      imageDefinitions: { name: "", data: "" },
     },
   ];
 
@@ -77,17 +86,22 @@ function SearchBar() {
 
 function Bottom({ data }: { data: TYPE_WORD[] | [] }) {
   const [isSelected, setIsSelected] = useState(false);
-  const [isAllSelected, setIsAllSelected] = useState(false);
-  const [numberOfPages, setNumberOfPages] = useState(3);
-  const [state, dispatch] = useReducer(paginationReducer, 1);
+  const [isAllChecked, setIsAllChecked] = useState(false);
+  const [numberOfPages, setNumberOfPages] = useState(1);
+  const [curPage, dispatch] = useReducer(paginationReducer, 1);
 
   function handleToggleSelected() {
-    setIsSelected(!isSelected);
+    setIsSelected((prev) => {
+      // when user finished selecting, reset isAllCheched too
+      if (prev) setIsAllChecked(false);
+
+      return !prev;
+    });
   }
 
   function handleChangeAllSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const isChecked = e.currentTarget.checked;
-    setIsAllSelected(isChecked);
+    setIsAllChecked(isChecked);
   }
 
   function handleClickDelete() {
@@ -107,10 +121,14 @@ function Bottom({ data }: { data: TYPE_WORD[] | [] }) {
         onChangeSelectAll={handleChangeAllSelected}
         onClickDelete={handleClickDelete}
       />
-      <WordLists data={data} />
+      <WordLists
+        data={data}
+        isSelected={isSelected}
+        isAllChecked={isAllChecked}
+      />
       <ButtonPagination
         numberOfPages={numberOfPages}
-        curPage={state}
+        curPage={curPage}
         onClickPagination={handleClickPagination}
       />
     </div>
@@ -162,31 +180,126 @@ function Selector({
   );
 }
 
-function WordLists({ data }: { data: TYPE_WORD[] | [] }) {
+function WordLists({
+  data,
+  isSelected,
+  isAllChecked,
+}: {
+  data: TYPE_WORD[] | [];
+  isSelected: boolean;
+  isAllChecked: boolean;
+}) {
   return (
     <ul className="w-[90%] flex flex-col gap-5 py-5">
       {data.map((word, i) => (
-        <WordList key={i} word={word} />
+        <WordList
+          key={i}
+          word={word}
+          isSelected={isSelected}
+          isAllChecked={isAllChecked}
+        />
       ))}
     </ul>
   );
 }
 
-function WordList({ word }: { word: TYPE_WORD }) {
+function WordList({
+  word,
+  isSelected,
+  isAllChecked,
+}: {
+  word: TYPE_WORD;
+  isSelected: boolean;
+  isAllChecked: boolean;
+}) {
   const maxPage = 3;
+  const formRef = useRef<HTMLFormElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isChecked, dispatch] = useReducer(checkboxReducer, false);
+  const [isEdited, setIsEdited] = useState(false);
+  const [wordData, setWordData] = useState<TYPE_WORD>(word);
 
   const getContent = () => {
+    const textareaClassName = "w-[65%]";
     const h3ClassName = "text-black/80 text-lg";
+
+    function handleClickRemove(type: string) {
+      setWordData((prev) => ({
+        ...prev,
+        [type]: undefined,
+      }));
+    }
+
+    if (isEdited)
+      return (
+        <form className="flex flex-col gap-2 p-3" onSubmit={handleSubmit}>
+          <label>
+            Word: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <input
+              name="name"
+              placeholder="word name"
+              value={wordData.name}
+              className="w-[55%]"
+              onChange={handleChangeInput}
+            ></input>
+          </label>
+          <label>
+            Audio:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <input
+              name="audio"
+              placeholder="audio"
+              value={wordData.audio || ""}
+              className="w-[55%]"
+              onChange={handleChangeInput}
+            ></input>
+          </label>
+          <label>
+            Definition:{" "}
+            <textarea
+              name="definitions"
+              placeholder="definitions"
+              value={wordData.definitions.join("\n")}
+              className={`${textareaClassName} resize-none`}
+              onChange={handleChangeTextarea}
+            ></textarea>
+          </label>
+          <label>
+            Examples:{" "}
+            <textarea
+              name="examples"
+              placeholder="example sentences"
+              value={wordData.examples.join("\n")}
+              className={`${textareaClassName} resize-none`}
+              onChange={handleChangeTextarea}
+            ></textarea>
+          </label>
+          <ImageWord
+            type="word name"
+            imageName={wordData.imageName?.name || ""}
+            onClickRemove={handleClickRemove}
+          />
+          <ImageWord
+            type="definitions"
+            imageName={wordData.imageDefinitions?.name || ""}
+            onClickRemove={handleClickRemove}
+          />
+          <button
+            type="submit"
+            className="w-fit bg-green-500 self-center text-white px-1 rounded hover:bg-green-300"
+          >
+            OK
+          </button>
+        </form>
+      );
 
     if (currentPage === 1)
       return (
         <>
           <p className="text-3xl">{word.name}</p>
-          {word.imageName && (
+          {word.imageName?.data && (
             <Image
-              src={word.imageName}
-              alt="Word name image"
+              src={word.imageName.data}
+              alt={word.imageName.name || "Word name image"}
               width={500}
               height={400}
             ></Image>
@@ -206,8 +319,11 @@ function WordList({ word }: { word: TYPE_WORD }) {
               </span>
             ))}
           </p>
-          {word.imageDefinitions && (
-            <Image src={word.imageDefinitions} alt="Definition image"></Image>
+          {word.imageDefinitions?.data && (
+            <Image
+              src={word.imageDefinitions.data}
+              alt={word.imageDefinitions.name || "Definition image"}
+            ></Image>
           )}
         </>
       );
@@ -227,16 +343,86 @@ function WordList({ word }: { word: TYPE_WORD }) {
     );
   };
 
-  function handleClickWord() {
-    setCurrentPage((prev) => (prev === maxPage ? 1 : prev + 1));
+  function handleToggleEdit() {
+    setIsEdited(!isEdited);
   }
 
+  function handleChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const target = e.currentTarget;
+    const value = target.value;
+    setWordData((prev) => ({
+      ...prev,
+      [target.name]: value,
+    }));
+  }
+
+  function handleChangeTextarea(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const target = e.currentTarget;
+    const value = target.value.split("\n");
+    setWordData((prev) => ({
+      ...prev,
+      [target.name]: value,
+    }));
+  }
+
+  function handleClickList(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.currentTarget === e.target)
+      setCurrentPage((prev) => (prev === maxPage ? 1 : prev + 1));
+  }
+
+  function handleToggleChecked() {
+    dispatch("toggle");
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    try {
+      e.preventDefault();
+      const data = await getSubmittedWordData(e.currentTarget);
+      const imageWordName = data?.imageWordName;
+      const imageDefinitions = data?.imageDefinitions;
+
+      // replace images
+      const newData = { ...data };
+      newData.imageWordName = imageWordName || data?.imageWordName;
+      newData.imageDefinitions = imageDefinitions || data?.imageDefinitions;
+
+      console.log(newData);
+    } catch (err: unknown) {
+      console.error("Error", err);
+    }
+  }
+
+  // when user finished selecting, reset isChecked for the checkbox
+  useEffect(() => {
+    if (!isSelected) dispatch(false);
+  }, [isSelected]);
+
+  // When user change the input of isAllSelected, change isChecked accordingly
+  useEffect(() => {
+    dispatch(isAllChecked);
+  }, [isAllChecked]);
+
   return (
-    <form
-      className="w-full min-h-44 bg-yellow-100 shadow-md shadow-black/20 rounded flex flex-col items-center justify-center cursor-pointer"
-      onClick={handleClickWord}
-    >
-      {getContent()}
-    </form>
+    <div className="flex flex-row gap-3">
+      {isSelected && (
+        <input
+          type="checkbox"
+          checked={isChecked}
+          className="w-5"
+          onChange={handleToggleChecked}
+        ></input>
+      )}
+      <div
+        className="relative w-full min-h-44 bg-yellow-100 shadow-md shadow-black/20 rounded flex flex-col items-center justify-center cursor-pointer"
+        onClick={handleClickList}
+      >
+        <button
+          type="button"
+          className="absolute w-4 aspect-square bg-[url('/icons/edit.svg')] bg-center bg-contain bg-no-repeat right-3 top-2 transition-all duration-150 hover:translate-y-[-2px]"
+          onClick={handleToggleEdit}
+        ></button>
+        {getContent()}
+      </div>
+    </div>
   );
 }

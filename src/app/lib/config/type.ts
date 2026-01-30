@@ -9,11 +9,11 @@ export type TYPE_DICTIONARY = {
 
 export type TYPE_WORD = {
   name: string;
-  pronunciationAudio?: string;
+  audio?: string;
   definitions: string[];
   examples: string[];
-  imageName?: string;
-  imageDefinitions?: string;
+  imageName?: { name: string; data: string };
+  imageDefinitions?: { name: string; data: string };
 };
 
 export type TYPE_ACTION_PAGINATION = "add" | "reduce";
