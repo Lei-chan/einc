@@ -3,16 +3,10 @@ import ButtonPagination from "@/app/Components/ButtonPagination";
 import { checkboxReducer, paginationReducer } from "@/app/lib/reducers";
 import { TYPE_ACTION_PAGINATION, TYPE_WORD } from "@/app/lib/config/type";
 import Image from "next/image";
-import {
-  use,
-  useCallback,
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
-import { getSubmittedWordData, joinWithLineBreaks } from "@/app/lib/helper";
-import { ImageWord } from "@/app/Components/ImageWord";
+import { use, useEffect, useReducer, useRef, useState } from "react";
+import { getSubmittedWordData } from "@/app/lib/helper";
+import ImageWord from "@/app/Components/ImageWord";
+import AudioWord from "@/app/Components/AudioWord";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -21,7 +15,7 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
   const wordData: TYPE_WORD[] | [] = [
     {
       name: "Hey",
-      audio: "",
+      audio: { name: "bb", data: "" },
       definitions: ["jsksk aka"],
       examples: ["ajka", "jaka"],
       imageName: { name: "aa", data: "" },
@@ -29,7 +23,7 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
     },
     {
       name: "Hey",
-      audio: "",
+      audio: { name: "bb", data: "" },
       definitions: ["jsksk aka"],
       examples: ["ajka", "jaka"],
       imageName: { name: "aa", data: "" },
@@ -37,7 +31,7 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
     },
     {
       name: "Hey",
-      audio: "",
+      audio: { name: "bb", data: "" },
       definitions: ["s aka"],
       examples: ["jaka"],
       imageName: { name: "", data: "" },
@@ -243,16 +237,7 @@ function WordList({
               onChange={handleChangeInput}
             ></input>
           </label>
-          <label>
-            Audio:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <input
-              name="audio"
-              placeholder="audio"
-              value={wordData.audio || ""}
-              className="w-[55%]"
-              onChange={handleChangeInput}
-            ></input>
-          </label>
+          <AudioWord />
           <label>
             Definition:{" "}
             <textarea
@@ -378,12 +363,12 @@ function WordList({
     try {
       e.preventDefault();
       const data = await getSubmittedWordData(e.currentTarget);
-      const imageWordName = data?.imageWordName;
+      const imageName = data?.imageName;
       const imageDefinitions = data?.imageDefinitions;
 
       // replace images
       const newData = { ...data };
-      newData.imageWordName = imageWordName || data?.imageWordName;
+      newData.imageName = imageName || data?.imageName;
       newData.imageDefinitions = imageDefinitions || data?.imageDefinitions;
 
       console.log(newData);

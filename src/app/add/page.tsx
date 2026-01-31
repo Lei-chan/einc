@@ -2,8 +2,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import ButtonPlus from "@/app/Components/ButtonPlus";
 import { nanoid } from "nanoid";
-import { ImageWord } from "../Components/ImageWord";
-import { getSubmittedWordData, resizeImage } from "../lib/helper";
+import { getSubmittedWordData } from "../lib/helper";
+import ImageWord from "../Components/ImageWord";
+import AudioWord from "../Components/AudioWord";
 
 export default function Add() {
   const [vocabKeys, setVocabKeys] = useState([{ id: nanoid() }]);
@@ -37,7 +38,7 @@ export default function Add() {
     setIsSubmitted(true);
   }
 
-  // When all vocabulary data is collected, send it to the server
+  // When all Word data is collected, send it to the server
   useEffect(() => {
     function handleSubmitData() {
       console.log(allVocabData);
@@ -49,7 +50,7 @@ export default function Add() {
   return (
     <div className="w-full min-h-screen max-h-fit flex flex-col items-center py-6 gap-5">
       {vocabKeys.map((keyObj, i) => (
-        <Vocabulary
+        <Word
           key={keyObj.id}
           isSubmitted={isSubmitted}
           onClickDelete={() => handleClickDelete(i)}
@@ -71,7 +72,7 @@ export default function Add() {
   );
 }
 
-function Vocabulary({
+function Word({
   isSubmitted,
   onClickDelete,
   onClickOpenDictionary,
@@ -90,7 +91,9 @@ function Vocabulary({
       try {
         const target = formRef.current;
         const wordData = await getSubmittedWordData(target);
-        if(!wordData) return;
+        if (!wordData) return;
+
+        console.log(wordData);
 
         collectAllData(wordData);
       } catch (err: unknown) {
@@ -122,10 +125,7 @@ function Vocabulary({
             className="w-[55%]"
           ></input>
         </label>
-        <label>
-          Audio:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <input name="audio" placeholder="audio" className="w-[55%]"></input>
-        </label>
+        <AudioWord />
         <label>
           Definition:{" "}
           <textarea
@@ -142,7 +142,7 @@ function Vocabulary({
             className={`${textareaClassName} resize-none`}
           ></textarea>
         </label>
-        <ImageWord type="word name" imageName="" />
+        <ImageWord type="name" imageName="" />
         <ImageWord type="definitions" imageName="" />
         <label>
           Add this word to:{" "}

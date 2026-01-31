@@ -1,4 +1,3 @@
-import { RefObject } from "react";
 import Resizer from "react-image-file-resizer";
 
 export const getNumberOfPages = (
@@ -14,24 +13,42 @@ export const joinWithLineBreaks = (array: string[]) =>
     </span>
   ));
 
-export const resizeImage = (imageFile: File) =>
-  new Promise((resolve) => {
-    if (!imageFile || !imageFile.name) {
-      resolve(undefined);
-      return;
-    }
+export const resizeImages = (imageFiles: File[]) => {
+  const resizePromises = imageFiles.map(
+    (file) =>
+      new Promise((resolve) => {
+        if (!file || !file.name) {
+          resolve(undefined);
+          return;
+        }
 
-    Resizer.imageFileResizer(
-      imageFile,
-      500,
-      400,
-      "WEBP",
-      100,
-      0,
-      (uri) => resolve(uri),
-      "base64",
+        Resizer.imageFileResizer(
+          file,
+          500,
+          400,
+          "WEBP",
+          100,
+          0,
+          (uri) => resolve(uri),
+          "file",
+        );
+      }),
+  );
+
+  return Promise.all(resizePromises);
+};
+
+const convertFilesToBuffers = async (files: (File | undefined)[]) => {
+  try {
+    const bufferPromises = files.map((file) =>
+      file ? file.arrayBuffer() : undefined,
     );
-  });
+
+    return Promise.all(bufferPromises);
+  } catch (err) {
+    throw err;
+  }
+};
 
 export const getSubmittedWordData = async (
   formElement: HTMLFormElement | null,
@@ -40,22 +57,27 @@ export const getSubmittedWordData = async (
     if (!formElement) return;
 
     const formData = new FormData(formElement);
-    const imgWordNameData = formData.get("imageWordName") as File;
-    const imgDefinitionsData = formData.get("imageDefinitions") as File;
-    const imgWordName = await resizeImage(imgWordNameData);
-    const imgDefinitions = await resizeImage(imgDefinitionsData);
+    const audioData = formData.get("audio") as File;
+    const imageNameData = formData.get("imageName") as File;
+    const imageDefinitionsData = formData.get("imageDefinitions") as File;
+
+    // make image size smaller
+    const resizedImages = (await resizeImages([
+      imageNameData,
+      imageDefinitionsData,
+    ])) as (File | undefined)[];
+
+    // convert files into buffer
+    const [audioBuffer, imageNameBuffer, imageDefinitionsBuffer] =
+      await convertFilesToBuffers([audioData, ...resizedImages]);
 
     return {
       name: formData.get("name"),
-      audio: formData.get("audio"),
+      audio: audioBuffer,
       definitions: String(formData.get("definitions")).split("\n"),
       examples: String(formData.get("examples")).split("\n"),
-      imageWordName: imgWordName
-        ? { name: imgWordNameData.name, data: imgWordName }
-        : undefined,
-      imageDefinitions: imgDefinitions
-        ? { name: imgDefinitionsData.name, data: imgDefinitions }
-        : undefined,
+      imageName: imageNameBuffer,
+      imageDefinitions: imageDefinitionsBuffer,
       // it's going to be a folder id
       folder: formData.get("folder"),
     };

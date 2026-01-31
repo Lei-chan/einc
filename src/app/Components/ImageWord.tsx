@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useState } from "react";
 
-export function ImageWord({
+export default function ImageWord({
   type,
   imageName,
   onClickRemove,

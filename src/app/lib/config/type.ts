@@ -7,13 +7,22 @@ export type TYPE_DICTIONARY = {
   synonyms: string[];
 };
 
-export type TYPE_WORD = {
+export type TYPE_WORD_BEFORE_SENT = {
   name: string;
-  audio?: string;
+  audio?: File | undefined;
   definitions: string[];
   examples: string[];
-  imageName?: { name: string; data: string };
-  imageDefinitions?: { name: string; data: string };
+  imageName?: File | undefined;
+  imageDefinitions?: File | undefined;
+};
+
+export type TYPE_WORD = {
+  name: string;
+  audio?: { name: string; data: string } | undefined;
+  definitions: string[];
+  examples: string[];
+  imageName?: { name: string; data: string } | undefined;
+  imageDefinitions?: { name: string; data: string } | undefined;
 };
 
 export type TYPE_ACTION_PAGINATION = "add" | "reduce";
