@@ -3,8 +3,11 @@ import mongoose from "mongoose";
 const UserSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true, select: false },
-    collections: [{ name: String, collectionId: String }],
+    password: { type: String, select: false },
+    isGoogleConnected: Boolean,
+    collections: [
+      { name: String, collectionId: String, numberOfWords: Number },
+    ],
   },
   { timestamps: true },
 );

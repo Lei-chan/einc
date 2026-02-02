@@ -3,10 +3,12 @@ import { TYPE_ACTION_PAGINATION } from "../lib/config/type";
 export default function ButtonPagination({
   numberOfPages,
   curPage,
+  showNumber,
   onClickPagination,
 }: {
   numberOfPages: number;
   curPage: number;
+  showNumber: boolean;
   onClickPagination: (type: TYPE_ACTION_PAGINATION) => void;
 }) {
   const btnClassName =
@@ -19,7 +21,7 @@ export default function ButtonPagination({
           className={`${btnClassName} left-7`}
           onClick={() => onClickPagination("reduce")}
         >
-          ←{curPage - 1}
+          ←{showNumber && curPage - 1}
         </button>
       )}
       {numberOfPages > curPage && (
@@ -28,7 +30,7 @@ export default function ButtonPagination({
           className={`${btnClassName} right-7`}
           onClick={() => onClickPagination("add")}
         >
-          {curPage + 1}→
+          {showNumber && curPage + 1}→
         </button>
       )}
     </div>

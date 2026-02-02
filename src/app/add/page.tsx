@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import { getSubmittedWordData } from "../lib/helper";
 import ImageWord from "../Components/ImageWord";
 import AudioWord from "../Components/AudioWord";
+import Image from "next/image";
 
 export default function Add() {
   const [vocabKeys, setVocabKeys] = useState([{ id: nanoid() }]);
@@ -93,8 +94,6 @@ function Word({
         const wordData = await getSubmittedWordData(target);
         if (!wordData) return;
 
-        console.log(wordData);
-
         collectAllData(wordData);
       } catch (err: unknown) {
         console.error("Error", err);
@@ -125,7 +124,7 @@ function Word({
             className="w-[55%]"
           ></input>
         </label>
-        <AudioWord />
+        <AudioWord audioName="" />
         <label>
           Definition:{" "}
           <textarea

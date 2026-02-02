@@ -10,31 +10,8 @@ import { checkboxReducer, paginationReducer } from "../lib/reducers";
 // type
 import { TYPE_ACTION_PAGINATION } from "../lib/config/type";
 import { getNumberOfPages } from "../lib/helper";
-
-// For dev
-const userCollections = [
-  { id: "kak", name: "Collection 1", numberOfWords: 333 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "f", name: "Collection 3", numberOfWords: 53 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-  { id: "kb", name: "Collection 2", numberOfWords: 2 },
-  { id: "kb", name: "Collection 2", numberOfWords: 533 },
-];
+import user1 from "../ModelsDev/User";
+import Link from "next/link";
 
 export default function FolderPagination({
   type,
@@ -54,6 +31,9 @@ export default function FolderPagination({
   const [numberOfCollectionsPage, setNumberOfCollectionPage] = useState(10);
   const [state, dispatch] = useReducer(paginationReducer, 1);
   const [isFolderCreated, setIsFolderCreated] = useState(false);
+
+  // For dev
+  const userCollections = user1.collections;
 
   const getCurCollections = () =>
     userCollections.slice(
@@ -111,6 +91,7 @@ export default function FolderPagination({
       <ButtonPagination
         numberOfPages={numberOfPages}
         curPage={state}
+        showNumber={true}
         onClickPagination={handleClickPagination}
       />
       <CreateFolder
@@ -135,7 +116,7 @@ function FolderContainer({
   type: "main" | "addTo";
   numberOfColumns: number;
   numberOfCollectionsPage: number;
-  collections: { id: string; name: string; numberOfWords: number }[];
+  collections: { name: string; collectionId: string; numberOfWords: number }[];
   onClickCreate: () => void;
   displayError?: (msg: string) => void;
   displayMessage?: (msg: string) => void;
@@ -271,7 +252,7 @@ function Folder({
   displayError,
   displayMessage,
 }: {
-  data: { id: string; name: string; numberOfWords: number };
+  data: { name: string; collectionId: string; numberOfWords: number };
   type: "main" | "addTo";
   isSelected: boolean;
   isAllSelected: boolean;
@@ -294,7 +275,7 @@ function Folder({
 
   // add-to page
   function handleAddTo() {
-    console.log(data.id);
+    console.log(data.collectionId);
 
     if (displayMessage)
       displayMessage("The word added to the folder successfully");
@@ -311,8 +292,8 @@ function Folder({
 
   // If user clicks delete button and this folder is checked, delete
   useEffect(() => {
-    if (isDeleted && isChecked) console.log(data.id);
-  }, [isDeleted, isChecked, data.id]);
+    if (isDeleted && isChecked) console.log(data.collectionId);
+  }, [isDeleted, isChecked, data.collectionId]);
 
   return (
     <div className="w-[90%] h-[85%] flex flex-row gap-2">
@@ -324,7 +305,10 @@ function Folder({
           onChange={handleToggleChecked}
         ></input>
       )}
-      <li className="relative w-full h-full bg-gradient-to-l from-red-500 to-orange-400 rounded flex flex-row items-center text-center shadow-sm shadow-black/30 px-2 gap-1 overflow-hidden">
+      <Link
+        href={`/folder/${data.collectionId}`}
+        className="relative w-full h-full bg-gradient-to-l from-red-500 to-orange-400 hover:from-orange-500 hover:to-yellow-400 rounded flex flex-row items-center text-center shadow-sm shadow-black/30 px-2 gap-1 overflow-hidden"
+      >
         {type === "addTo" && (
           <button
             type="button"
@@ -355,7 +339,7 @@ function Folder({
             {data.numberOfWords}
           </span>
         )}
-      </li>
+      </Link>
     </div>
   );
 }

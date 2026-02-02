@@ -1,7 +1,11 @@
 "use client";
 import { useState } from "react";
 
-export default function PasswordInput() {
+export default function PasswordInput({
+  classNameOptions,
+}: {
+  classNameOptions: string;
+}) {
   const buttonClassName =
     "absolute w-[10%] aspect-square bg-center bg-no-repeat bg-contain right-2";
 
@@ -12,11 +16,12 @@ export default function PasswordInput() {
   }
 
   return (
-    <div className="relative w-[12rem] flex flex-row items-center mt-1">
+    <div className="relative w-[12rem] flex flex-row items-center">
       <input
+        name="password"
         type={isVisible ? "text" : "password"}
         placeholder="password"
-        className="w-full text-base"
+        className={`w-full text-base ${classNameOptions}`}
       />
       {!isVisible ? (
         <button
