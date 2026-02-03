@@ -1,3 +1,20 @@
+export type TYPE_DECODED_GOOGLE_CREDENTIAL = {
+  iss: string;
+  nbf: number;
+  aud: string;
+  sub: string;
+  email: string;
+  email_verified: boolean;
+  azp: string;
+  name: string;
+  picture: string;
+  given_name: string;
+  family_name: string;
+  iat: number;
+  exp: number;
+  jti: string;
+};
+
 export type TYPE_DICTIONARY = {
   name: string;
   pronunciationString: string;
@@ -42,6 +59,12 @@ export type TYPE_WORD_TO_DISPLAY = {
   collectionId: string;
   status: number;
   nextReviewAt: string;
+};
+
+export type TYPE_COLLECTIONS = {
+  name: string;
+  collectionId: string;
+  numberOfWords: number;
 };
 
 export type TYPE_ACTION_PAGINATION = "add" | "reduce";

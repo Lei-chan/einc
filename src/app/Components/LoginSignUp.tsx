@@ -1,8 +1,11 @@
 "use client";
+// react
 import { useState } from "react";
+// components
 import Logo from "./Logo";
 import PasswordInput from "./PasswordInput";
 import ViaGoogle from "./ViaGoogle";
+import users from "../ModelsDev/User";
 
 export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   const [error, setError] = useState("");
@@ -66,6 +69,15 @@ function ViaNameEmail({
     });
     if (!emailValue || !passwordValue)
       return displayError("※ Please fill the field below");
+
+    // change it later by connecting to server
+    const user = users.find(
+      (user) => user.email === emailValue && user.password === passwordValue,
+    );
+    if (!user)
+      return displayError("※ No user found! Please try different value");
+
+    console.log(user);
   }
 
   console.log(fieldsHaveError);

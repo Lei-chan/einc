@@ -1,5 +1,13 @@
 import Resizer from "react-image-file-resizer";
 import { TYPE_WORD, TYPE_WORD_TO_DISPLAY } from "./config/type";
+import users from "../ModelsDev/User";
+import wordsDev from "../ModelsDev/UserWord";
+
+export const getUserDev = (accessToken: string) =>
+  users.find((user) => user.accessToken === accessToken);
+
+export const getUserWordsDev = (userId: string) =>
+  wordsDev.filter((word) => word.userId === userId);
 
 export const getNumberOfPages = (
   numContentsPage: number,

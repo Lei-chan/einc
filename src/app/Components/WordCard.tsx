@@ -1,11 +1,17 @@
 "use client";
+// react
 import { useEffect, useReducer, useState } from "react";
-import { TYPE_WORD } from "../lib/config/type";
-import { getSubmittedWordData, getWordDataToDisplay } from "../lib/helper";
+// next.js
+import Image from "next/image";
+// reducers
 import { checkboxReducer } from "../lib/reducers";
+// components
 import AudioWord from "./AudioWord";
 import ImageWord from "./ImageWord";
-import Image from "next/image";
+// methods
+import { getSubmittedWordData, getWordDataToDisplay } from "../lib/helper";
+// types
+import { TYPE_WORD } from "../lib/config/type";
 
 export default function WordCard({
   type,
@@ -192,6 +198,7 @@ export default function WordCard({
       newData.imageDefinitions = imageDefinitions || wordData?.imageDefinitions;
 
       console.log(newData);
+      // send to server
     } catch (err: unknown) {
       console.error("Error", err);
     }

@@ -8,10 +8,11 @@ import ButtonPagination from "./ButtonPagination";
 // reducer
 import { checkboxReducer, paginationReducer } from "../lib/reducers";
 // type
-import { TYPE_ACTION_PAGINATION } from "../lib/config/type";
-import { getNumberOfPages } from "../lib/helper";
+import { TYPE_ACTION_PAGINATION, TYPE_COLLECTIONS } from "../lib/config/type";
+import { getNumberOfPages, getUserDev } from "../lib/helper";
 import user1 from "../ModelsDev/User";
 import Link from "next/link";
+import users from "../ModelsDev/User";
 
 export default function FolderPagination({
   type,
@@ -29,17 +30,15 @@ export default function FolderPagination({
   const [numberOfColumns, setNumberOfColumns] = useState(2);
   const [numberOfPages, setNumberOfPages] = useState(1);
   const [numberOfCollectionsPage, setNumberOfCollectionPage] = useState(10);
-  const [state, dispatch] = useReducer(paginationReducer, 1);
+  const [collectionData, setCollectionData] = useState<{
+    collections: TYPE_COLLECTIONS[];
+    numberOfCollections: number;
+  }>({ collections: [], numberOfCollections: 0 });
+  const [curPage, dispatch] = useReducer(paginationReducer, 1);
   const [isFolderCreated, setIsFolderCreated] = useState(false);
 
-  // For dev
-  const userCollections = user1.collections;
-
-  const getCurCollections = () =>
-    userCollections.slice(
-      (state - 1) * numberOfCollectionsPage,
-      state * numberOfCollectionsPage,
-    );
+  // for dev
+  const accessToken = "iiii";
 
   function handleClickPagination(type: TYPE_ACTION_PAGINATION) {
     dispatch(type);
@@ -51,6 +50,26 @@ export default function FolderPagination({
 
   // Set numberOfColumns when it's rendered
   useEffect(() => {
+    // I will connect it to server later
+    const getSetCurCollectionData = () => {
+      const user = getUserDev(accessToken);
+      if (!user) return;
+
+      const data = {
+        collections: user.collections.slice(
+          (curPage - 1) * numberOfCollectionsPage,
+          curPage * numberOfCollectionsPage,
+        ),
+        numberOfCollections: user.collections.length,
+      };
+
+      setCollectionData(data);
+      return data;
+    };
+
+    const curCollectionData = getSetCurCollectionData();
+
+    // design
     const getNumberOfColumns = (width: number) => {
       if (width < sm) return 2;
       if (width < md) return 3;
@@ -67,7 +86,10 @@ export default function FolderPagination({
       setNumberOfColumns(numColumns);
       setNumberOfCollectionPage(numCollectionsPage);
       setNumberOfPages(
-        getNumberOfPages(numCollectionsPage, userCollections.length),
+        getNumberOfPages(
+          numCollectionsPage,
+          curCollectionData?.numberOfCollections || 0,
+        ),
       );
     };
     handleResize();
@@ -83,14 +105,14 @@ export default function FolderPagination({
         type={type}
         numberOfColumns={numberOfColumns}
         numberOfCollectionsPage={numberOfCollectionsPage}
-        collections={getCurCollections()}
+        collections={collectionData.collections}
         onClickCreate={handleToggleCreateFolder}
         displayError={displayError}
         displayMessage={displayMessage}
       />
       <ButtonPagination
         numberOfPages={numberOfPages}
-        curPage={state}
+        curPage={curPage}
         showNumber={true}
         onClickPagination={handleClickPagination}
       />

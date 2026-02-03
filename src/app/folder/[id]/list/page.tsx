@@ -1,6 +1,6 @@
 "use client";
 // react
-import { use, useReducer, useState } from "react";
+import { use, useEffect, useReducer, useState } from "react";
 // reducers
 import { paginationReducer } from "@/app/lib/reducers";
 // models
@@ -9,7 +9,13 @@ import wordsDev from "@/app/ModelsDev/UserWord";
 import ButtonPagination from "@/app/Components/ButtonPagination";
 import WordCard from "@/app/Components/WordCard";
 // type
-import { TYPE_ACTION_PAGINATION, TYPE_WORD } from "@/app/lib/config/type";
+import {
+  TYPE_ACTION_PAGINATION,
+  TYPE_WORD,
+  TYPE_WORD_TO_DISPLAY,
+} from "@/app/lib/config/type";
+import { getNumberOfPages, getWordDataToDisplay } from "@/app/lib/helper";
+import { LISTS_ONE_PAGE } from "@/app/lib/config/settings";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -26,14 +32,24 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
 }
 
 function SearchBar() {
-  const [word, setWord] = useState("");
+  const [words, setWords] = useState<TYPE_WORD_TO_DISPLAY[]>([]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const value = String(formData.get("word")).trim();
-    if (value) setWord(value);
+
+    // Chenge it later by connecting to server
+    if (value) {
+      const matchedWords = wordsDev.filter((word) => word.name.includes(value));
+      const matchedWordsToDisplay = matchedWords.map((word) =>
+        getWordDataToDisplay(word),
+      );
+      setWords(matchedWordsToDisplay);
+    }
   }
+
+  console.log(words);
 
   return (
     <form
@@ -84,6 +100,13 @@ function Bottom({ data }: { data: TYPE_WORD[] | [] }) {
     dispatch(type);
   }
 
+  useEffect(() => {
+    const pages = getNumberOfPages(LISTS_ONE_PAGE, wordsDev.length);
+    (function () {
+      setNumberOfPages(pages);
+    })();
+  }, []);
+
   return (
     <div className="w-[90%] h-fit flex flex-col items-center">
       <NumberOfLists />
@@ -101,6 +124,7 @@ function Bottom({ data }: { data: TYPE_WORD[] | [] }) {
       <ButtonPagination
         numberOfPages={numberOfPages}
         curPage={curPage}
+        showNumber={true}
         onClickPagination={handleClickPagination}
       />
     </div>

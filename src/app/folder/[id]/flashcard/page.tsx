@@ -1,12 +1,19 @@
 "use client";
+// react
+import { use, useEffect, useReducer, useState } from "react";
+// next.js
+import Link from "next/link";
+// reducers
+import { paginationReducer } from "@/app/lib/reducers";
+// models
+import wordsDev from "@/app/ModelsDev/UserWord";
+// components
 import ButtonPagination from "@/app/Components/ButtonPagination";
 import WordCard from "@/app/Components/WordCard";
+// settings
+import { FLASHCARD_QUIZ_ONE_TURN } from "@/app/lib/config/settings";
+// types
 import { TYPE_WORD } from "@/app/lib/config/type";
-import { paginationReducer } from "@/app/lib/reducers";
-import wordsDev from "@/app/ModelsDev/UserWord";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { use, useEffect, useReducer, useState } from "react";
 
 export default function Flashcard({
   params,
@@ -23,15 +30,14 @@ export default function Flashcard({
       Math.floor(Math.random() * (totalNumberOfWords - 1));
 
     const getRandomWords = (totalNumberOfWords: number) => {
-      const maxWordsOneTurn = 20;
-
       //   If totalNumberOfWords is less than maxWordsOneTurn, set all words
-      if (maxWordsOneTurn > totalNumberOfWords) return setWords(wordsDev);
+      if (FLASHCARD_QUIZ_ONE_TURN > totalNumberOfWords)
+        return setWords(wordsDev);
 
       const randomNumbersSet: Set<number> = new Set([]);
 
       //   until set gets 20 random numbers
-      while (randomNumbersSet.size < maxWordsOneTurn) {
+      while (randomNumbersSet.size < FLASHCARD_QUIZ_ONE_TURN) {
         randomNumbersSet.add(getRandomNumberInRange(totalNumberOfWords));
       }
 
