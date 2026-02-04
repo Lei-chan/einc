@@ -128,6 +128,7 @@ function QuizContent({
   const answer = curQuiz?.answer;
   const [isAnswering, setIsAnswering] = useState(false);
   const [isCorrect, setIsCorrect] = useState(true);
+  const [userAnswer, setUserAnswer] = useState("");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -139,7 +140,11 @@ function QuizContent({
       {isAnswering ? (
         <QuizAnswer question={question} onSubmitForm={handleSubmit} />
       ) : (
-        <QuizResult answer={answer} isCorrect={isCorrect} />
+        <QuizResult
+          answer={answer}
+          isCorrect={isCorrect}
+          userAnswer={userAnswer}
+        />
       )}
     </div>
   );
