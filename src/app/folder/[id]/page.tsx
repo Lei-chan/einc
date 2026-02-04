@@ -19,14 +19,19 @@ import {
 } from "chart.js";
 import { Line, Pie } from "react-chartjs-2";
 import { getUserDev, getUserWordsDev } from "@/app/lib/helper";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 
-export default function Folder() {
+export default function Folder({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
   return (
     <div className="w-full h-fit flex flex-col items-center gap-12">
       <Top />
       <ContentContainer />
-      <Graphs />
+      <Graphs collectionId={id} />
     </div>
   );
 }
@@ -69,7 +74,7 @@ function LinkContent({ name }: { name: string }) {
   );
 }
 
-function Graphs() {
+function Graphs({ collectionId }: { collectionId: string }) {
   const [wordStatusData, setWordStatusData] = useState<number[]>(
     new Array(6).fill(0),
   );
@@ -93,7 +98,8 @@ function Graphs() {
         const user = getUserDev(accessToken);
         if (!user) throw new Error("User not found");
 
-        const userWords = getUserWordsDev(user._id);
+        const userWords = getUserWordsDev(user._id, collectionId);
+
         setWordStatusData((prev) => {
           const newStatus = [...prev];
           userWords.forEach((word) => {

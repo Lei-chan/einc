@@ -14,6 +14,7 @@ import WordCard from "@/app/Components/WordCard";
 import { FLASHCARD_QUIZ_ONE_TURN } from "@/app/lib/config/settings";
 // types
 import { TYPE_WORD } from "@/app/lib/config/type";
+import { getRandomNumber } from "@/app/lib/helper";
 
 export default function Flashcard({
   params,
@@ -25,10 +26,6 @@ export default function Flashcard({
   const [curCard, dispatch] = useReducer(paginationReducer, 1);
 
   useEffect(() => {
-    //   For dev
-    const getRandomNumberInRange = (totalNumberOfWords: number) =>
-      Math.floor(Math.random() * (totalNumberOfWords - 1));
-
     const getRandomWords = (totalNumberOfWords: number) => {
       //   If totalNumberOfWords is less than maxWordsOneTurn, set all words
       if (FLASHCARD_QUIZ_ONE_TURN > totalNumberOfWords)
@@ -38,7 +35,8 @@ export default function Flashcard({
 
       //   until set gets 20 random numbers
       while (randomNumbersSet.size < FLASHCARD_QUIZ_ONE_TURN) {
-        randomNumbersSet.add(getRandomNumberInRange(totalNumberOfWords));
+        // minus 1 because it's gonna be used as an index and indexes are 0 base
+        randomNumbersSet.add(getRandomNumber(0, totalNumberOfWords - 1));
       }
 
       const randomNumbersArray = Array.from(randomNumbersSet);

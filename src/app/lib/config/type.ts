@@ -68,3 +68,26 @@ export type TYPE_COLLECTIONS = {
 };
 
 export type TYPE_ACTION_PAGINATION = "add" | "reduce";
+
+export type TYPE_QUIZ_QUESTION = {
+  sentence: string;
+  name?: string;
+  definitions?: string;
+  audio?: { name: string; data: string } | undefined;
+  image: { name: string; data: string } | undefined;
+};
+
+export type TYPE_QUIZ_ANSWER = {
+  name?: string;
+  definitions?: string;
+  audio?: { name: string; data: string } | undefined;
+  image: { name: string; data: string } | undefined;
+};
+
+export type TYPE_QUIZ_DATA = {
+  question: TYPE_QUIZ_QUESTION;
+  answer: TYPE_QUIZ_ANSWER;
+  afterSentence: string;
+  id: string;
+  status: number;
+};

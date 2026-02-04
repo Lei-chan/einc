@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { TYPE_DICTIONARY } from "../lib/config/type";
+import ButtonAudio from "./ButtonAudio";
 
 export default function Dictionary({
   widthClassName,
@@ -112,10 +113,7 @@ function Word({ name, id }: { name: string; id: string }) {
         <h2 className="text-2xl font-bold tracking-wide">{name}</h2>
         <div className="flex flex-row items-center gap-2">
           {data.pronunciationAudio && (
-            <button
-              ref={btnAudioRef}
-              className="w-5 aspect-square bg-[url('/icons/audio.svg')] bg-center bg-contain bg-no-repeat"
-            ></button>
+            <ButtonAudio src={data.pronunciationAudio} />
           )}
           <span>{data.pronunciationString}</span>
         </div>
