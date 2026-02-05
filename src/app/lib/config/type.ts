@@ -72,14 +72,14 @@ export type TYPE_ACTION_PAGINATION = "add" | "reduce";
 export type TYPE_QUIZ_QUESTION = {
   sentence: string;
   name?: string;
-  definitions?: string;
+  definitions?: string[];
   audio?: { name: string; data: string } | undefined;
   image: { name: string; data: string } | undefined;
 };
 
 export type TYPE_QUIZ_ANSWER = {
   name?: string;
-  definitions?: string;
+  definitions?: string[];
   audio?: { name: string; data: string } | undefined;
   image: { name: string; data: string } | undefined;
 };

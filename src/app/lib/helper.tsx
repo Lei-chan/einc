@@ -139,3 +139,17 @@ export const getWordDataToDisplay = (
 
   return newWordData;
 };
+
+export const getNextStatus = (currentStatus: number, isCorrect: boolean) => {
+  if (isCorrect) return currentStatus === 5 ? 5 : currentStatus + 1;
+
+  return currentStatus === 0 ? 0 : currentStatus - 1;
+};
+
+export const getNextReviewDate = (status: number) => {
+  const datePlus = [0, 1, 3, 7, 14, 30];
+  const datePlusMilliseconds = datePlus.map(
+    (date) => date * 24 * 60 * 60 * 1000,
+  );
+  return new Date(Date.now() + datePlusMilliseconds[status]).toISOString();
+};
