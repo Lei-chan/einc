@@ -1,13 +1,14 @@
-import Image from "next/image";
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-export default function Logo() {
+export default function Logo({ topClassName }: { topClassName?: string }) {
+  const pathname = usePathname();
+
   return (
-    <Image
-      src="/einc-logo.PNG"
-      alt="einc logo"
-      width={500}
-      height={250}
-      className="w-[30%] h-auto aspect-[1/0.5] object-contain left-3 absolute"
+    <Link
+      href={pathname === "/" ? "/" : "/main"}
+      className={`absolute w-[100px] aspect-[1/0.5] bg-[url('/einc-logo.PNG')] bg-no-repeat bg-contain bg-center left-3 ${topClassName}`}
     />
   );
 }

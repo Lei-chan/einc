@@ -14,6 +14,9 @@ importers:
       chart.js:
         specifier: ^4.5.1
         version: 4.5.1
+      jaro-winkler:
+        specifier: ^0.2.8
+        version: 0.2.8
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
@@ -45,6 +48,9 @@ importers:
       '@faker-js/faker':
         specifier: ^10.2.0
         version: 10.2.0
+      '@types/jaro-winkler':
+        specifier: ^0.2.4
+        version: 0.2.4
       '@types/node':
         specifier: ^20
         version: 20.19.27
@@ -462,6 +468,9 @@ packages:
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
+
+  '@types/jaro-winkler@0.2.4':
+    resolution: {integrity: sha512-TNVu6vL0Z3h+hYcW78IRloINA0y0MTVJ1PFVtVpBSgk+ejmaH5aVfcVghzNXZ0fa6gXe4zapNMQtMGWOJKTLig==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -1338,6 +1347,9 @@ packages:
   iterator.prototype@1.1.5:
     resolution: {integrity: sha512-H0dkQoCa3b2VEeKQBOxFph+JAbcrQdE7KC0UkqwpLmv2EC4P41QXP+rqo9wYodACiG5/WM5s9oDApTU8utwj9g==}
     engines: {node: '>= 0.4'}
+
+  jaro-winkler@0.2.8:
+    resolution: {integrity: sha512-yr+mElb6dWxA1mzFu0+26njV5DWAQRNTi5pB6fFMm79zHrfAs3d0qjhe/IpZI4AHIUJkzvu5QXQRWOw2O0GQyw==}
 
   jiti@1.21.7:
     resolution: {integrity: sha512-/imKNG4EbWNrVjoNC/1H5/9GFy+tqjGBHCaSsN+P2RnPqjsLmv6UD3Ej+Kj8nBWaRAwyk7kK5ZUc+OEatnTR3A==}
@@ -2413,6 +2425,8 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
+  '@types/jaro-winkler@0.2.4': {}
+
   '@types/json-schema@7.0.15': {}
 
   '@types/json5@0.0.29': {}
@@ -3467,6 +3481,8 @@ snapshots:
       get-proto: 1.0.1
       has-symbols: 1.1.0
       set-function-name: 2.0.2
+
+  jaro-winkler@0.2.8: {}
 
   jiti@1.21.7: {}
 

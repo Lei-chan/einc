@@ -19,6 +19,8 @@ import {
   getUserDev,
   getUserWordsDev,
   getWordDataToDisplay,
+  joinWithCommas,
+  joinWithLineBreaks,
 } from "@/app/lib/helper";
 // Types
 import {
@@ -27,6 +29,8 @@ import {
   TYPE_QUIZ_QUESTION,
   TYPE_WORD,
 } from "@/app/lib/config/type";
+// libraries
+// import distance from "jaro-winkler";
 
 export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -54,7 +58,8 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
         image: wordToDisplay.imageDefinitions,
       };
       const commonData = {
-        afterSentence: wordToDisplay.examples.join("\n"),
+        // display just 2 examples
+        afterSentence: wordToDisplay.examples.slice(0, 2).join("\n"),
         id: word._id,
         status: word.status,
       };
@@ -130,13 +135,11 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
     const wordId = quiz[curQuizIndex].id;
     const word = userWords.find((word) => word._id === wordId);
     if (!word) return;
-    console.log(word);
 
     const updatedWord = { ...word };
     const nextStatus = getNextStatus(updatedWord.status, isCorrect);
     updatedWord.status = nextStatus;
     updatedWord.nextReviewAt = getNextReviewDate(nextStatus);
-    console.log(updatedWord);
     // update the word in database here
 
     dispatch("add");
@@ -150,8 +153,6 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
     });
     toggleIsAnswering();
   }
-
-  console.log(curQuizIndex);
 
   return (
     <div className="w-screen h-screen flex flex-col items-center justify-center">
@@ -191,7 +192,7 @@ function QuizContent({
   onClickNext: () => void;
 }) {
   const answer = curQuiz?.answer;
-  const [userAnswer, setUserAnswer] = useState("");
+  const [userAnswer, setUserAnswer] = useState<string[]>([]);
 
   const convertStringToCompare = (str: string) =>
     str
@@ -202,28 +203,42 @@ function QuizContent({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    // get rid of spaces, change it to lowercase, and get rid of special characters
-    const value = convertStringToCompare(String(formData.get("answer")));
+    // get rid of spaces
+    const value = String(formData.get("answer")).trim();
 
-    setUserAnswer(value);
+    if (answer?.name) {
+      setUserAnswer([value]);
 
-    // If user aswers name from definitions
-    if (answer?.name)
-      handleChangeIsCorrect(convertStringToCompare(answer.name) === value);
+      // get rid of spaces, change it to lowercase, and get rid of special characters
+      const valueToCompare = convertStringToCompare(value);
 
+      // If user aswers name from definitions
+      handleChangeIsCorrect(
+        convertStringToCompare(answer.name) === valueToCompare,
+      );
+    }
     // If user answers definitions from name
 
     if (answer?.definitions) {
-      // split value into words and get rid of empty spaces
-      // const valueWordsArr = value
-      //   .replaceAll("\n", " ")
-      //   .split(" ")
-      //   .filter((word) => word);
+      // split by lines and get rid of empty spaces
+      const values = value.split("\n").filter((answer) => answer);
+      setUserAnswer(values);
 
-      const matchedAnswer = answer?.definitions?.find(
-        (def) => convertStringToCompare(def) === value,
+      const valuesToCompare = values.map((answer) =>
+        convertStringToCompare(answer),
       );
-      handleChangeIsCorrect(matchedAnswer ? true : false);
+
+      // check if any definitions match any values
+      const isAnswerMatched = answer.definitions.some((def) => {
+        // check if the definition matches more than one values
+        const isMatched = valuesToCompare.some(
+          (value) =>
+            convertStringToCompare(def) === convertStringToCompare(value),
+        );
+        return isMatched;
+      });
+
+      handleChangeIsCorrect(isAnswerMatched);
     }
 
     toggleIsAnswering();
@@ -257,12 +272,16 @@ function QuizAnswer({
 }) {
   const textareaInputClassName = "mt-3";
 
+  if (!question) return;
+
   return (
     <form className="flex flex-col items-center gap-3" onSubmit={onSubmitForm}>
       <h2 className="text-xl">{question?.sentence}</h2>
       <div>
-        <p className="text-2xl text-center font-bold tracking-wide">
-          {question?.name || question?.definitions}
+        <p
+          className={`text-2xl font-bold tracking-wide ${question.name ? "text-center" : "text-left"}`}
+        >
+          {question?.name || joinWithLineBreaks(question?.definitions || [])}
         </p>
         {question?.audio && <ButtonAudio src={question.audio.data} />}
       </div>
@@ -310,7 +329,7 @@ function QuizResult({
   answer: TYPE_QUIZ_ANSWER | undefined;
   afterSentence: string | undefined;
   isCorrect: boolean;
-  userAnswer: string;
+  userAnswer: string[];
   isQuizFinished: boolean;
   onClickCorrect: (option: true | false | "toggle") => void;
   onClickNext: () => void;
@@ -319,6 +338,8 @@ function QuizResult({
   const buttonClassName =
     "transition-all duration-150 rounded leading-none w-fit text-sm";
   const pathnameToFolder = usePathname().replace("/quiz", "");
+
+  if (!answer) return;
 
   return (
     <div className="w-full h-fit">
@@ -337,11 +358,14 @@ function QuizResult({
         ></Image>
         <div className="w-full flex flex-row items-center">
           <p className={pAnswerClassName}>
-            Correct answer: {answer?.name || answer?.definitions}
+            Correct answer:{" "}
+            {answer.name || joinWithCommas(answer.definitions || [])}
           </p>
           {answer?.audio && <ButtonAudio src={answer.audio.data} />}
         </div>
-        <p className={pAnswerClassName}>Your answer: {userAnswer}</p>
+        <p className={pAnswerClassName}>
+          Your answer: {joinWithCommas(userAnswer)}
+        </p>
         {answer?.image && (
           <Image
             src={answer.image.data}
@@ -353,7 +377,16 @@ function QuizResult({
         )}
         <p className="mt-2">Examples: {afterSentence}</p>
         <div className="h-fit flex flex-row items-center gap-3 mt-5 text-white">
-          {!isCorrect && (
+          {isCorrect ? (
+            <button
+              className={`${buttonClassName} bg-blue-500 hover:bg-blue-300 py-1 px-2`}
+              onClick={() => onClickCorrect(false)}
+            >
+              Mark as
+              <br />
+              wrong
+            </button>
+          ) : (
             <>
               <button
                 className={`${buttonClassName} bg-red-500 hover:bg-orange-500 py-1 px-2`}

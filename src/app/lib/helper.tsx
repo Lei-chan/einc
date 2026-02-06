@@ -21,6 +21,8 @@ export const getNumberOfPages = (
   numUserContents: number,
 ) => Math.ceil(numUserContents / numContentsPage);
 
+export const joinWithCommas = (array: unknown[]) => array.join(", ");
+
 export const joinWithLineBreaks = (array: string[]) =>
   array.map((str, i) => (
     <span key={i}>
@@ -28,6 +30,15 @@ export const joinWithLineBreaks = (array: string[]) =>
       {str !== array.at(-1) && <br />}
     </span>
   ));
+
+// compare letter and uppercase letter, if letter is uppercase letter => add space and convert it to lowercase, other wise return original letter
+export const getWordFromCammelCase = (word: string) =>
+  word
+    .split("")
+    .map((letter) =>
+      letter === letter.toUpperCase() ? " " + letter.toLowerCase() : letter,
+    )
+    .join("");
 
 export const resizeImages = (imageFiles: File[]) => {
   const resizePromises = imageFiles.map(

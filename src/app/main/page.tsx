@@ -18,8 +18,8 @@ function Top() {
   const btnClassName = "h-full bg-top bg-no-repeat text-xs";
 
   return (
-    <div className="relative w-full flex flex-row items-center flex-1">
-      <Logo />
+    <div className="relative w-full h-fit flex flex-row items-center flex-1">
+      <Logo topClassName="top-3" />
       <div className="absolute w-[55%] h-[70%] flex flex-row items-center justify-center gap-[6%] right-2 text-center">
         <Link
           href="/dictionary"
