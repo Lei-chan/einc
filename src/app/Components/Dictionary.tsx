@@ -11,7 +11,7 @@ export default function Dictionary({
   heightClassName: string;
 }) {
   return (
-    <div className={`${widthClassName} ${heightClassName}`}>
+    <div className={`${widthClassName} ${heightClassName} z-10`}>
       <Top />
       <WordContainer />
     </div>

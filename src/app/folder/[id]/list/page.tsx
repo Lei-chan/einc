@@ -3,58 +3,72 @@
 import { use, useEffect, useReducer, useState } from "react";
 // reducers
 import { paginationReducer } from "@/app/lib/reducers";
-// models
-import wordsDev from "@/app/ModelsDev/UserWord";
 // components
 import ButtonPagination from "@/app/Components/ButtonPagination";
 import WordCard from "@/app/Components/WordCard";
 // type
-import {
-  TYPE_ACTION_PAGINATION,
-  TYPE_WORD,
-  TYPE_WORD_TO_DISPLAY,
-} from "@/app/lib/config/type";
-import { getNumberOfPages, getWordDataToDisplay } from "@/app/lib/helper";
+import { TYPE_ACTION_PAGINATION, TYPE_WORD } from "@/app/lib/config/type";
+import { getMatchedWordsCurPage } from "@/app/lib/logics/list";
+import { getNumberOfPages } from "@/app/lib/helper";
 import { LISTS_ONE_PAGE } from "@/app/lib/config/settings";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
 
-  //   For dev
-  const wordData = wordsDev;
-
-  return (
-    <div className="w-full h-fit flex flex-col items-center">
-      <SearchBar />
-      <Bottom data={wordData} />
-    </div>
-  );
-}
-
-function SearchBar() {
-  const [words, setWords] = useState<TYPE_WORD_TO_DISPLAY[]>([]);
+  // states
+  const [searchValue, setSearchValue] = useState("");
+  const [words, setWords] = useState<TYPE_WORD[]>([]);
+  const [numberOfPages, setNumberOfPages] = useState(1);
+  const [curPage, dispatch] = useReducer(paginationReducer, 1);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
     const formData = new FormData(e.currentTarget);
     const value = String(formData.get("word")).trim();
+    setSearchValue(value);
 
-    // Chenge it later by connecting to server
-    if (value) {
-      const matchedWords = wordsDev.filter((word) => word.name.includes(value));
-      const matchedWordsToDisplay = matchedWords.map((word) =>
-        getWordDataToDisplay(word),
-      );
-      setWords(matchedWordsToDisplay);
-    }
+    // reset curPage to 1
+    dispatch("reset");
   }
+
+  useEffect(() => {
+    const setWordsNumberOfPages = () => {
+      // set numberOfPages by matchedWords
+      const { numberOfMatchedWords, matchedWordsCurPage } =
+        getMatchedWordsCurPage(searchValue, curPage);
+
+      setNumberOfPages(getNumberOfPages(LISTS_ONE_PAGE, numberOfMatchedWords));
+      setWords(matchedWordsCurPage);
+    };
+
+    setWordsNumberOfPages();
+  }, [searchValue, curPage]);
 
   console.log(words);
 
   return (
+    <div className="w-full h-fit flex flex-col items-center">
+      <SearchBar onSubmitSearch={handleSubmit} />
+      <Bottom
+        data={words}
+        numberOfPages={numberOfPages}
+        curPage={curPage}
+        dispatch={dispatch}
+      />
+    </div>
+  );
+}
+
+function SearchBar({
+  onSubmitSearch,
+}: {
+  onSubmitSearch: (e: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
     <form
       className="w-full h-20 bg-gradient-to-l from-orange-300 to-yellow-300/60 shadow-md shadow-black/10 flex flex-row items-center justify-center gap-2"
-      onSubmit={handleSubmit}
+      onSubmit={onSubmitSearch}
     >
       <input
         name="word"
@@ -72,11 +86,19 @@ function SearchBar() {
   );
 }
 
-function Bottom({ data }: { data: TYPE_WORD[] | [] }) {
+function Bottom({
+  data,
+  numberOfPages,
+  curPage,
+  dispatch,
+}: {
+  data: TYPE_WORD[] | [];
+  numberOfPages: number;
+  curPage: number;
+  dispatch: (action: TYPE_ACTION_PAGINATION) => void;
+}) {
   const [isSelected, setIsSelected] = useState(false);
   const [isAllChecked, setIsAllChecked] = useState(false);
-  const [numberOfPages, setNumberOfPages] = useState(1);
-  const [curPage, dispatch] = useReducer(paginationReducer, 1);
 
   function handleToggleSelected() {
     setIsSelected((prev) => {
@@ -100,16 +122,12 @@ function Bottom({ data }: { data: TYPE_WORD[] | [] }) {
     dispatch(type);
   }
 
-  useEffect(() => {
-    const pages = getNumberOfPages(LISTS_ONE_PAGE, wordsDev.length);
-    (function () {
-      setNumberOfPages(pages);
-    })();
-  }, []);
-
   return (
     <div className="w-[90%] h-fit flex flex-col items-center">
-      <NumberOfLists />
+      <NumberOfLists
+        passedWords={curPage * LISTS_ONE_PAGE}
+        numberOfMatchedWords={numberOfPages * LISTS_ONE_PAGE}
+      />
       <Selector
         isSelected={isSelected}
         onClickSelected={handleToggleSelected}
@@ -131,8 +149,18 @@ function Bottom({ data }: { data: TYPE_WORD[] | [] }) {
   );
 }
 
-function NumberOfLists() {
-  return <p className=" text-right self-end mt-3 text-lg">50 / 115 words</p>;
+function NumberOfLists({
+  passedWords,
+  numberOfMatchedWords,
+}: {
+  passedWords: number;
+  numberOfMatchedWords: number;
+}) {
+  return (
+    <p className=" text-right self-end mt-3 text-lg">
+      {passedWords} / {numberOfMatchedWords} words
+    </p>
+  );
 }
 
 function Selector({

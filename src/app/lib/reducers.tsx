@@ -6,7 +6,9 @@ export function paginationReducer(
 ) {
   if (action === "add") return state + 1;
 
-  return state - 1;
+  if (action === "reduce") return state - 1;
+
+  return 1;
 }
 
 export function checkboxReducer(state: boolean, action: boolean | "toggle") {

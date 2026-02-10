@@ -7,18 +7,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 // Reducers
 import { paginationReducer } from "@/app/lib/reducers";
-// Settings
-import { FLASHCARD_QUIZ_ONE_TURN } from "@/app/lib/config/settings";
 // Components
 import ButtonAudio from "@/app/Components/ButtonAudio";
 // Methods
 import {
-  getNextReviewDate,
-  getNextStatus,
   getRandomNumber,
-  getUserDev,
-  getUserWordsDev,
-  getWordDataToDisplay,
   joinWithCommas,
   joinWithLineBreaks,
 } from "@/app/lib/helper";
@@ -27,8 +20,13 @@ import {
   TYPE_QUIZ_ANSWER,
   TYPE_QUIZ_DATA,
   TYPE_QUIZ_QUESTION,
-  TYPE_WORD,
 } from "@/app/lib/config/type";
+import {
+  convertWordsToQuizData,
+  getNextQuizAndIndex,
+  getWordsToReview,
+  updateStatusNextReviewDate,
+} from "@/app/lib/logics/quiz";
 // libraries
 // import distance from "jaro-winkler";
 
@@ -44,64 +42,11 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   //   For dev
   const accessToken = "iiii";
 
-  const convertWordsToQuizData = (words: TYPE_WORD[]) => {
-    const quizData = words.flatMap((word) => {
-      const wordToDisplay = getWordDataToDisplay(word);
-
-      const nameData = {
-        name: wordToDisplay.name,
-        audio: wordToDisplay.audio,
-        image: wordToDisplay.imageName,
-      };
-      const definitionsData = {
-        definitions: wordToDisplay.definitions,
-        image: wordToDisplay.imageDefinitions,
-      };
-      const commonData = {
-        // display just 2 examples
-        afterSentence: wordToDisplay.examples.slice(0, 2).join("\n"),
-        id: word._id,
-        status: word.status,
-      };
-
-      const wordAnswerMeaning = {
-        question: {
-          sentence: "Please answer the meaning of this word.",
-          ...nameData,
-        },
-        answer: definitionsData,
-        ...commonData,
-      };
-      const wordAnsweringWord = {
-        question: {
-          sentence: "Please answer the word of this meaning",
-          ...definitionsData,
-        },
-        answer: nameData,
-        ...commonData,
-      };
-
-      return [wordAnswerMeaning, wordAnsweringWord];
-    });
-
-    return quizData;
-  };
-
   useEffect(() => {
     // I will connect it to server with await later!
     const getWordsForQuiz = async () => {
       try {
-        const user = getUserDev(accessToken);
-        if (!user) throw new Error("User not found!");
-
-        const userWords = getUserWordsDev(user._id, id);
-        //   get words nextReviewAt time is now or before now for one turn
-        const wordsToReview = userWords
-          .filter(
-            (word) => Date.now() - new Date(word.nextReviewAt).getTime() >= 0,
-          )
-          .slice(0, FLASHCARD_QUIZ_ONE_TURN);
-
+        const wordsToReview = getWordsToReview(accessToken, id);
         const quizData = convertWordsToQuizData(wordsToReview);
         setQuiz(quizData);
 
@@ -128,29 +73,14 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   function handleClickNext() {
     if (!curQuizIndex && curQuizIndex !== 0) return;
 
-    // for dev
-    const user = getUserDev(accessToken);
-    if (!user) throw new Error("User not found!");
-    const userWords = getUserWordsDev(user._id, id);
     const wordId = quiz[curQuizIndex].id;
-    const word = userWords.find((word) => word._id === wordId);
-    if (!word) return;
+    updateStatusNextReviewDate(accessToken, id, wordId, isCorrect);
 
-    const updatedWord = { ...word };
-    const nextStatus = getNextStatus(updatedWord.status, isCorrect);
-    updatedWord.status = nextStatus;
-    updatedWord.nextReviewAt = getNextReviewDate(nextStatus);
-    // update the word in database here
+    const { newQuiz, newQuizIndex } = getNextQuizAndIndex(quiz, curQuizIndex);
+    setQuiz(newQuiz);
+    setCurQuizIndex(newQuizIndex);
 
     dispatch("add");
-    setQuiz((prev) => {
-      // get rid of current quiz from quiz
-      const newQuiz = [...prev].toSpliced(curQuizIndex, 1);
-
-      // set new random index for next quiz
-      setCurQuizIndex(getRandomNumber(0, newQuiz.length - 1));
-      return newQuiz;
-    });
     toggleIsAnswering();
   }
 

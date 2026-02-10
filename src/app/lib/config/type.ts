@@ -67,7 +67,7 @@ export type TYPE_COLLECTIONS = {
   numberOfWords: number;
 };
 
-export type TYPE_ACTION_PAGINATION = "add" | "reduce";
+export type TYPE_ACTION_PAGINATION = "add" | "reduce" | "reset";
 
 export type TYPE_QUIZ_QUESTION = {
   sentence: string;
