@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
-import { getUserDev } from "../lib/helper";
+import { getInputErrorMessage, getUserDev } from "../lib/helper";
 import PasswordInput from "../Components/PasswordInput";
+import ErrorMessageInput from "../Components/ErrorMessageInput";
+import EmailInput from "../Components/EmailInput";
 type TYPE_CLASSNAMES = {
   h3ClassName: string;
   pClassName: string;
@@ -56,7 +58,6 @@ function UserInfo() {
   );
 }
 
-// add error next!!
 function Email({
   email,
   isGoogleConnected,
@@ -67,22 +68,25 @@ function Email({
   classNames: TYPE_CLASSNAMES;
 }) {
   const [isClicked, setIsClicked] = useState(false);
-  const [value, setValue] = useState(email);
+  const [errorMessage, setErrorMessage] = useState("");
 
   function handleClickChange() {
     setIsClicked(true);
   }
 
-  function handleChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.currentTarget.value;
-    setValue(value);
-  }
-
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const trimmedValue = value.trim();
+    const value = new FormData(e.currentTarget).get("email");
+    const trimmedValue = String(value).trim();
+
+    const errorMessage = getInputErrorMessage(trimmedValue, "email", email);
+
+    if (errorMessage) return setErrorMessage(errorMessage);
+
+    // send data to server
     console.log(trimmedValue);
+    setErrorMessage("");
   }
 
   return (
@@ -108,15 +112,13 @@ function Email({
             Change
           </button>
         ) : (
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-3 px-3">
             <p>Please enter your new email</p>
-            <input
-              type="email"
+            <EmailInput
               placeholder="new email"
-              value={value}
-              className="w-[12rem]"
-              onChange={handleChangeInput}
-            ></input>
+              defaultValue={email}
+              errorMessage={errorMessage}
+            />
             <button type="submit" className={classNames.buttonSubmitClassName}>
               Submit
             </button>
@@ -128,6 +130,8 @@ function Email({
 
 function Password({ classNames }: { classNames: TYPE_CLASSNAMES }) {
   const [isClicked, setIsClicked] = useState(false);
+  const [errorMessageCurrent, setErrorMessageCurrent] = useState("");
+  const [errorMessageNew, setErrorMessageNew] = useState("");
 
   function handleClickChange() {
     setIsClicked(true);
@@ -140,7 +144,23 @@ function Password({ classNames }: { classNames: TYPE_CLASSNAMES }) {
     const currentPassword = String(formData.get("currentPassword")).trim();
     const newPassword = String(formData.get("newPassword")).trim();
 
+    const errorMsgCurrent = getInputErrorMessage(currentPassword, "password");
+    const errorMsgNew = getInputErrorMessage(
+      newPassword,
+      "password",
+      currentPassword,
+    );
+
+    if (errorMsgCurrent || errorMsgNew) {
+      setErrorMessageCurrent(errorMsgCurrent);
+      setErrorMessageNew(errorMsgNew);
+      return;
+    }
+
+    // send data to server
     console.log(currentPassword, newPassword);
+    setErrorMessageCurrent("");
+    setErrorMessageNew("");
   }
 
   return (
@@ -155,11 +175,14 @@ function Password({ classNames }: { classNames: TYPE_CLASSNAMES }) {
           Change
         </button>
       ) : (
-        <div className="flex flex-col items-center gap-3 py-3">
+        <div className="flex flex-col items-center gap-3 p-3">
           <p>Please enter your current password</p>
-          <PasswordInput name="currentPassword" />
+          <PasswordInput
+            name="currentPassword"
+            errorMessage={errorMessageCurrent}
+          />
           <p>Please enter your new password</p>
-          <PasswordInput name="newPassword" />
+          <PasswordInput name="newPassword" errorMessage={errorMessageNew} />
           <button
             type="submit"
             className={`${classNames.buttonClassName} mt-2 bg-green-500 hover:bg-yellow-500`}

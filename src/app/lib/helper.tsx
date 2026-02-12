@@ -2,6 +2,11 @@ import Resizer from "react-image-file-resizer";
 import { TYPE_WORD, TYPE_WORD_TO_DISPLAY } from "./config/type";
 import users from "../ModelsDev/User";
 import wordsDev from "../ModelsDev/UserWord";
+import {
+  MIN_LENGTH_PASSWORD,
+  MIN_NUMBER_EACH_PASSWORD,
+  PASSWORD_REGEX,
+} from "./config/settings";
 
 export const getRandomNumber = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -152,12 +157,34 @@ export const getWordDataToDisplay = (
 };
 
 export const formatDate = (
-  date: Date,
+  date: Date | string,
   locale: string = "en-US",
   withDay: boolean,
 ) => {
-  const formattedDate = Intl.DateTimeFormat(locale).format(date);
+  const selectedDate = new Date(date);
+  const formattedDate = Intl.DateTimeFormat(locale).format(selectedDate);
   if (!withDay) return formattedDate;
 
-  return `${formattedDate} (${Intl.DateTimeFormat(locale, { weekday: "short" }).format(date)})`;
+  return `${formattedDate} (${Intl.DateTimeFormat(locale, { weekday: "short" }).format(selectedDate)})`;
+};
+
+export const validatePassword = (value: string) => {
+  const passwordRegex = PASSWORD_REGEX;
+  return passwordRegex.test(value);
+};
+
+export const getInputErrorMessage = (
+  value: string,
+  type: "email" | "password",
+  currenData?: string,
+) => {
+  if (!value) return "※ This field is required";
+
+  if (currenData && value === currenData)
+    return "※ Please enter new information that you are not currently using";
+
+  if (type === "password" && !validatePassword(value))
+    return `※ Please enter password at least ${MIN_LENGTH_PASSWORD} characters long, with more than ${MIN_NUMBER_EACH_PASSWORD} lowercase, ${MIN_NUMBER_EACH_PASSWORD} uppercase, and ${MIN_NUMBER_EACH_PASSWORD} digit`;
+
+  return "";
 };

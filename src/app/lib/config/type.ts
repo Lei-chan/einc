@@ -91,3 +91,16 @@ export type TYPE_QUIZ_DATA = {
   id: string;
   status: number;
 };
+
+export type TYPE_JOURNAL_DATA_DATABASE = {
+  //  MongoDB _id
+  _id: string;
+  userId: string;
+  collectionId: string;
+  journals: TYPE_JOURNAL_DATA_TO_DISPLAY[];
+};
+
+export type TYPE_JOURNAL_DATA_TO_DISPLAY = {
+  date: Date | string;
+  content: string[];
+};
