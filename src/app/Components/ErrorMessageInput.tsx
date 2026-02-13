@@ -1,7 +1,15 @@
 export default function ErrorMessageInput({
   errorMessage,
 }: {
-  errorMessage: string;
+  errorMessage: string[];
 }) {
-  return <p className="text-red-500 text-sm">{errorMessage}</p>;
+  return (
+    <div className="w-[12rem] text-left">
+      {errorMessage.map((msg, i) => (
+        <p key={i} className=" text-red-500 text-sm ">
+          {msg}
+        </p>
+      ))}
+    </div>
+  );
 }

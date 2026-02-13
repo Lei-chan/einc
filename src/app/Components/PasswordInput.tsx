@@ -10,7 +10,7 @@ export default function PasswordInput({
 }: {
   name?: string;
   classNameOptions?: string;
-  errorMessage: string;
+  errorMessage: string[] | undefined;
 }) {
   const buttonClassName =
     "absolute w-[10%] aspect-square bg-center bg-no-repeat bg-contain right-2";

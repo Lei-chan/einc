@@ -1,105 +1,62 @@
 "use client";
 // react
-import { useState } from "react";
+import { useActionState, useState } from "react";
 // components
 import Logo from "./Logo";
+import { signupViaGoogle, signupViaUserInfo } from "../actions/auth";
+import EmailInput from "./EmailInput";
 import PasswordInput from "./PasswordInput";
-import ViaGoogle from "./ViaGoogle";
-import users from "../ModelsDev/User";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import { TYPE_DECODED_GOOGLE_CREDENTIAL } from "../lib/config/type";
+import ErrorMessageInput from "./ErrorMessageInput";
+import { FormState } from "../lib/definitions";
 
 export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
-  const [error, setError] = useState("");
-
   const typeToDisplay = type === "login" ? "Log in" : "Sign up";
-
-  function displayError(error: string) {
-    setError(error);
-  }
 
   return (
     <div className="relative w-screen h-screen pt-1">
       <Logo />
       <div className="w-full h-full flex flex-col justify-center items-center text-center">
-        {error && (
+        {/* {error && (
           <p className="w-[90%] bg-orange-600 text-center text-white shadow-md shadow-black/10 rounded py-1 px-2 leading-tight text-sm">
             {error}
           </p>
-        )}
+        )} */}
         <div className="w-[90%] h-fit bg-white/70 shadow-lg shadow-black/20 rounded-md mt-3 text-base py-3">
-          <ViaNameEmail
-            typeToDisplay={typeToDisplay}
-            displayError={displayError}
-          />
-          <ViaGoogle
-            typeToDisplay={typeToDisplay}
-            displayError={displayError}
-          />
+          <ViaUserInfo typeToDisplay={typeToDisplay} />
+          <ViaGoogle typeToDisplay={typeToDisplay} />
         </div>
       </div>
     </div>
   );
 }
 
-function ViaNameEmail({
+function ViaUserInfo({
   typeToDisplay,
-  displayError,
 }: {
   typeToDisplay: "Log in" | "Sign up";
-  displayError: (error: string) => void;
 }) {
-  const pClassName = "w-full text-left";
-  const errorInputClassName = "border-2 border-red-300";
-  const [fieldsHaveError, setFieldsHaveError] = useState({
-    email: false,
-    password: false,
-  });
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formDataArray = [...new FormData(e.currentTarget)];
-    const [emailValue, passwordValue] = formDataArray.map((array) =>
-      String(array[1]).trim(),
-    );
-
-    // Set error
-    setFieldsHaveError({
-      ...fieldsHaveError,
-      email: !emailValue,
-      password: !passwordValue,
-    });
-    if (!emailValue || !passwordValue)
-      return displayError("※ Please fill the field below");
-
-    // change it later by connecting to server
-    const user = users.find(
-      (user) => user.email === emailValue && user.password === passwordValue,
-    );
-    if (!user)
-      return displayError("※ No user found! Please try different value");
-
-    console.log(user);
-  }
-
-  console.log(fieldsHaveError);
+  const pClassName = "w-[12rem] text-left";
+  const [state, action, pending] = useActionState<FormState, FormData>(
+    signupViaUserInfo,
+    undefined,
+  );
 
   return (
     <div className="w-full p-3 pb-1 border-b-2 flex flex-col items-center gap-3">
       <p>{typeToDisplay} via email and password</p>
-      <form
-        className="w-fit flex flex-col gap-1 items-center"
-        onSubmit={handleSubmit}
-      >
+      <form className="w-fit flex flex-col gap-1 items-center" action={action}>
         <p className={pClassName}>Email</p>
-        <input
-          name="email"
-          type="email"
+        <EmailInput
           placeholder="email"
-          className={`w-[12rem] ${fieldsHaveError.email ? errorInputClassName : ""}`}
+          defaultValue=""
+          errorMessage={state?.errors?.email}
         />
         <p className={`${pClassName} mt-2`}>Password</p>
-        <PasswordInput
-          classNameOptions={fieldsHaveError.password ? errorInputClassName : ""}
-        />
+        <PasswordInput errorMessage={state?.errors?.password} />
+        <input name="isGoogleConnected" defaultValue={"false"} hidden></input>
         <button
           type="submit"
           className="w-fit text-sm text-white px-1 py-[1px] rounded mt-2 transition-all duration-150 bg-green-400 hover:bg-yellow-400"
@@ -109,5 +66,65 @@ function ViaNameEmail({
       </form>
       <p className="opacity-70">or</p>
     </div>
+  );
+}
+
+function ViaGoogle({ typeToDisplay }: { typeToDisplay: "Log in" | "Sign up" }) {
+  const errorMessage = `${typeToDisplay} Failed. Please try this later or try another mathod.`;
+
+  const [email, setEmail] = useState("");
+  const [state, action, pending] = useActionState<FormState, FormData>(
+    signupViaGoogle,
+    undefined,
+  );
+  const [error, setError] = useState("");
+
+  return (
+    <form action={action} className="w-full p-3 flex flex-col items-center">
+      <p className="mb-3">{typeToDisplay} via Google</p>
+      <GoogleLogin
+        onSuccess={async (credentialResponse) => {
+          try {
+            const credential = credentialResponse.credential;
+
+            if (!credential) {
+              console.error("Error. No credential provided.");
+              return setError(errorMessage);
+            }
+
+            const userCredential: TYPE_DECODED_GOOGLE_CREDENTIAL =
+              jwtDecode(credential);
+
+            const email = userCredential.email;
+            if (!email) return setError(errorMessage);
+
+            setEmail(email);
+          } catch (err: unknown) {
+            console.error("Error", err);
+            return;
+          }
+        }}
+        onError={() => {
+          setError(errorMessage);
+          console.error(errorMessage);
+        }}
+      />
+      <input name="email" value={email} hidden readOnly></input>
+      <input name="isGoogleConnected" defaultValue={"true"} hidden></input>
+      {state?.errors?.email && (
+        <ErrorMessageInput errorMessage={state?.errors?.email} />
+      )}
+      {state?.errors?.password && (
+        <ErrorMessageInput errorMessage={state?.errors?.password} />
+      )}
+      {email && (
+        <button
+          type="submit"
+          className="transition-all duration-150 rounded bg-purple-500 hover:bg-pink-400 text-white px-1 py-[1px] text-sm mt-4"
+        >
+          {typeToDisplay}
+        </button>
+      )}
+    </form>
   );
 }

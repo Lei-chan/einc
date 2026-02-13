@@ -9,7 +9,7 @@ export default function EmailInput({
 }: {
   placeholder: string;
   defaultValue: string;
-  errorMessage: string;
+  errorMessage: string[] | undefined;
 }) {
   const [value, setValue] = useState(defaultValue);
 

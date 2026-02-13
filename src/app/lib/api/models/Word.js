@@ -1,18 +1,16 @@
 import mongoose from "mongoose";
 
-const UserWordShcema = new mongoose.Schema({
+const WordShcema = new mongoose.Schema({
   userId: { type: String, required: true },
   collectionId: String,
   name: String,
-  audio: String,
+  audio: {},
   examples: [String],
   definitions: [String],
-  //   change images later
   imageName: {},
-  imageDefinitionsId: {},
+  imageDefinitions: {},
   status: { type: Number, min: 0, max: 5 },
   nextReviewAt: Date,
 });
 
-export default mongoose.models.UserWord ||
-  mongoose.model("UserWord", UserWordShcema);
+export default mongoose.models.Word || mongoose.model("Word", WordShcema);

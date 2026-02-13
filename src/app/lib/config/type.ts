@@ -15,6 +15,10 @@ export type TYPE_DECODED_GOOGLE_CREDENTIAL = {
   jti: string;
 };
 
+export interface TYPE_ERROR extends Error {
+  status?: number;
+}
+
 export type TYPE_DICTIONARY = {
   name: string;
   pronunciationString: string;
