@@ -3,7 +3,12 @@
 import { useActionState, useState } from "react";
 // components
 import Logo from "./Logo";
-import { signupViaGoogle, signupViaUserInfo } from "../actions/auth";
+import {
+  loginViaGoogle,
+  loginViaUserInfo,
+  signupViaGoogle,
+  signupViaUserInfo,
+} from "../actions/auth";
 import EmailInput from "./EmailInput";
 import PasswordInput from "./PasswordInput";
 import { GoogleLogin } from "@react-oauth/google";
@@ -40,7 +45,7 @@ function ViaUserInfo({
 }) {
   const pClassName = "w-[12rem] text-left";
   const [state, action, pending] = useActionState<FormState, FormData>(
-    signupViaUserInfo,
+    typeToDisplay === "Sign up" ? signupViaUserInfo : loginViaUserInfo,
     undefined,
   );
 
@@ -74,7 +79,7 @@ function ViaGoogle({ typeToDisplay }: { typeToDisplay: "Log in" | "Sign up" }) {
 
   const [email, setEmail] = useState("");
   const [state, action, pending] = useActionState<FormState, FormData>(
-    signupViaGoogle,
+    typeToDisplay === "Sign up" ? signupViaGoogle : loginViaGoogle,
     undefined,
   );
   const [error, setError] = useState("");
@@ -100,8 +105,8 @@ function ViaGoogle({ typeToDisplay }: { typeToDisplay: "Log in" | "Sign up" }) {
 
             setEmail(email);
           } catch (err: unknown) {
-            console.error("Error", err);
-            return;
+            console.error("Error occured", err);
+            return setError(errorMessage);
           }
         }}
         onError={() => {

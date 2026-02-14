@@ -1,8 +1,9 @@
 import { FormState, SignupSchema } from "../lib/definitions";
-import { redirect, RedirectType } from "next/navigation";
+import { redirect } from "next/navigation";
 import bcrypt from "bcrypt";
-import User from "@/app/lib/api/models/User";
+import User from "@/app/lib/models/User";
 import { TYPE_ERROR } from "../lib/config/type";
+import { createSession } from "../lib/session";
 
 export async function signupViaUserInfo(
   formState: FormState,
@@ -30,11 +31,12 @@ export async function signupViaUserInfo(
 
     if (!user) return getError("notFound");
 
-    return { message: "Success" };
+    await createSession(user._id);
   } catch (err: unknown) {
     return getError("other", err);
   }
-  //   redirect("/main", RedirectType.replace);
+
+  redirect("/main");
 }
 
 export async function signupViaGoogle(
@@ -55,11 +57,46 @@ export async function signupViaGoogle(
 
     if (!user) return getError("notFound");
 
-    return { message: "Success" };
+    await createSession(user._id);
   } catch (err: unknown) {
     return getError("other", err);
   }
-  //   redirect("/main", RedirectType.replace);
+
+  redirect("/main");
+}
+
+export async function loginViaUserInfo(
+  formState: FormState,
+  formData: FormData,
+) {
+  try {
+    const email = String(formData.get("email")).trim();
+    const password = String(formData.get("password")).trim();
+
+    const user = await User.findOne({ email });
+    if (!user) return getError("notFound");
+
+    // verify password here
+
+    await createSession(user._id);
+  } catch (err: unknown) {
+    return getError("other", err);
+  }
+
+  redirect("/main");
+}
+
+export async function loginViaGoogle(formState: FormState, formData: FormData) {
+  try {
+    const email = String(formData.get("email")).trim();
+    const user = await User.findOne({ email });
+    if (!user) return getError("notFound");
+
+    await createSession(user._id);
+  } catch (err: unknown) {
+    return getError("other", err);
+  }
+  redirect("/main");
 }
 
 const isError = (err: unknown): err is TYPE_ERROR => {

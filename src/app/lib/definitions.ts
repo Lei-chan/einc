@@ -32,19 +32,6 @@ export const SignupSchema = z.object({
   ),
 });
 
-export type FormState =
-  | {
-      errors?: {
-        email?: string[];
-        password?: string[];
-        isGoogleConnected?: string[];
-        collections?: string[];
-      };
-      error?: { status?: number; message?: string };
-      message?: string;
-    }
-  | undefined;
-
 export const WordSchema = z.object({
   userId: z.string(),
   collectionId: z.string(),
@@ -69,3 +56,21 @@ export const JournalSchema = z.object({
   collectionId: z.string(),
   journals: z.object({ date: z.iso.datetime(), content: z.array(z.string()) }),
 });
+
+export type FormState =
+  | {
+      errors?: {
+        email?: string[];
+        password?: string[];
+        isGoogleConnected?: string[];
+        collections?: string[];
+      };
+      error?: { status?: number; message?: string };
+      message?: string;
+    }
+  | undefined;
+
+export type SessionPayload = {
+  userId: string;
+  expiresAt: Date;
+};
