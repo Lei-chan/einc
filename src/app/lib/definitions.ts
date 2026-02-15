@@ -70,6 +70,10 @@ export type FormState =
     }
   | undefined;
 
+export type ErrorFormState =
+  | { error?: { status?: number; message?: string } }
+  | undefined;
+
 export type SessionPayload = {
   userId: string;
   expiresAt: Date;

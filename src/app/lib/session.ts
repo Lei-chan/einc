@@ -1,3 +1,4 @@
+"use server";
 import "server-only";
 import { SignJWT, jwtVerify } from "jose";
 import { SessionPayload } from "./definitions";
@@ -43,7 +44,7 @@ export async function decrypt(session: string | undefined = "") {
 
 export async function createSession(userId: string) {
   const session = await encrypt({ userId, expiresAt });
-  setSessionCookie(session);
+  await setSessionCookie(session);
 }
 
 export async function updateSession() {
@@ -51,7 +52,7 @@ export async function updateSession() {
   const payload = await decrypt(session);
   if (!session || !payload) return null;
 
-  setSessionCookie(session);
+  await setSessionCookie(session);
 }
 
 export async function deleteSession() {

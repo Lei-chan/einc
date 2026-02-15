@@ -1,15 +1,19 @@
+"use server";
 import { FormState, SignupSchema } from "../lib/definitions";
 import { redirect } from "next/navigation";
 import bcrypt from "bcrypt";
 import User from "@/app/lib/models/User";
-import { TYPE_ERROR } from "../lib/config/type";
 import { createSession } from "../lib/session";
+import { getError } from "../lib/errorHandler";
+import dbConnect from "../lib/database";
 
 export async function signupViaUserInfo(
   formState: FormState,
   formData: FormData,
 ) {
   try {
+    console.log("signupViaUserInfo");
+
     const validatedFields = SignupSchema.safeParse({
       email: formData.get("email"),
       password: formData.get("password"),
@@ -24,6 +28,7 @@ export async function signupViaUserInfo(
 
     const hashedPassword = await bcrypt.hash(password as string, 10);
 
+    await dbConnect();
     const user = await User.create({
       password: hashedPassword,
       others,
@@ -33,7 +38,7 @@ export async function signupViaUserInfo(
 
     await createSession(user._id);
   } catch (err: unknown) {
-    return getError("other", err);
+    return getError("other", "", err);
   }
 
   redirect("/main");
@@ -44,6 +49,8 @@ export async function signupViaGoogle(
   formData: FormData,
 ) {
   try {
+    console.log("signupViaGoogle");
+
     const validatedFields = SignupSchema.safeParse({
       email: formData.get("email"),
       isGoogleConnected: true,
@@ -53,13 +60,14 @@ export async function signupViaGoogle(
     if (!validatedFields.success)
       return { errors: validatedFields.error.flatten().fieldErrors };
 
+    await dbConnect();
     const user = await User.create(validatedFields.data);
 
     if (!user) return getError("notFound");
 
     await createSession(user._id);
   } catch (err: unknown) {
-    return getError("other", err);
+    return getError("other", "", err);
   }
 
   redirect("/main");
@@ -70,9 +78,15 @@ export async function loginViaUserInfo(
   formData: FormData,
 ) {
   try {
+    console.log("loginViaUserInfo");
     const email = String(formData.get("email")).trim();
     const password = String(formData.get("password")).trim();
 
+    if (!email && !password) return getError("bothBlank");
+    if (!email) return getError("emailBlank");
+    if (!password) return getError("passwordBlank");
+
+    await dbConnect();
     const user = await User.findOne({ email });
     if (!user) return getError("notFound");
 
@@ -80,7 +94,7 @@ export async function loginViaUserInfo(
 
     await createSession(user._id);
   } catch (err: unknown) {
-    return getError("other", err);
+    return getError("other", "", err);
   }
 
   redirect("/main");
@@ -88,39 +102,17 @@ export async function loginViaUserInfo(
 
 export async function loginViaGoogle(formState: FormState, formData: FormData) {
   try {
+    console.log("loginViaGoogle");
+
     const email = String(formData.get("email")).trim();
+
+    await dbConnect();
     const user = await User.findOne({ email });
     if (!user) return getError("notFound");
 
     await createSession(user._id);
   } catch (err: unknown) {
-    return getError("other", err);
+    return getError("other", "", err);
   }
   redirect("/main");
 }
-
-const isError = (err: unknown): err is TYPE_ERROR => {
-  return err !== undefined;
-};
-
-const getError = (type: "notFound" | "other", err?: unknown) => {
-  if (type === "notFound")
-    return {
-      error: { status: 404, message: "User Not Found." },
-    };
-
-  if (err && isError(err))
-    return {
-      error: {
-        status: err?.status || 500,
-        message: err?.message || "Unexpected error occured.",
-      },
-    };
-
-  return {
-    error: {
-      status: 500,
-      message: "Unexpected error occured.",
-    },
-  };
-};

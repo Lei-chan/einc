@@ -13,6 +13,7 @@ import { getNumberOfPages, getUserDev } from "../lib/helper";
 import user1 from "../ModelsDev/User";
 import Link from "next/link";
 import users from "../ModelsDev/User";
+import { getCollectionDataCurPage, getUser } from "../lib/dal";
 
 export default function FolderPagination({
   type,
@@ -23,10 +24,13 @@ export default function FolderPagination({
   displayError?: (msg: string) => void;
   displayMessage?: (msg: string) => void;
 }) {
+  // design
   const sm = 640;
   const md = 768;
   const lg = 1024;
   const numberOfRows = 5;
+
+  // states
   const [numberOfColumns, setNumberOfColumns] = useState(2);
   const [numberOfPages, setNumberOfPages] = useState(1);
   const [numberOfCollectionsPage, setNumberOfCollectionPage] = useState(10);
@@ -36,9 +40,6 @@ export default function FolderPagination({
   }>({ collections: [], numberOfCollections: 0 });
   const [curPage, dispatch] = useReducer(paginationReducer, 1);
   const [isFolderCreated, setIsFolderCreated] = useState(false);
-
-  // for dev
-  const accessToken = "iiii";
 
   function handleClickPagination(type: TYPE_ACTION_PAGINATION) {
     dispatch(type);
@@ -50,25 +51,6 @@ export default function FolderPagination({
 
   // Set numberOfColumns when it's rendered
   useEffect(() => {
-    // I will connect it to server later
-    const getSetCurCollectionData = () => {
-      const user = getUserDev(accessToken);
-      if (!user) return;
-
-      const data = {
-        collections: user.collections.slice(
-          (curPage - 1) * numberOfCollectionsPage,
-          curPage * numberOfCollectionsPage,
-        ),
-        numberOfCollections: user.collections.length,
-      };
-
-      setCollectionData(data);
-      return data;
-    };
-
-    const curCollectionData = getSetCurCollectionData();
-
     // design
     const getNumberOfColumns = (width: number) => {
       if (width < sm) return 2;
@@ -88,7 +70,7 @@ export default function FolderPagination({
       setNumberOfPages(
         getNumberOfPages(
           numCollectionsPage,
-          curCollectionData?.numberOfCollections || 0,
+          collectionData.numberOfCollections,
         ),
       );
     };
@@ -97,7 +79,21 @@ export default function FolderPagination({
     window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [collectionData]);
+
+  useEffect(() => {
+    const setCurCollectionData = async () => {
+      const indexFrom = (curPage - 1) * numberOfCollectionsPage;
+      const indexTo = curPage * numberOfCollectionsPage;
+
+      const collections = await getCollectionDataCurPage(indexFrom, indexTo);
+      if (!collections) return;
+
+      setCollectionData(collections);
+    };
+
+    setCurCollectionData();
+  }, [curPage]);
 
   return (
     <div className="relative flex-[5] w-full h-full flex flex-col items-center overflow-hidden">
