@@ -19,13 +19,14 @@ export interface TYPE_ERROR extends Error {
   status?: number;
 }
 
-// export type TYPE_USER = {
-//   email: string;
-//   isGoogleConnected: boolean;
-//   collections: [{ name: string; collectionId: string; numberOfWords: number }];
-//   createdAt?: string;
-//   updatedAt?: string;
-// };
+export type TYPE_USER = {
+  _id?: string;
+  email: string;
+  isGoogleConnected: boolean;
+  collections: [{ name: string; collectionId: string; numberOfWords: number }];
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 export type TYPE_DICTIONARY = {
   name: string;

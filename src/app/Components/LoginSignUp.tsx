@@ -17,12 +17,13 @@ import { TYPE_DECODED_GOOGLE_CREDENTIAL } from "../lib/config/type";
 import ErrorMessageInput from "./ErrorMessageInput";
 import { ErrorFormState, FormState } from "../lib/definitions";
 import { getError } from "../lib/errorHandler";
+import PErrorMessage from "./PErrorMessage";
 
 export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   const typeToDisplay = type === "login" ? "Log in" : "Sign up";
   const messageClassName = "py-1 px-2 rounded";
   const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
 
   function handlePending(isPending: boolean) {
     setIsPending(isPending);
@@ -38,7 +39,7 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   return (
     <div className="relative w-screen h-screen pt-1">
       <Logo />
-      <div className="w-full h-full flex flex-col justify-center items-center text-center">
+      <div className="w-full h-full flex flex-col justify-center items-center text-center my-6">
         {(isPending || error) && (
           <div className="w-[90%] text-center text-white shadow-md shadow-black/10  leading-tight text-sm">
             {isPending ? (
@@ -46,7 +47,7 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
                 {type === "login" ? "Loging in..." : "Creating your accound..."}
               </p>
             ) : (
-              <p className={`${messageClassName} bg-red-500`}>{error}</p>
+              <PErrorMessage error={error} />
             )}
           </div>
         )}

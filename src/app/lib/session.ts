@@ -3,6 +3,8 @@ import "server-only";
 import { SignJWT, jwtVerify } from "jose";
 import { SessionPayload } from "./definitions";
 import { cookies } from "next/headers";
+import { ObjectId } from "mongoose";
+import { getError } from "./errorHandler";
 
 const secretKey = process.env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
@@ -37,13 +39,13 @@ export async function decrypt(session: string | undefined = "") {
       algorithms: ["HS256"],
     });
     return payload;
-  } catch (err) {
-    console.error("Failed to verify session");
+  } catch (err: unknown) {
+    console.error("Failed to verify session", err);
   }
 }
 
-export async function createSession(userId: string) {
-  const session = await encrypt({ userId, expiresAt });
+export async function createSession(userId: ObjectId) {
+  const session = await encrypt({ userId: userId.toString(), expiresAt });
   await setSessionCookie(session);
 }
 

@@ -5,7 +5,14 @@ const isError = (err: unknown): err is TYPE_ERROR => {
 };
 
 export const getError = (
-  type: "notFound" | "emailBlank" | "passwordBlank" | "bothBlank" | "other",
+  type:
+    | "notFound"
+    | "emailBlank"
+    | "passwordBlank"
+    | "bothBlank"
+    | "wrongPassword"
+    | "fetchFailed"
+    | "other",
   customMessage?: string,
   err?: unknown,
 ) => {
@@ -25,7 +32,23 @@ export const getError = (
     return { errors: { ...errorEmail, ...errorPassword } };
 
   if (type === "emailBlank") return { errors: errorEmail };
+
   if (type === "passwordBlank") return { errors: errorPassword };
+
+  if (type === "wrongPassword") {
+    console.error("Unauthorized");
+    return { error: { status: 401, message: customMessage || "Unauthorized" } };
+  }
+
+  if (type === "fetchFailed") {
+    console.error("Failed to fetch", err);
+    return {
+      error: {
+        status: 500,
+        message: customMessage || "Failed to fetch",
+      },
+    };
+  }
 
   if (err && isError(err)) {
     console.error(unexpectedErrorMsg);

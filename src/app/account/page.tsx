@@ -1,9 +1,11 @@
 "use client";
-import { useState } from "react";
-import { getInputErrorMessage, getUserDev } from "../lib/helper";
+import { useEffect, useState } from "react";
+import { formatDate, getInputErrorMessage, getUserDev } from "../lib/helper";
 import PasswordInput from "../Components/PasswordInput";
-import ErrorMessageInput from "../Components/ErrorMessageInput";
 import EmailInput from "../Components/EmailInput";
+import { getUser } from "../lib/dal";
+import PErrorMessage from "../Components/PErrorMessage";
+import { TYPE_USER } from "../lib/config/type";
 type TYPE_CLASSNAMES = {
   h3ClassName: string;
   pClassName: string;
@@ -32,29 +34,40 @@ function UserInfo() {
     buttonSubmitClassName: `${buttonClassName} mt-2 bg-green-500 hover:bg-yellow-500`,
   };
 
-  // for dev
-  const accessToken = "iiii";
-  const user = getUserDev(accessToken);
-  if (!user) {
-    console.error("User Not Found!");
-    return;
-  }
+  const [user, setUser] = useState<TYPE_USER>();
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const user = await getUser();
+      if (user.error) setError(user.error.message);
+
+      setUser(user);
+    })();
+  }, []);
 
   return (
-    <div className="w-[90%] h-fit bg-slate-50 rounded my-6 shadow-md shadow-black/20 overflow-hidden">
-      <Email
-        email={user.email}
-        isGoogleConnected={user.isGoogleConnected}
-        classNames={classNames}
-      />
-      {user.password && <Password classNames={classNames} />}
-      <GoogleConnected
-        isGoogleConnected={user.isGoogleConnected}
-        classNames={classNames}
-      />
-      <MemberSince memberSince={user.createdAt} classNames={classNames} />
-      <CloseAccount classNames={classNames} />
-    </div>
+    <>
+      <div className="max-w-[90%] my-2">
+        {error && <PErrorMessage error={error} />}
+      </div>
+      <div
+        className={`w-[90%] h-fit bg-slate-50 rounded mb-6 shadow-md shadow-black/20 overflow-hidden ${!user ? "animate-pulse" : "animation-none"}`}
+      >
+        <Email
+          email={user?.email}
+          isGoogleConnected={user?.isGoogleConnected}
+          classNames={classNames}
+        />
+        {!user?.isGoogleConnected && <Password classNames={classNames} />}
+        <GoogleConnected
+          isGoogleConnected={user?.isGoogleConnected}
+          classNames={classNames}
+        />
+        <MemberSince memberSince={user?.createdAt} classNames={classNames} />
+        <CloseAccount classNames={classNames} />
+      </div>
+    </>
   );
 }
 
@@ -63,8 +76,8 @@ function Email({
   isGoogleConnected,
   classNames,
 }: {
-  email: string;
-  isGoogleConnected: boolean;
+  email: string | undefined;
+  isGoogleConnected: boolean | undefined;
   classNames: TYPE_CLASSNAMES;
 }) {
   const [isClicked, setIsClicked] = useState(false);
@@ -100,7 +113,7 @@ function Email({
             Current email
           </span>
         )}
-        &nbsp;&nbsp;{email}
+        &nbsp;&nbsp;{email && email}
       </p>
       {!isGoogleConnected &&
         (!isClicked ? (
@@ -116,8 +129,8 @@ function Email({
             <p>Please enter your new email</p>
             <EmailInput
               placeholder="new email"
-              defaultValue={email}
-              errorMessage={errorMessage}
+              defaultValue={email || ""}
+              errorMessage={[errorMessage]}
             />
             <button type="submit" className={classNames.buttonSubmitClassName}>
               Submit
@@ -158,7 +171,6 @@ function Password({ classNames }: { classNames: TYPE_CLASSNAMES }) {
     }
 
     // send data to server
-    console.log(currentPassword, newPassword);
     setErrorMessageCurrent("");
     setErrorMessageNew("");
   }
@@ -179,10 +191,10 @@ function Password({ classNames }: { classNames: TYPE_CLASSNAMES }) {
           <p>Please enter your current password</p>
           <PasswordInput
             name="currentPassword"
-            errorMessage={errorMessageCurrent}
+            errorMessage={[errorMessageCurrent]}
           />
           <p>Please enter your new password</p>
-          <PasswordInput name="newPassword" errorMessage={errorMessageNew} />
+          <PasswordInput name="newPassword" errorMessage={[errorMessageNew]} />
           <button
             type="submit"
             className={`${classNames.buttonClassName} mt-2 bg-green-500 hover:bg-yellow-500`}
@@ -199,14 +211,16 @@ function GoogleConnected({
   isGoogleConnected,
   classNames,
 }: {
-  isGoogleConnected: boolean;
+  isGoogleConnected: boolean | undefined;
   classNames: TYPE_CLASSNAMES;
 }) {
   return (
     <div>
       <h3 className={classNames.h3ClassName}>Google Connection</h3>
       <p className={classNames.pClassName}>
-        {isGoogleConnected ? "Connected" : "Not connected"}
+        {isGoogleConnected !== undefined && (
+          <span>{isGoogleConnected ? "Connected" : "Not connected"}</span>
+        )}
       </p>
     </div>
   );
@@ -216,13 +230,15 @@ function MemberSince({
   memberSince,
   classNames,
 }: {
-  memberSince: string;
+  memberSince: string | undefined;
   classNames: TYPE_CLASSNAMES;
 }) {
   return (
     <div>
       <h3 className={classNames.h3ClassName}>Member Since</h3>
-      <p className={classNames.pClassName}>{memberSince}</p>
+      <p className={classNames.pClassName}>
+        {memberSince && formatDate(memberSince, "en-US", true)}
+      </p>
     </div>
   );
 }

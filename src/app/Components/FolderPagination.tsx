@@ -9,11 +9,9 @@ import ButtonPagination from "./ButtonPagination";
 import { checkboxReducer, paginationReducer } from "../lib/reducers";
 // type
 import { TYPE_ACTION_PAGINATION, TYPE_COLLECTIONS } from "../lib/config/type";
-import { getNumberOfPages, getUserDev } from "../lib/helper";
-import user1 from "../ModelsDev/User";
+import { getNumberOfPages } from "../lib/helper";
 import Link from "next/link";
-import users from "../ModelsDev/User";
-import { getCollectionDataCurPage, getUser } from "../lib/dal";
+import { getCollectionDataCurPage } from "../lib/dal";
 
 export default function FolderPagination({
   type,
@@ -93,7 +91,9 @@ export default function FolderPagination({
     };
 
     setCurCollectionData();
-  }, [curPage]);
+  }, [curPage, numberOfCollectionsPage]);
+
+  console.log(collectionData);
 
   return (
     <div className="relative flex-[5] w-full h-full flex flex-col items-center overflow-hidden">

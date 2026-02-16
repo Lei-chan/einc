@@ -1,10 +1,12 @@
+"use server";
 import "server-only";
 import { cookies } from "next/headers";
-import { decrypt } from "./session";
+import { decrypt, deleteSession } from "./session";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import User from "./models/User";
 import { getError } from "./errorHandler";
+import dbConnect from "./database";
 
 export const verifySession = cache(async () => {
   const cookie = (await cookies()).get("session")?.value;
@@ -20,19 +22,20 @@ export const getUser = cache(async () => {
   const session = await verifySession();
   if (!session) return null;
   try {
+    await dbConnect();
     const user = await User.findById(session.userId);
+    const userObject = JSON.parse(JSON.stringify(user));
 
-    return user;
+    return userObject;
   } catch (err: unknown) {
-    console.error("Error. Failed to fetch.");
-    return null;
+    return getError("fetchFailed", "", err);
   }
 });
 
 export const getCollectionDataCurPage = cache(
   async (indexFrom: number, indexTo: number) => {
     const user = await getUser();
-    if (!user) return null;
+    if (!user) return getError("fetchFailed", "");
 
     const collections = user.collections;
     const collectionsCurPage = collections.slice(indexFrom, indexTo);
@@ -43,3 +46,8 @@ export const getCollectionDataCurPage = cache(
     };
   },
 );
+
+export async function logout() {
+  await deleteSession();
+  redirect("/");
+}

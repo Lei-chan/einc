@@ -3,7 +3,7 @@ import { FormState, SignupSchema } from "../lib/definitions";
 import { redirect } from "next/navigation";
 import bcrypt from "bcrypt";
 import User from "@/app/lib/models/User";
-import { createSession } from "../lib/session";
+import { createSession, deleteSession } from "../lib/session";
 import { getError } from "../lib/errorHandler";
 import dbConnect from "../lib/database";
 
@@ -12,8 +12,6 @@ export async function signupViaUserInfo(
   formData: FormData,
 ) {
   try {
-    console.log("signupViaUserInfo");
-
     const validatedFields = SignupSchema.safeParse({
       email: formData.get("email"),
       password: formData.get("password"),
@@ -31,9 +29,8 @@ export async function signupViaUserInfo(
     await dbConnect();
     const user = await User.create({
       password: hashedPassword,
-      others,
+      ...others,
     });
-
     if (!user) return getError("notFound");
 
     await createSession(user._id);
@@ -49,8 +46,6 @@ export async function signupViaGoogle(
   formData: FormData,
 ) {
   try {
-    console.log("signupViaGoogle");
-
     const validatedFields = SignupSchema.safeParse({
       email: formData.get("email"),
       isGoogleConnected: true,
@@ -78,7 +73,6 @@ export async function loginViaUserInfo(
   formData: FormData,
 ) {
   try {
-    console.log("loginViaUserInfo");
     const email = String(formData.get("email")).trim();
     const password = String(formData.get("password")).trim();
 
@@ -87,10 +81,12 @@ export async function loginViaUserInfo(
     if (!password) return getError("passwordBlank");
 
     await dbConnect();
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("password");
     if (!user) return getError("notFound");
 
-    // verify password here
+    // verify password
+    const isRightPassword = await bcrypt.compare(password, user.password);
+    if (!isRightPassword) return getError("wrongPassword");
 
     await createSession(user._id);
   } catch (err: unknown) {
@@ -102,8 +98,6 @@ export async function loginViaUserInfo(
 
 export async function loginViaGoogle(formState: FormState, formData: FormData) {
   try {
-    console.log("loginViaGoogle");
-
     const email = String(formData.get("email")).trim();
 
     await dbConnect();

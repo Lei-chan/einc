@@ -4,12 +4,14 @@ import Link from "next/link";
 import Logo from "../Components/Logo";
 import LinkAddVocab from "../Components/LinkAddVocab";
 import FolderPagination from "../Components/FolderPagination";
+import { logout } from "@/app/lib/dal";
 
 export default function Main() {
   return (
     <div className="relative w-screen h-screen flex flex-col">
       <Top />
       <FolderPagination type="main" />
+      <ButtonLogout />
     </div>
   );
 }
@@ -36,5 +38,16 @@ function Top() {
         </Link>
       </div>
     </div>
+  );
+}
+
+function ButtonLogout() {
+  return (
+    <button
+      className="fixed w-fit bg-blue-400 text-white rounded py-[2px] px-1 text-sm right-2 bottom-3 transition-all duration-200 shadow-md shadow-black/20 hover:translate-y-[-1px] hover:bg-blue-300"
+      onClick={logout}
+    >
+      Logout
+    </button>
   );
 }
