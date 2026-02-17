@@ -32,6 +32,26 @@ export const SignupSchema = z.object({
   ),
 });
 
+export const updateEmailSchema = z
+  .email({ error: "Please enter a valid email." })
+  .trim();
+
+export const updatePasswordSchema = z
+  .string()
+  .min(MIN_LENGTH_PASSWORD, {
+    error: `It should be at least ${MIN_LENGTH_PASSWORD} characters long.`,
+  })
+  .regex(/[a-z]/, {
+    error: `Please contain at least ${MIN_NUMBER_EACH_PASSWORD} lowercase letter.`,
+  })
+  .regex(/[A-Z]/, {
+    error: `Please contain at least ${MIN_NUMBER_EACH_PASSWORD} uppercase letter.`,
+  })
+  .regex(/[0-9]/, {
+    error: `Please contain at least ${MIN_NUMBER_EACH_PASSWORD} digit.`,
+  })
+  .trim();
+
 export const WordSchema = z.object({
   userId: z.string(),
   collectionId: z.string(),

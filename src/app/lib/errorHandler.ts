@@ -1,3 +1,4 @@
+import { ZodSafeParseResult } from "zod";
 import { TYPE_ERROR } from "./config/type";
 
 const isError = (err: unknown): err is TYPE_ERROR => {
@@ -10,11 +11,13 @@ export const getError = (
     | "emailBlank"
     | "passwordBlank"
     | "bothBlank"
+    | "zodError"
     | "wrongPassword"
     | "fetchFailed"
     | "other",
   customMessage?: string,
-  err?: unknown,
+  err?: unknown | undefined,
+  zodValidationResult?: ZodSafeParseResult<string>,
 ) => {
   const unexpectedErrorMsg = "Unexpected error occured";
 
@@ -34,6 +37,9 @@ export const getError = (
   if (type === "emailBlank") return { errors: errorEmail };
 
   if (type === "passwordBlank") return { errors: errorPassword };
+
+  if (type === "zodError" && zodValidationResult)
+    return { errors: zodValidationResult.error?.flatten()?.fieldErrors };
 
   if (type === "wrongPassword") {
     console.error("Unauthorized");
