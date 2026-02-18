@@ -1,5 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+// react
+import { useActionState, useEffect, useState } from "react";
+import { FormStateCollection } from "../lib/definitions";
+import { createCollection } from "../actions/auth";
+import { joinWithLineBreaks, wait } from "../lib/helper";
+import PMessage from "./PMessage";
 
 export default function CreateFolder({
   widthClassName,
@@ -13,38 +18,50 @@ export default function CreateFolder({
   onClickClose: () => void;
 }) {
   const transitionClassName = "transition-all duration-300";
-  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const [state, action, isPending] = useActionState<
+    FormStateCollection,
+    FormData
+  >(createCollection, undefined);
 
-    const formData = new FormData(e.currentTarget);
-    const name = String(formData.get("name")).trim();
+  // use it to modify state
+  const [curState, setCurState] = useState(state);
+  const [successMsg, setSuccessMsg] = useState("");
 
-    if (!name) return setError("Folder name is empty");
-
-    console.log(name);
-  }
-
-  // Reset error message
+  // set curState as state to modify
   useEffect(() => {
-    const setErrorMsg = (msg: string) => setError(msg);
-    if (!isVisible) setErrorMsg("");
+    (() => setCurState(state))();
+  }, [state]);
+
+  useEffect(() => {
+    const message = curState?.message;
+    if (message)
+      (async () => {
+        setSuccessMsg(message);
+        await wait(2);
+        setSuccessMsg("");
+        if (isVisible) onClickClose();
+      })();
+  }, [curState, isVisible, onClickClose]);
+
+  // Reset error message when user closes the form
+  useEffect(() => {
+    if (!isVisible) (() => setCurState(undefined))();
   }, [isVisible]);
 
   return (
     <form
-      className={`${widthClassName} ${heightClassName} ${transitionClassName} absolute bottom-0 text-white text-center ${isVisible ? "translate-y-0" : "translate-y-[100%]"}`}
-      onSubmit={handleSubmit}
+      action={action}
+      className={`${widthClassName} ${heightClassName} ${transitionClassName} absolute bottom-0 text-white text-center flex flex-col items-center z-10 ${isVisible ? "translate-y-0" : "translate-y-[100%]"}`}
     >
-      <div className="relative w-full h-full bg-black/60 backdrop-blur-sm flex flex-col items-center gap-3 p-3">
-        {error && (
-          <p
-            className={`absolute bg-orange-600 -top-7 text-[15px] px-1 mx-2 rounded-sm`}
-          >
-            {error}
-          </p>
-        )}
+      {isPending && (
+        <PMessage type="pending" message="Creating collection..." />
+      )}
+      {curState?.error && (
+        <PMessage type="error" message={curState.error.message || ""} />
+      )}
+      {successMsg && <PMessage type="success" message={successMsg} />}
+      <div className="relative w-full h-full bg-black/60 backdrop-blur-sm flex flex-col items-center gap-3 p-3 mt-2">
         <button
           type="button"
           className={`${transitionClassName} absolute right-2 top-0 text-2xl hover:text-white/80`}
@@ -58,8 +75,13 @@ export default function CreateFolder({
           <input
             name="name"
             placeholder="name"
-            className={`mt-1  ${error && "border-2 border-red-500"}`}
+            className={`mt-1  ${state?.errors?.name && "border-2 border-red-500"}`}
           ></input>
+          {state?.errors?.name && (
+            <p className="text-sm text-red-500">
+              {joinWithLineBreaks(state.errors.name)}
+            </p>
+          )}
         </label>
         <button
           className={`${transitionClassName} bg-orange-500 py-[1px] px-1 mt-1 rounded hover:bg-yellow-500`}

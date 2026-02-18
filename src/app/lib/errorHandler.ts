@@ -17,7 +17,7 @@ export const getError = (
     | "other",
   customMessage?: string,
   err?: unknown | undefined,
-  zodValidationResult?: ZodSafeParseResult<string>,
+  zodValidationResult?: ZodSafeParseResult<object>,
 ) => {
   const unexpectedErrorMsg = "Unexpected error occured";
 
@@ -28,8 +28,10 @@ export const getError = (
     };
   }
 
-  const errorEmail = { email: ["Email is required."] };
-  const errorPassword = { password: ["Password is required."] };
+  const errorEmail = { email: [customMessage || "Email is required."] };
+  const errorPassword = {
+    password: [customMessage || "Password is required."],
+  };
 
   if (type === "bothBlank")
     return { errors: { ...errorEmail, ...errorPassword } };
@@ -43,7 +45,13 @@ export const getError = (
 
   if (type === "wrongPassword") {
     console.error("Unauthorized");
-    return { error: { status: 401, message: customMessage || "Unauthorized" } };
+    return {
+      error: {
+        status: 401,
+        message:
+          customMessage || "Unauthorized. Please enter correct password.",
+      },
+    };
   }
 
   if (type === "fetchFailed") {
@@ -57,7 +65,7 @@ export const getError = (
   }
 
   if (err && isError(err)) {
-    console.error(unexpectedErrorMsg);
+    console.error(unexpectedErrorMsg, err);
     return {
       error: {
         status: err?.status || 500,

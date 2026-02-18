@@ -1,20 +1,27 @@
 "use server";
+// next.js
+import { redirect } from "next/navigation";
+// mongoose
+import User from "@/app/lib/models/User";
+import dbConnect from "../lib/database";
+// methods
+import { createSession, deleteSession } from "../lib/session";
+import { getCollections, verifySession } from "../lib/dal";
+import { getError } from "../lib/errorHandler";
+// types
 import {
-  FormState,
+  FormStateAccount,
+  FormStateCollection,
   SignupSchema,
   updateEmailSchema,
   updatePasswordSchema,
 } from "../lib/definitions";
-import { redirect } from "next/navigation";
+// libraries
 import bcrypt from "bcrypt";
-import User from "@/app/lib/models/User";
-import { createSession, deleteSession } from "../lib/session";
-import { getError } from "../lib/errorHandler";
-import dbConnect from "../lib/database";
-import { verifySession } from "../lib/dal";
+import { nanoid } from "nanoid";
 
 export async function signupViaUserInfo(
-  formState: FormState,
+  formState: FormStateAccount,
   formData: FormData,
 ) {
   try {
@@ -22,11 +29,11 @@ export async function signupViaUserInfo(
       email: formData.get("email"),
       password: formData.get("password"),
       isGoogleConnected: false,
-      collections: [],
+      collections: [{ name: "All", collectionId: nanoid(), numberOfWords: 0 }],
     });
 
     if (!validatedFields.success)
-      return { errors: validatedFields.error.flatten().fieldErrors };
+      return getError("zodError", "", undefined, validatedFields);
 
     const { password, ...others } = validatedFields.data;
 
@@ -48,18 +55,18 @@ export async function signupViaUserInfo(
 }
 
 export async function signupViaGoogle(
-  formState: FormState,
+  formState: FormStateAccount,
   formData: FormData,
 ) {
   try {
     const validatedFields = SignupSchema.safeParse({
       email: formData.get("email"),
       isGoogleConnected: true,
-      collections: [],
+      collections: [{ name: "All", collectionId: nanoid(), numberOfWords: 0 }],
     });
 
     if (!validatedFields.success)
-      return { errors: validatedFields.error.flatten().fieldErrors };
+      return getError("zodError", "", undefined, validatedFields);
 
     await dbConnect();
     const user = await User.create(validatedFields.data);
@@ -75,7 +82,7 @@ export async function signupViaGoogle(
 }
 
 export async function loginViaUserInfo(
-  formState: FormState,
+  formState: FormStateAccount,
   formData: FormData,
 ) {
   try {
@@ -102,7 +109,10 @@ export async function loginViaUserInfo(
   redirect("/main");
 }
 
-export async function loginViaGoogle(formState: FormState, formData: FormData) {
+export async function loginViaGoogle(
+  formState: FormStateAccount,
+  formData: FormData,
+) {
   try {
     const email = String(formData.get("email")).trim();
 
@@ -117,54 +127,79 @@ export async function loginViaGoogle(formState: FormState, formData: FormData) {
   redirect("/main");
 }
 
-export async function updateEmail(formState: FormState, formData: FormData) {
+export async function updateEmail(
+  formState: FormStateAccount,
+  formData: FormData,
+) {
   try {
     const { isAuth, userId } = await verifySession();
 
     const email = formData.get("email");
 
     // validate email
-    const validatedEmail = updateEmailSchema.safeParse(email);
-    if (!validatedEmail.success)
-      return getError("zodError", "", undefined, validatedEmail);
+    const validationField = updateEmailSchema.safeParse({ email });
+    if (!validationField.success)
+      return getError("zodError", "", undefined, validationField);
 
     // update user
     await dbConnect();
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
       userId,
       { email },
       { new: true },
     ).select("email");
     if (!user) return getError("notFound");
 
-    return user;
+    const userEmail = JSON.parse(JSON.stringify(user)).email;
+
+    return { data: { email: userEmail } };
   } catch (err: unknown) {
     return getError("other", "", err);
   }
 }
 
-export async function updatePassword(formState: FormState, formData: FormData) {
+export async function updatePassword(
+  formState: FormStateAccount,
+  formData: FormData,
+) {
   try {
     const { isAuth, userId } = await verifySession();
 
     const curPassword = String(formData.get("currentPassword")).trim() || "";
-    const newPassword = String(formData.get("newPassword")) || "";
+    const newPassword = String(formData.get("newPassword")).trim() || "";
+
+    // if curPassword or newPassword is falsy, return errors
+    if (!curPassword || !newPassword)
+      return {
+        errors: {
+          ...(!curPassword && {
+            curPassword: ["Current password is required."],
+          }),
+          ...(!newPassword && { newPassword: ["New password is required."] }),
+        },
+      };
 
     // verify current password
     await dbConnect();
-    const userPassword = await User.findById(userId).select("password");
-    if (!userPassword) return getError("notFound");
+    const user = await User.findById(userId).select("password");
+    if (!user) return getError("notFound");
 
-    const isRightPassword = await bcrypt.compare(curPassword, userPassword);
+    const isRightPassword = await bcrypt.compare(curPassword, user.password);
     if (!isRightPassword) return getError("wrongPassword");
 
     // validate new password
-    const validatedPassword = updatePasswordSchema.safeParse(newPassword);
-    if (!validatedPassword.success)
-      return getError("zodError", "", undefined, validatedPassword);
+    const validationField = updatePasswordSchema.safeParse({
+      password: newPassword,
+    });
+
+    if (!validationField.success)
+      return getError("zodError", "", undefined, validationField);
+
+    // hash password
+    const hashedPassword = await bcrypt.hash(newPassword as string, 10);
 
     // update password
-    await User.findByIdAndUpdate(userId, { password: newPassword });
+    await User.findByIdAndUpdate(userId, { password: hashedPassword });
 
     return { message: "Password updated successfully!" };
   } catch (err: unknown) {
@@ -172,16 +207,43 @@ export async function updatePassword(formState: FormState, formData: FormData) {
   }
 }
 
-export async function deleteAccount(formState: FormState, formData: FormData) {
+export async function deleteAccount(
+  formState: FormStateAccount,
+  formData: FormData,
+) {
   try {
     const { isAuth, userId } = await verifySession();
 
     await dbConnect();
     await User.findByIdAndDelete(userId);
     await deleteSession();
+  } catch (err: unknown) {
+    return getError("other", "", err);
+  }
 
-    // redirect to thank you page
-    redirect("/account-closed");
+  // redirect to thank you page
+  redirect("/account-closed");
+}
+
+export async function createCollection(
+  formState: FormStateCollection,
+  formData: FormData,
+) {
+  try {
+    const name = String(formData.get("name")).trim();
+    if (!name) return { errors: { name: ["Name is required."] } };
+
+    const { isAuth, userId } = await verifySession();
+
+    await dbConnect();
+
+    const user = await User.findById(userId).select("collections");
+    user.collections.push({ name, numberOfWords: 0 });
+    await user.save();
+
+    const newCollections = user.collections;
+    console.log(newCollections);
+    return { message: `Collection ${name} created` };
   } catch (err: unknown) {
     return getError("other", "", err);
   }

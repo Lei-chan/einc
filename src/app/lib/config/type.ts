@@ -23,7 +23,7 @@ export type TYPE_USER = {
   _id?: string;
   email: string;
   isGoogleConnected: boolean;
-  collections: [{ name: string; collectionId: string; numberOfWords: number }];
+  collections: [{ name: string; _id?: string; numberOfWords: number }];
   createdAt?: string;
   updatedAt?: string;
 };

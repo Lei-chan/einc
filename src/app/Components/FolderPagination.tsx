@@ -1,6 +1,6 @@
 "use client";
 // react
-import { useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 // components
 import CreateFolder from "./CreateFolder";
 import ButtonPlus from "./ButtonPlus";
@@ -37,14 +37,14 @@ export default function FolderPagination({
     numberOfCollections: number;
   }>({ collections: [], numberOfCollections: 0 });
   const [curPage, dispatch] = useReducer(paginationReducer, 1);
-  const [isFolderCreated, setIsFolderCreated] = useState(false);
+  const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
 
   function handleClickPagination(type: TYPE_ACTION_PAGINATION) {
     dispatch(type);
   }
 
   function handleToggleCreateFolder() {
-    setIsFolderCreated(!isFolderCreated);
+    setIsCreateCollectionOpen(!isCreateCollectionOpen);
   }
 
   // Set numberOfColumns when it's rendered
@@ -80,20 +80,20 @@ export default function FolderPagination({
   }, [collectionData]);
 
   useEffect(() => {
-    const setCurCollectionData = async () => {
-      const indexFrom = (curPage - 1) * numberOfCollectionsPage;
-      const indexTo = curPage * numberOfCollectionsPage;
+    // fetch collection data
+    if (!isCreateCollectionOpen)
+      (async () => {
+        const indexFrom = (curPage - 1) * numberOfCollectionsPage;
+        const indexTo = curPage * numberOfCollectionsPage;
 
-      const collections = await getCollectionDataCurPage(indexFrom, indexTo);
-      if (!collections) return;
+        const collections = await getCollectionDataCurPage(indexFrom, indexTo);
+        if (!collections) return;
 
-      setCollectionData(collections);
-    };
+        setCollectionData(collections);
+      })();
+  }, [curPage, numberOfCollectionsPage, isCreateCollectionOpen]);
 
-    setCurCollectionData();
-  }, [curPage, numberOfCollectionsPage]);
-
-  console.log(collectionData);
+  // add pagination also when the page has max number of collections so users can add more collections
 
   return (
     <div className="relative flex-[5] w-full h-full flex flex-col items-center overflow-hidden">
@@ -114,8 +114,8 @@ export default function FolderPagination({
       />
       <CreateFolder
         widthClassName="w-full"
-        heightClassName="h-[40%]"
-        isVisible={isFolderCreated}
+        heightClassName="h-1/2"
+        isVisible={isCreateCollectionOpen}
         onClickClose={handleToggleCreateFolder}
       />
     </div>

@@ -32,12 +32,26 @@ export const getUser = cache(async () => {
   }
 });
 
+export const getCollections = cache(async () => {
+  const session = await verifySession();
+  if (!session) return null;
+  try {
+    await dbConnect();
+    const user = await User.findById(session.userId).select("collections");
+
+    const userObject = JSON.parse(JSON.stringify(user));
+
+    return userObject.collections;
+  } catch (err: unknown) {
+    return getError("fetchFailed", "", err);
+  }
+});
+
 export const getCollectionDataCurPage = cache(
   async (indexFrom: number, indexTo: number) => {
-    const user = await getUser();
-    if (!user) return getError("fetchFailed", "");
+    const collections = await getCollections();
+    if (!collections) return null;
 
-    const collections = user.collections;
     const collectionsCurPage = collections.slice(indexFrom, indexTo);
 
     return {

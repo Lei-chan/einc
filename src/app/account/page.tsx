@@ -1,11 +1,19 @@
 "use client";
-import { useEffect, useState } from "react";
-import { formatDate, getInputErrorMessage } from "../lib/helper";
+// react
+import { useActionState, useEffect, useState } from "react";
+// components
 import PasswordInput from "../Components/PasswordInput";
 import EmailInput from "../Components/EmailInput";
+import PMessage from "../Components/PMessage";
+// actions
+import { deleteAccount, updateEmail, updatePassword } from "../actions/auth";
+// methods
 import { getUser } from "../lib/dal";
-import PErrorMessage from "../Components/PErrorMessage";
+import { formatDate, wait } from "../lib/helper";
+// types
 import { TYPE_USER } from "../lib/config/type";
+import { ErrorFormState, FormStateAccount } from "../lib/definitions";
+
 type TYPE_CLASSNAMES = {
   h3ClassName: string;
   pClassName: string;
@@ -35,8 +43,11 @@ function UserInfo() {
   };
 
   const [user, setUser] = useState<TYPE_USER>();
+  const [pendingMsg, setPendingMsg] = useState("");
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
+  // fetch user
   useEffect(() => {
     (async () => {
       const user = await getUser();
@@ -46,10 +57,28 @@ function UserInfo() {
     })();
   }, []);
 
+  function displayError(err: ErrorFormState) {
+    if (!err) return;
+
+    setError(err?.error?.message || "");
+  }
+
+  function displayPending(pendingMessage: string) {
+    setPendingMsg(pendingMessage);
+  }
+
+  async function displaySuccess(successMessage: string) {
+    setSuccessMsg(successMessage);
+    await wait();
+    setSuccessMsg("");
+  }
+
   return (
     <>
-      <div className="max-w-[90%] my-2">
-        {error && <PErrorMessage error={error} />}
+      <div className="w-full h-fit my-2 flex flex-col items-center">
+        {pendingMsg && <PMessage type="pending" message={pendingMsg} />}
+        {error && <PMessage type="error" message={error} />}
+        {successMsg && <PMessage type="success" message={successMsg} />}
       </div>
       <div
         className={`w-[90%] h-fit bg-slate-50 rounded mb-6 shadow-md shadow-black/20 overflow-hidden ${!user ? "animate-pulse" : "animation-none"}`}
@@ -58,14 +87,28 @@ function UserInfo() {
           email={user?.email}
           isGoogleConnected={user?.isGoogleConnected}
           classNames={classNames}
+          displayPending={displayPending}
+          displayError={displayError}
+          displaySuccess={displaySuccess}
         />
-        {!user?.isGoogleConnected && <Password classNames={classNames} />}
+        {!user?.isGoogleConnected && (
+          <Password
+            classNames={classNames}
+            displayPending={displayPending}
+            displayError={displayError}
+            displaySuccess={displaySuccess}
+          />
+        )}
         <GoogleConnected
           isGoogleConnected={user?.isGoogleConnected}
           classNames={classNames}
         />
         <MemberSince memberSince={user?.createdAt} classNames={classNames} />
-        <CloseAccount classNames={classNames} />
+        <CloseAccount
+          classNames={classNames}
+          displayPending={displayPending}
+          displayError={displayError}
+        />
       </div>
     </>
   );
@@ -75,35 +118,63 @@ function Email({
   email,
   isGoogleConnected,
   classNames,
+  displayPending,
+  displayError,
+  displaySuccess,
 }: {
   email: string | undefined;
   isGoogleConnected: boolean | undefined;
   classNames: TYPE_CLASSNAMES;
+  displayPending: (pendingMsg: string) => void;
+  displayError: (error: ErrorFormState) => void;
+  displaySuccess: (successMessage: string) => void;
 }) {
+  const [curEmail, setCurEmail] = useState(email);
   const [isClicked, setIsClicked] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [state, action, isPending] = useActionState<FormStateAccount, FormData>(
+    updateEmail,
+    undefined,
+  );
+  // use this to modify state
+  const [curState, setCurState] = useState(state);
 
   function handleClickChange() {
     setIsClicked(true);
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  // set user email as curEmail when it's fetched
+  useEffect(() => {
+    setCurEmail(email);
+  }, [email]);
 
-    const value = new FormData(e.currentTarget).get("email");
-    const trimmedValue = String(value).trim();
+  // display pending state at the top of the page
+  useEffect(() => {
+    displayPending(isPending ? "Updating email..." : "");
+  }, [isPending, displayPending]);
 
-    const errorMessage = getInputErrorMessage(trimmedValue, "email", email);
+  // set curState as state to modify
+  useEffect(() => {
+    (() => setCurState(state))();
+  }, [state]);
 
-    if (errorMessage) return setErrorMessage(errorMessage);
+  // display error at the top of the page
+  useEffect(() => {
+    displayError(curState);
 
-    // send data to server
-    console.log(trimmedValue);
-    setErrorMessage("");
-  }
+    // when update finished
+    (() => {
+      const newEmail = curState?.data?.email;
+      if (!newEmail) return;
+
+      setCurEmail(newEmail);
+      setIsClicked(false);
+      displaySuccess("Email updated");
+      setCurState(undefined);
+    })();
+  }, [curState, displayError, displaySuccess]);
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form action={action}>
       <h3 className={classNames.h3ClassName}>Email</h3>
       <p
         className={`${classNames.pClassName} overflow-hidden whitespace-nowrap text-ellipsis`}
@@ -113,7 +184,7 @@ function Email({
             Current email
           </span>
         )}
-        &nbsp;&nbsp;{email && email}
+        &nbsp;&nbsp;{curEmail}
       </p>
       {!isGoogleConnected &&
         (!isClicked ? (
@@ -129,8 +200,8 @@ function Email({
             <p>Please enter your new email</p>
             <EmailInput
               placeholder="new email"
-              defaultValue={email || ""}
-              errorMessage={[errorMessage]}
+              defaultValue={curEmail || ""}
+              errorMessage={state?.errors?.email}
             />
             <button type="submit" className={classNames.buttonSubmitClassName}>
               Submit
@@ -141,42 +212,56 @@ function Email({
   );
 }
 
-function Password({ classNames }: { classNames: TYPE_CLASSNAMES }) {
+function Password({
+  classNames,
+  displayPending,
+  displayError,
+  displaySuccess,
+}: {
+  classNames: TYPE_CLASSNAMES;
+  displayPending: (pendingMsg: string) => void;
+  displayError: (error: ErrorFormState) => void;
+  displaySuccess: (successMessage: string) => void;
+}) {
   const [isClicked, setIsClicked] = useState(false);
-  const [errorMessageCurrent, setErrorMessageCurrent] = useState("");
-  const [errorMessageNew, setErrorMessageNew] = useState("");
+  const [state, action, isPending] = useActionState<FormStateAccount, FormData>(
+    updatePassword,
+    undefined,
+  );
+  // use this to modify state
+  const [curState, setCurState] = useState(state);
 
   function handleClickChange() {
     setIsClicked(true);
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+  // display pending state at the top of the page
+  useEffect(() => {
+    displayPending(isPending ? "Updating password..." : "");
+  }, [isPending, displayPending]);
 
-    const currentPassword = String(formData.get("currentPassword")).trim();
-    const newPassword = String(formData.get("newPassword")).trim();
+  // set curState as state to modify
+  useEffect(() => {
+    (() => setCurState(state))();
+  }, [state]);
 
-    const errorMsgCurrent = getInputErrorMessage(currentPassword, "password");
-    const errorMsgNew = getInputErrorMessage(
-      newPassword,
-      "password",
-      currentPassword,
-    );
+  // display error at the top of the page
+  useEffect(() => {
+    displayError(curState);
 
-    if (errorMsgCurrent || errorMsgNew) {
-      setErrorMessageCurrent(errorMsgCurrent);
-      setErrorMessageNew(errorMsgNew);
-      return;
-    }
+    // when update finished
+    (() => {
+      const successMessage = curState?.message;
+      if (!successMessage) return;
 
-    // send data to server
-    setErrorMessageCurrent("");
-    setErrorMessageNew("");
-  }
+      setIsClicked(false);
+      displaySuccess(successMessage);
+      setCurState(undefined);
+    })();
+  }, [curState, displayError, displaySuccess]);
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form action={action}>
       <h3 className={classNames.h3ClassName}>Password</h3>
       {!isClicked ? (
         <button
@@ -191,10 +276,13 @@ function Password({ classNames }: { classNames: TYPE_CLASSNAMES }) {
           <p>Please enter your current password</p>
           <PasswordInput
             name="currentPassword"
-            errorMessage={[errorMessageCurrent]}
+            errorMessage={state?.errors?.curPassword}
           />
           <p>Please enter your new password</p>
-          <PasswordInput name="newPassword" errorMessage={[errorMessageNew]} />
+          <PasswordInput
+            name="newPassword"
+            errorMessage={state?.errors?.newPassword || state?.errors?.password}
+          />
           <button
             type="submit"
             className={`${classNames.buttonClassName} mt-2 bg-green-500 hover:bg-yellow-500`}
@@ -243,22 +331,41 @@ function MemberSince({
   );
 }
 
-function CloseAccount({ classNames }: { classNames: TYPE_CLASSNAMES }) {
+function CloseAccount({
+  classNames,
+  displayPending,
+  displayError,
+}: {
+  classNames: TYPE_CLASSNAMES;
+  displayPending: (pendingMsg: string) => void;
+  displayError: (error: ErrorFormState) => void;
+}) {
   const [isClicked, setIsClicked] = useState(false);
+  const [state, action, isPending] = useActionState<FormStateAccount, FormData>(
+    deleteAccount,
+    undefined,
+  );
 
   function handleClickClose() {
     setIsClicked(true);
   }
 
-  function handleClickUnderstand() {
-    console.log("Account Closed!");
-  }
+  // display pending state at the top of the page
+  useEffect(() => {
+    displayPending(isPending ? "Closing account..." : "");
+  }, [isPending, displayPending]);
+
+  // display error at the top of the page
+  useEffect(() => {
+    displayError(state);
+  }, [state, displayError]);
 
   return (
-    <div>
+    <form action={action}>
       <h3 className={classNames.h3ClassName}>Close Account</h3>
       {!isClicked ? (
         <button
+          type="button"
           className={`${classNames.buttonClassName} bg-red-500 hover:bg-red-400`}
           onClick={handleClickClose}
         >
@@ -270,13 +377,13 @@ function CloseAccount({ classNames }: { classNames: TYPE_CLASSNAMES }) {
             ※ Once you close your accound, you can not undo this action.
           </p>
           <button
+            type="submit"
             className={`${classNames.buttonClassName} bg-red-600 hover:bg-red-400 mt-0`}
-            onClick={handleClickUnderstand}
           >
             I understand
           </button>
         </>
       )}
-    </div>
+    </form>
   );
 }
