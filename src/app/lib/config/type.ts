@@ -23,9 +23,15 @@ export type TYPE_USER = {
   _id?: string;
   email: string;
   isGoogleConnected: boolean;
-  collections: [{ name: string; _id?: string; numberOfWords: number }];
+  collections: TYPE_COLLECTION[];
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type TYPE_COLLECTION = {
+  _id?: string;
+  name: string;
+  numberOfWords: number;
 };
 
 export type TYPE_DICTIONARY = {

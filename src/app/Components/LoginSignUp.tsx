@@ -3,12 +3,6 @@
 import { useActionState, useEffect, useState } from "react";
 // components
 import Logo from "./Logo";
-import {
-  loginViaGoogle,
-  loginViaUserInfo,
-  signupViaGoogle,
-  signupViaUserInfo,
-} from "../actions/auth";
 import ErrorMessageInput from "./ErrorMessageInput";
 import PMessage from "./PMessage";
 import EmailInput from "./EmailInput";
@@ -21,6 +15,8 @@ import { ErrorFormState, FormStateAccount } from "../lib/definitions";
 // libraries
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import { signupViaGoogle, signupViaUserInfo } from "../actions/auth/signup";
+import { loginViaGoogle, loginViaUserInfo } from "../actions/auth/login";
 
 export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   const typeToDisplay = type === "login" ? "Log in" : "Sign up";
@@ -89,13 +85,13 @@ function ViaUserInfo({
 
   useEffect(() => {
     handlePending(pending);
-  }, [pending]);
+  }, [handlePending, pending]);
 
   useEffect(() => {
     if (!state?.error) return;
 
     handleError(state);
-  }, [state?.error]);
+  }, [handleError, state]);
 
   return (
     <div className="w-full p-3 pb-1 border-b-2 flex flex-col items-center gap-3">
@@ -141,13 +137,13 @@ function ViaGoogle({
 
   useEffect(() => {
     handlePending(pending);
-  }, [pending]);
+  }, [handlePending, pending]);
 
   useEffect(() => {
     if (!state?.error) return;
 
     handleError(state);
-  }, [state?.error]);
+  }, [handleError, state]);
   return (
     <form action={action} className="w-full p-3 flex flex-col items-center">
       <p className="mb-3">{typeToDisplay} via Google</p>

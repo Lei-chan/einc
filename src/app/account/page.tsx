@@ -5,14 +5,17 @@ import { useActionState, useEffect, useState } from "react";
 import PasswordInput from "../Components/PasswordInput";
 import EmailInput from "../Components/EmailInput";
 import PMessage from "../Components/PMessage";
-// actions
-import { deleteAccount, updateEmail, updatePassword } from "../actions/auth";
 // methods
 import { getUser } from "../lib/dal";
 import { formatDate, wait } from "../lib/helper";
 // types
 import { TYPE_USER } from "../lib/config/type";
 import { ErrorFormState, FormStateAccount } from "../lib/definitions";
+import {
+  deleteAccount,
+  updateEmail,
+  updatePassword,
+} from "../actions/auth/account";
 
 type TYPE_CLASSNAMES = {
   h3ClassName: string;

@@ -2,7 +2,7 @@
 // react
 import { useActionState, useEffect, useState } from "react";
 import { FormStateCollection } from "../lib/definitions";
-import { createCollection } from "../actions/auth";
+import { createCollection } from "../actions/auth/collections";
 import { joinWithLineBreaks, wait } from "../lib/helper";
 import PMessage from "./PMessage";
 
