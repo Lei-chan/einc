@@ -65,7 +65,7 @@ export const getError = (
   }
 
   if (err && isError(err)) {
-    console.error(unexpectedErrorMsg, err);
+    console.error(customMessage || unexpectedErrorMsg, err);
     return {
       error: {
         status: err?.status || 500,

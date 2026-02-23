@@ -19,6 +19,8 @@ export interface TYPE_ERROR extends Error {
   status?: number;
 }
 
+export type TYPE_MESSAGE = "pending" | "error" | "success";
+
 export type TYPE_USER = {
   _id?: string;
   email: string;
@@ -123,3 +125,7 @@ export type TYPE_JOURNAL_DATA_TO_DISPLAY = {
   date: Date | string;
   content: string[];
 };
+
+export type TYPE_DISPLAY_MESSAGE =
+  | { type: TYPE_MESSAGE; message: string }
+  | undefined;

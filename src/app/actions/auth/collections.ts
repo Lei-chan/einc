@@ -37,6 +37,7 @@ export async function updateCollection(
   formData: FormData,
 ) {
   try {
+    console.log("update");
     const formDataArr = [...formData];
     if (!formDataArr.length) return;
 
@@ -79,6 +80,23 @@ export async function deleteCollection(
   formData: FormData,
 ) {
   try {
+    const formDataArr = [...formData];
+    if (!formDataArr.length) return;
+
+    const collectionIds = formDataArr.map((dataArr) => dataArr[0]);
+
+    const { isAuth, userId } = await verifySession();
+
+    await dbConnect();
+    const user = await User.findById(userId).select("collections");
+    if (!user) return getError("notFound");
+
+    collectionIds.forEach((id) => user.collections.pull({ _id: id }));
+    await user.save();
+
+    return {
+      message: `Collection${collectionIds.length === 1 ? "" : "s"} deleted`,
+    };
   } catch (err: unknown) {
     return getError("other", "", err);
   }

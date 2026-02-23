@@ -1,8 +1,10 @@
+import { TYPE_MESSAGE } from "../lib/config/type";
+
 export default function PMessage({
   type,
   message,
 }: {
-  type: "pending" | "error" | "success";
+  type: TYPE_MESSAGE;
   message: string;
 }) {
   return (

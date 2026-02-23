@@ -11,11 +11,13 @@ export default function CreateFolder({
   heightClassName,
   isVisible,
   onClickClose,
+  handleSetIsUpdated,
 }: {
   widthClassName: string;
   heightClassName: string;
   isVisible: boolean;
   onClickClose: () => void;
+  handleSetIsUpdated: () => void;
 }) {
   const transitionClassName = "transition-all duration-300";
 
@@ -40,11 +42,12 @@ export default function CreateFolder({
         setSuccessMsg(message);
         await wait(2);
         setSuccessMsg("");
+        handleSetIsUpdated();
         if (isVisible) onClickClose();
       })();
-  }, [curState, isVisible, onClickClose]);
+  }, [curState, isVisible, handleSetIsUpdated, onClickClose]);
 
-  // Reset error message when user closes the form
+  // // Reset error message when user closes the form
   useEffect(() => {
     if (!isVisible) (() => setCurState(undefined))();
   }, [isVisible]);
