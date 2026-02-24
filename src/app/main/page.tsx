@@ -7,23 +7,15 @@ import LinkAddVocab from "../Components/LinkAddVocab";
 import FolderPagination from "../Components/FolderPagination";
 import { logout } from "@/app/lib/dal";
 import { useState } from "react";
-import { TYPE_DISPLAY_MESSAGE } from "../lib/config/type";
+import { TYPE_DISPLAY_MESSAGE, TYPE_MESSAGE } from "../lib/config/type";
 import PMessage from "../Components/PMessage";
+import { wait } from "../lib/helper";
 
 export default function Main() {
-  const [messageData, setMessageData] = useState<TYPE_DISPLAY_MESSAGE>();
-
-  function displayMessage(msgData: TYPE_DISPLAY_MESSAGE) {
-    setMessageData(msgData);
-  }
-
   return (
     <div className="relative w-screen h-screen flex flex-col items-center">
-      {messageData && (
-        <PMessage type={messageData.type} message={messageData.message} />
-      )}
       <Top />
-      <FolderPagination type="main" displayMessage={displayMessage} />
+      <FolderPagination type="main" />
       <ButtonLogout />
     </div>
   );

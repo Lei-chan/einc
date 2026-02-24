@@ -1,6 +1,6 @@
 "use client";
 // react
-import { useActionState, useEffect, useReducer, useState } from "react";
+import { useActionState, useEffect, useReducer, useRef, useState } from "react";
 // components
 import CreateFolder from "./CreateFolder";
 import ButtonPagination from "./ButtonPagination";
@@ -23,39 +23,43 @@ import {
 } from "../actions/auth/collections";
 import { FormStateCollection } from "../lib/definitions";
 import { nanoid } from "nanoid";
+import PMessage from "./PMessage";
 
-export default function FolderPagination({
-  type,
-  displayMessage,
-}: {
-  type: "main" | "addTo";
-  displayMessage: (msgData: TYPE_DISPLAY_MESSAGE) => void;
-}) {
+export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
   // design
   const sm = 640;
   const md = 768;
   const lg = 1024;
   const numberOfRows = 5;
 
-  // states for design
   const [numberOfColumns, setNumberOfColumns] = useState(2);
-  const [numberOfPages, setNumberOfPages] = useState(1);
-  const [numberOfCollectionsPage, setNumberOfCollectionPage] = useState(10);
-
-  // states
   const [collectionData, setCollectionData] = useState<{
     collections: TYPE_COLLECTIONS[];
     numberOfCollections: number;
   }>({ collections: [], numberOfCollections: 0 });
-  const [curPage, dispatch] = useReducer(paginationReducer, 1);
-  const [isUpdated, setIsUpdated] = useState(false);
-  const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
 
-  async function handleSetIsUpdated() {
-    setIsUpdated(true);
-    await wait(0.3);
-    // reset to other updates later
-    setIsUpdated(false);
+  const numberOfCollectionsPage = numberOfRows * numberOfColumns;
+  const numberOfPages = getNumberOfPages(
+    numberOfCollectionsPage,
+    collectionData.numberOfCollections,
+  );
+
+  // others
+  const [curPage, dispatch] = useReducer(paginationReducer, 1);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
+  const [messageData, setMessageData] =
+    useState<TYPE_DISPLAY_MESSAGE>(undefined);
+
+  // display message for 3 seconds
+  async function displayMessage(msgData: TYPE_DISPLAY_MESSAGE) {
+    setMessageData(msgData);
+    await wait();
+    setMessageData(undefined);
+  }
+
+  function handleSetIsUpdated() {
+    setRefreshKey((prev) => prev + 1);
   }
 
   function handleClickPagination(type: TYPE_ACTION_PAGINATION) {
@@ -75,12 +79,12 @@ export default function FolderPagination({
 
       if (collections) setCollectionData(collections);
     };
+
     fetchCollectionData();
-  }, [curPage, numberOfCollectionsPage, isUpdated]);
+  }, [refreshKey, curPage, numberOfCollectionsPage]);
 
   // Set numberOfColumns when it's rendered
   useEffect(() => {
-    // design
     const getNumberOfColumns = (width: number) => {
       if (width < sm) return 2;
       if (width < md) return 3;
@@ -92,16 +96,8 @@ export default function FolderPagination({
       const clientWidth = document.documentElement.clientWidth;
 
       const numColumns = getNumberOfColumns(clientWidth);
-      const numCollectionsPage = numberOfRows * numColumns;
 
       setNumberOfColumns(numColumns);
-      setNumberOfCollectionPage(numCollectionsPage);
-      setNumberOfPages(
-        getNumberOfPages(
-          numCollectionsPage,
-          collectionData.numberOfCollections,
-        ),
-      );
     };
     handleResize();
 
@@ -112,11 +108,14 @@ export default function FolderPagination({
 
   return (
     <div className="relative flex-[5] w-full h-full flex flex-col items-center overflow-hidden">
+      {messageData && (
+        <PMessage type={messageData.type} message={messageData.message} />
+      )}
       <FolderContainer
         type={type}
         numberOfColumns={numberOfColumns}
         collections={collectionData.collections}
-        isUpdated={isUpdated}
+        refreshKey={refreshKey}
         handleUpdate={handleSetIsUpdated}
         onClickCreate={handleToggleCreateFolder}
         displayMessage={displayMessage}
@@ -142,7 +141,7 @@ function FolderContainer({
   type,
   numberOfColumns,
   collections,
-  isUpdated,
+  refreshKey,
   handleUpdate,
   onClickCreate,
   displayMessage,
@@ -150,7 +149,7 @@ function FolderContainer({
   type: "main" | "addTo";
   numberOfColumns: number;
   collections: TYPE_COLLECTION[];
-  isUpdated: boolean;
+  refreshKey: number;
   handleUpdate: () => void;
   onClickCreate: () => void;
   displayMessage: (msgData: TYPE_DISPLAY_MESSAGE) => void;
@@ -161,18 +160,7 @@ function FolderContainer({
   const [isEdited, setIsEdited] = useState(false);
 
   function handleToggleSelected() {
-    setIsSelected((prev) =>
-      // Reset allSelected and isDeleted data
-      {
-        if (prev) {
-          setIsAllSelected(false);
-          setIsDelete(false);
-          setIsEdited(false);
-        }
-
-        return !prev;
-      },
-    );
+    setIsSelected(!isSelected);
   }
 
   function handleChangeSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
@@ -195,8 +183,22 @@ function FolderContainer({
   }
 
   useEffect(() => {
-    if (isUpdated) (() => handleToggleSelected())();
-  }, [isUpdated]);
+    const setSelectedToFalse = () => setIsSelected(false);
+
+    setSelectedToFalse();
+  }, [refreshKey]);
+
+  useEffect(() => {
+    if (isSelected) return;
+
+    const setAllButtonsToFalse = () => {
+      // Reset allSelected and isDeleted data
+      setIsAllSelected(false);
+      setIsDelete(false);
+      setIsEdited(false);
+    };
+    setAllButtonsToFalse();
+  }, [isSelected]);
 
   return (
     <form className="w-full flex-[4.5] p-[5%] flex flex-col items-center">
@@ -231,7 +233,6 @@ function FolderContainer({
               isAllSelected={isAllSelected}
               isDeleted={isDeleted}
               isEdited={isEdited}
-              // displayMessage={displayMessage}
             />
           ))}
       </ul>
@@ -262,104 +263,92 @@ function Selector({
   onClickEdit: (e: React.MouseEvent<HTMLButtonElement>) => void;
   displayMessage: (msgData: TYPE_DISPLAY_MESSAGE) => void;
 }) {
+  const btnNewSelectClassName =
+    "text-white rounded transition-all duration-300 px-1";
+  const btnEditClassName =
+    "bg-purple-500 text-white py-[1px] px-1 mr-1 rounded";
+
   // action state for update
   const [updateState, updateAction, updateIsPending] = useActionState<
     FormStateCollection,
     FormData
   >(updateCollection, undefined);
-  // use updateState as curUpdateState to modify
-  const [curUpdateState, setCurUpdateState] = useState(updateState);
+  const prevUpdatePendingRef = useRef(false);
+  const lastHandledUpdateStateRef = useRef<FormStateCollection | null>(null);
 
   // action state for delete
   const [deleteState, deleteAction, deleteIsPending] = useActionState<
     FormStateCollection,
     FormData
   >(deleteCollection, undefined);
-  // use deleteState as curDeleteState to modify
-  const [curDeleteState, setCurDeleteState] = useState(deleteState);
-
-  const btnNewSelectClassName =
-    "text-white rounded transition-all duration-300 px-1";
-  const btnEditClassName =
-    "bg-purple-500 text-white py-[1px] px-1 mr-1 rounded";
-
-  // useEffect for update
-  useEffect(() => {
-    (() => setCurUpdateState(updateState))();
-  }, [updateState]);
+  const prevDeletePendingRef = useRef(false);
+  const lastHandledDeleteStateRef = useRef<FormStateCollection | null>(null);
 
   useEffect(() => {
-    if (!curUpdateState && !updateIsPending) {
-      displayMessage(undefined);
-      return;
-    }
+    if (!prevUpdatePendingRef.current && updateIsPending)
+      displayMessage({ type: "pending", message: "Updating collections..." });
 
-    if (updateIsPending) {
-      displayMessage({
-        type: "pending",
-        message: "Updating collections...",
-      });
-      return;
-    }
+    prevUpdatePendingRef.current = updateIsPending;
+  }, [updateIsPending, displayMessage]);
 
-    if (curUpdateState?.error) {
+  useEffect(() => {
+    // if update state was the same as update state that was handled last time
+    if (updateState === lastHandledUpdateStateRef.current || !updateState)
+      return;
+
+    lastHandledUpdateStateRef.current = updateState;
+
+    if (updateState?.error) {
       displayMessage({
         type: "error",
         message:
-          curUpdateState?.error?.message || "Error occured. Plase try again.",
+          updateState?.error?.message || "Error occured. Plase try again.",
       });
       return;
     }
 
-    if (curUpdateState?.message) {
+    if (updateState?.message) {
       displayMessage({
         type: "success",
-        message: curUpdateState?.message || "Collection updated",
+        message: updateState?.message || "Collection updated",
       });
 
       handleUpdate();
-      (() => setCurUpdateState(undefined))();
     }
-  }, [curUpdateState, updateIsPending, displayMessage, handleUpdate]);
-
-  // useEffect for delete
-  useEffect(() => (() => setCurDeleteState(deleteState))(), [deleteState]);
-
-  // when clicking trash button, delete keeps rendering, fix next
-  useEffect(() => {
-    if (!curDeleteState && !deleteIsPending) displayMessage(undefined);
-  }, [curDeleteState, deleteIsPending, displayMessage]);
+  }, [updateState, handleUpdate, displayMessage]);
 
   useEffect(() => {
-    if (!deleteIsPending) return;
+    if (!prevDeletePendingRef.current && deleteIsPending)
+      displayMessage({ type: "pending", message: "Deleting collection..." });
 
-    displayMessage({
-      type: "pending",
-      message: "Deleting collection...",
-    });
+    prevDeletePendingRef.current = deleteIsPending;
   }, [deleteIsPending, displayMessage]);
 
   useEffect(() => {
-    if (!curDeleteState?.error) return;
+    // if delete state was the same as delete state that was handled last time
+    if (lastHandledDeleteStateRef.current === deleteState || !deleteState)
+      return;
 
-    displayMessage({
-      type: "error",
-      message:
-        curDeleteState?.error?.message || "Error occured. Please try again.",
-    });
-  }, [curDeleteState?.error, displayMessage]);
+    lastHandledDeleteStateRef.current = deleteState;
 
-  useEffect(() => {
-    if (!curDeleteState?.message) return;
+    if (deleteState?.error) {
+      displayMessage({
+        type: "error",
+        message:
+          deleteState.error.message || "Error occured. Please try again.",
+      });
+      return;
+    }
 
-    displayMessage({
-      type: "success",
-      message: curDeleteState?.message || "Collection deleted",
-    });
+    if (deleteState?.message) {
+      displayMessage({
+        type: "success",
+        message: deleteState.message || "Collection deleted",
+      });
 
-    handleUpdate();
-    (() => setCurDeleteState(undefined))();
-  }, [curDeleteState?.message, displayMessage, handleUpdate]);
+      handleUpdate();
+    }
+  }, [deleteState, deleteIsPending, displayMessage, handleUpdate]);
 
   return (
     <div className="w-[92%] flex flex-row justify-end gap-2 text-sm items-center">
@@ -376,38 +365,40 @@ function Selector({
             </button>
           ) : (
             <>
-              {!isEdited ? (
-                <button
-                  type="button"
-                  className={btnEditClassName}
-                  onClick={onClickEdit}
-                >
-                  Edit name
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className={btnEditClassName}
-                  formAction={updateAction}
-                >
-                  Finish editing
-                </button>
-              )}
-              {!isDeleted ? (
-                <button
-                  type="button"
-                  className="bg-orange-500 text-white py-[1px] px-1 mr-1 rounded"
-                  onClick={onClickDelete}
-                >
-                  Delete
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
-                  formAction={deleteAction}
-                ></button>
-              )}
+              {!isDeleted &&
+                (!isEdited ? (
+                  <button
+                    type="button"
+                    className={btnEditClassName}
+                    onClick={onClickEdit}
+                  >
+                    Edit name
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className={btnEditClassName}
+                    formAction={updateAction}
+                  >
+                    Finish editing
+                  </button>
+                ))}
+              {!isEdited &&
+                (!isDeleted ? (
+                  <button
+                    type="button"
+                    className="bg-orange-500 text-white py-[1px] px-1 mr-1 rounded"
+                    onClick={onClickDelete}
+                  >
+                    Delete
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
+                    formAction={deleteAction}
+                  ></button>
+                ))}
               {(isEdited || isDeleted) && (
                 <label className="w-fit h-full flex flex-row items-center">
                   Select all:&nbsp;
@@ -441,7 +432,6 @@ function Folder({
   isAllSelected,
   isDeleted,
   isEdited,
-  // displayMessage,
 }: {
   i: number;
   data: TYPE_COLLECTION;
@@ -450,7 +440,6 @@ function Folder({
   isAllSelected: boolean;
   isDeleted: boolean;
   isEdited: boolean;
-  // displayMessage?: (msg: string) => void;
 }) {
   const [isChecked, dispatch] = useReducer(checkboxReducer, false);
   const [name, setName] = useState(data.name);
@@ -484,7 +473,7 @@ function Folder({
   return (
     <div className="w-[90%] h-[85%] flex flex-row gap-2">
       {/* Remove the first one (All) collection so it cannot be deleted or edited */}
-      {i !== 0 && isSelected && (
+      {i !== 0 && (isEdited || isDeleted) && (
         <input
           type="checkbox"
           // use name only for deleting collections
