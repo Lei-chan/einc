@@ -104,8 +104,10 @@ function ViaUserInfo({
           errorMessage={state?.errors?.email}
         />
         <p className={`${pClassName} mt-2`}>Password</p>
-        <PasswordInput errorMessage={state?.errors?.password} />
-        <input name="isGoogleConnected" defaultValue={"false"} hidden></input>
+        <PasswordInput
+          showExplanation={typeToDisplay === "Sign up" ? true : false}
+          errorMessage={state?.errors?.password}
+        />
         <button
           type="submit"
           className="w-fit text-sm text-white px-1 py-[1px] rounded mt-2 transition-all duration-150 bg-green-400 hover:bg-yellow-400"
@@ -147,6 +149,7 @@ function ViaGoogle({
   return (
     <form action={action} className="w-full p-3 flex flex-col items-center">
       <p className="mb-3">{typeToDisplay} via Google</p>
+      <p className="text-sm mb-2">Please select your account</p>
       <GoogleLogin
         onSuccess={async (credentialResponse) => {
           try {
@@ -183,7 +186,6 @@ function ViaGoogle({
         }}
       />
       <input name="email" value={email} hidden readOnly></input>
-      <input name="isGoogleConnected" defaultValue={"true"} hidden></input>
       {state?.errors?.email && (
         <ErrorMessageInput errorMessage={state?.errors?.email} />
       )}

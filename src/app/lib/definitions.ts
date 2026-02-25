@@ -26,8 +26,8 @@ export const SignupSchema = z.object({
   collections: z.array(
     z.object({
       name: z.string().trim(),
-      collectionId: z.string(),
       numberOfWords: z.number(),
+      allWords: z.boolean().optional(),
     }),
   ),
 });
@@ -57,12 +57,12 @@ export const updatePasswordSchema = z.object({
 export const WordSchema = z.object({
   userId: z.string(),
   collectionId: z.string(),
-  name: z.string().trim(),
+  name: z.string().trim().min(1),
   audio: z
     .object({ name: z.string().trim(), data: z.instanceof(ArrayBuffer) })
     .optional(),
+  definitions: z.array(z.string().trim().min(1)),
   examples: z.array(z.string().trim()),
-  definitions: z.array(z.string().trim()),
   imageName: z
     .object({ name: z.string().trim(), data: z.instanceof(ArrayBuffer) })
     .optional(),
@@ -111,6 +111,18 @@ export type FormStateCollection =
       errors?: {
         name?: string[];
       };
+      error?: { status?: number; message?: string };
+      message?: string;
+    }
+  | undefined;
+
+export type FormStateWord =
+  | {
+      // errors?: {
+      //   collectionId?: string[];
+      //   name?: string[];
+      //   definitions?: string[];
+      // };
       error?: { status?: number; message?: string };
       message?: string;
     }

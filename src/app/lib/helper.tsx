@@ -1,5 +1,9 @@
 import Resizer from "react-image-file-resizer";
-import { TYPE_WORD, TYPE_WORD_TO_DISPLAY } from "./config/type";
+import {
+  TYPE_WORD,
+  TYPE_WORD_BEFORE_SENT,
+  TYPE_WORD_TO_DISPLAY,
+} from "./config/type";
 import users from "../ModelsDev/User";
 import wordsDev from "../ModelsDev/UserWord";
 import {
@@ -48,11 +52,11 @@ export const getWordFromCammelCase = (word: string) =>
     )
     .join("");
 
-export const resizeImages = (imageFiles: File[]) => {
+export const resizeImages = (imageFiles: (File | undefined)[]) => {
   const resizePromises = imageFiles.map(
     (file) =>
       new Promise((resolve) => {
-        if (!file || !file.name) {
+        if (!file?.size) {
           resolve(undefined);
           return;
         }
@@ -76,7 +80,7 @@ export const resizeImages = (imageFiles: File[]) => {
 const convertFilesToBuffersWithNames = async (files: (File | undefined)[]) => {
   try {
     const bufferPromises = files.map((file) =>
-      file ? file.arrayBuffer() : undefined,
+      file?.size ? file.arrayBuffer() : undefined,
     );
 
     const buffers = await Promise.all(bufferPromises);
@@ -86,6 +90,38 @@ const convertFilesToBuffersWithNames = async (files: (File | undefined)[]) => {
     });
 
     return buffersWithNames;
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const convertWordDataToSendServer = async (
+  wordData: TYPE_WORD_BEFORE_SENT,
+) => {
+  try {
+    console.log(wordData);
+    // make image size smaller
+    const resizedImages = (await resizeImages([
+      wordData.imageName,
+      wordData.imageDefinitions,
+    ])) as (File | undefined)[];
+
+    // convert files into buffer
+    const [audioBuffer, imageNameBuffer, imageDefinitionsBuffer] =
+      await convertFilesToBuffersWithNames([wordData.audio, ...resizedImages]);
+
+    return {
+      userId: wordData.userId,
+      collectionId: wordData.collectionId,
+      name: wordData.name.trim(),
+      audio: audioBuffer,
+      definitions: wordData.definitions.split("\n"),
+      examples: wordData.examples.split("\n"),
+      imageName: imageNameBuffer,
+      imageDefinitions: imageDefinitionsBuffer,
+      status: wordData.status,
+      nextReviewAt: wordData.nextReviewAt,
+    };
   } catch (err) {
     throw err;
   }

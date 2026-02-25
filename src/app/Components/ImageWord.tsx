@@ -3,24 +3,23 @@ import { useCallback, useState } from "react";
 
 export default function ImageWord({
   type,
-  imageName,
+  index,
+  imageTitle,
   onClickRemove,
 }: {
   type: string;
-  imageName: string;
+  index?: number;
+  imageTitle: string;
   onClickRemove?: (type: string) => void;
 }) {
   const [inputValue, setInputValue] = useState("");
-  const [imgName, setImgName] = useState(imageName);
+  const [imgName, setImgName] = useState(imageTitle);
 
-  const getImageName = useCallback(
-    () =>
-      `image ${type}`
-        .split(" ")
-        .map((t, i) => (i !== 0 ? t.at(0)?.toUpperCase() + t.slice(1) : t))
-        .join(""),
-    [type],
-  );
+  const cammeledImageTitle =
+    `image ${type}`
+      .split(" ")
+      .map((t, i) => (i !== 0 ? t.at(0)?.toUpperCase() + t.slice(1) : t))
+      .join("") + ` ${index || index === 0 ? index : ""}`;
 
   function handleChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
     setInputValue(e.currentTarget.value);
@@ -41,7 +40,7 @@ export default function ImageWord({
           <input
             type="file"
             value={inputValue}
-            name={getImageName()}
+            name={cammeledImageTitle}
             accept="image/*"
             className="w-[75%] border-none my-1 p-0 text-sm cursor-pointer rounded-none"
             onChange={handleChangeInput}
@@ -53,7 +52,7 @@ export default function ImageWord({
             className="h-fit bg-purple-800 text-white px-1 py-[2px] rounded text-xs"
             onClick={() => {
               handleRemoveImage();
-              if (onClickRemove) onClickRemove(getImageName());
+              if (onClickRemove) onClickRemove(cammeledImageTitle);
             }}
           >
             Remove

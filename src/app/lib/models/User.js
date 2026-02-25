@@ -9,9 +9,7 @@ const UserSchema = new mongoose.Schema(
     },
     password: { type: {}, select: false },
     isGoogleConnected: Boolean,
-    collections: [
-      { name: String, collectionId: String, numberOfWords: Number },
-    ],
+    collections: [{ name: String, numberOfWords: Number, allWords: {} }],
   },
   { timestamps: true },
 );

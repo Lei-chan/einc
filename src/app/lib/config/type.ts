@@ -34,7 +34,10 @@ export type TYPE_COLLECTION = {
   _id?: string;
   name: string;
   numberOfWords: number;
+  allWords?: boolean;
 };
+
+export type TYPE_COLLECTIONS = TYPE_COLLECTION[];
 
 export type TYPE_DICTIONARY = {
   name: string;
@@ -46,24 +49,28 @@ export type TYPE_DICTIONARY = {
 };
 
 export type TYPE_WORD_BEFORE_SENT = {
+  userId: string;
+  collectionId: string;
   name: string;
   audio?: File | undefined;
-  definitions: string[];
-  examples: string[];
+  definitions: string;
+  examples: string;
   imageName?: File | undefined;
   imageDefinitions?: File | undefined;
+  status: number;
+  nextReviewAt: string;
 };
 
 export type TYPE_WORD = {
   _id: string;
   userId: string;
+  collectionId: string;
   name: string;
   audio?: { name: string; buffer: ArrayBuffer } | undefined;
   definitions: string[];
-  examples: string[];
+  examples?: string[];
   imageName?: { name: string; buffer: ArrayBuffer } | undefined;
   imageDefinitions?: { name: string; buffer: ArrayBuffer } | undefined;
-  collectionId: string;
   status: number;
   nextReviewAt: string;
 };
@@ -80,12 +87,6 @@ export type TYPE_WORD_TO_DISPLAY = {
   collectionId: string;
   status: number;
   nextReviewAt: string;
-};
-
-export type TYPE_COLLECTIONS = {
-  name: string;
-  collectionId: string;
-  numberOfWords: number;
 };
 
 export type TYPE_ACTION_PAGINATION = "add" | "reduce" | "reset";

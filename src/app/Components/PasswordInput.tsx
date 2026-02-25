@@ -2,14 +2,20 @@
 import { useState } from "react";
 import { getWordFromCammelCase } from "../lib/helper";
 import ErrorMessageInput from "./ErrorMessageInput";
+import {
+  MIN_LENGTH_PASSWORD,
+  MIN_NUMBER_EACH_PASSWORD,
+} from "../lib/config/settings";
 
 export default function PasswordInput({
   name = "password",
   classNameOptions,
+  showExplanation,
   errorMessage,
 }: {
   name?: string;
   classNameOptions?: string;
+  showExplanation: boolean;
   errorMessage: string[] | undefined;
 }) {
   const buttonClassName =
@@ -22,8 +28,15 @@ export default function PasswordInput({
   }
 
   return (
-    <>
-      <div className="relative w-[12rem] flex flex-row items-center">
+    <div className="w-[12rem]">
+      {showExplanation && (
+        <p className="w-full text-sm text-left mb-2 leading-tight text-amber-800/90">
+          Please use more than {MIN_LENGTH_PASSWORD} characters with at least{" "}
+          {MIN_NUMBER_EACH_PASSWORD} uppsercase letter, lowercase letter, and
+          digit.
+        </p>
+      )}
+      <div className="relative w-full flex flex-row items-center">
         <input
           name={name}
           type={isVisible ? "text" : "password"}
@@ -45,6 +58,6 @@ export default function PasswordInput({
         )}
       </div>
       {errorMessage && <ErrorMessageInput errorMessage={errorMessage} />}
-    </>
+    </div>
   );
 }

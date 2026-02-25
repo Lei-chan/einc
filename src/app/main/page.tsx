@@ -5,11 +5,8 @@ import Link from "next/link";
 import Logo from "../Components/Logo";
 import LinkAddVocab from "../Components/LinkAddVocab";
 import FolderPagination from "../Components/FolderPagination";
+// methods
 import { logout } from "@/app/lib/dal";
-import { useState } from "react";
-import { TYPE_DISPLAY_MESSAGE, TYPE_MESSAGE } from "../lib/config/type";
-import PMessage from "../Components/PMessage";
-import { wait } from "../lib/helper";
 
 export default function Main() {
   return (

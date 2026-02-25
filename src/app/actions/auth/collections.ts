@@ -7,7 +7,6 @@ import { verifySession } from "../../lib/dal";
 import { getError } from "../../lib/errorHandler";
 // types
 import { FormStateCollection } from "../../lib/definitions";
-import { error } from "console";
 import { TYPE_COLLECTION } from "@/app/lib/config/type";
 
 export async function createCollection(
@@ -37,9 +36,9 @@ export async function updateCollection(
   formData: FormData,
 ) {
   try {
-    console.log("update");
     const formDataArr = [...formData];
-    if (!formDataArr.length) return;
+    if (!formDataArr.length)
+      return getError("other", "Please select at least one collection.");
 
     const validFormDataArr = [...formData].filter((dataArr) =>
       String(dataArr[1]).trim(),
@@ -81,7 +80,8 @@ export async function deleteCollection(
 ) {
   try {
     const formDataArr = [...formData];
-    if (!formDataArr.length) return;
+    if (!formDataArr.length)
+      return getError("other", "Please select at least one collection.");
 
     const collectionIds = formDataArr.map((dataArr) => dataArr[0]);
 

@@ -1,7 +1,7 @@
 import { ZodSafeParseResult } from "zod";
 import { TYPE_ERROR } from "./config/type";
 
-const isError = (err: unknown): err is TYPE_ERROR => {
+export const isError = (err: unknown): err is TYPE_ERROR => {
   return err !== undefined;
 };
 

@@ -21,7 +21,7 @@ export async function signupViaUserInfo(
       email: formData.get("email"),
       password: formData.get("password"),
       isGoogleConnected: false,
-      collections: [{ name: "All", numberOfWords: 0 }],
+      collections: [{ name: "All", numberOfWords: 0, allWords: true }],
     });
 
     if (!validatedFields.success)
@@ -54,7 +54,7 @@ export async function signupViaGoogle(
     const validatedFields = SignupSchema.safeParse({
       email: formData.get("email"),
       isGoogleConnected: true,
-      collections: [{ name: "All", numberOfWords: 0 }],
+      collections: [{ name: "All", numberOfWords: 0, allWords: true }],
     });
 
     if (!validatedFields.success)

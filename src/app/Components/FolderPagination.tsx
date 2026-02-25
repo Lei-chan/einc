@@ -12,7 +12,6 @@ import {
   TYPE_COLLECTION,
   TYPE_COLLECTIONS,
   TYPE_DISPLAY_MESSAGE,
-  TYPE_MESSAGE,
 } from "../lib/config/type";
 import { getNumberOfPages, wait } from "../lib/helper";
 import Link from "next/link";
@@ -226,7 +225,6 @@ function FolderContainer({
           collections.map((collection, i) => (
             <Folder
               key={nanoid()}
-              i={i}
               type={type}
               data={collection}
               isSelected={isSelected}
@@ -425,7 +423,6 @@ function Selector({
 }
 
 function Folder({
-  i,
   data,
   type,
   isSelected,
@@ -433,7 +430,6 @@ function Folder({
   isDeleted,
   isEdited,
 }: {
-  i: number;
   data: TYPE_COLLECTION;
   type: "main" | "addTo";
   isSelected: boolean;
@@ -473,7 +469,7 @@ function Folder({
   return (
     <div className="w-[90%] h-[85%] flex flex-row gap-2">
       {/* Remove the first one (All) collection so it cannot be deleted or edited */}
-      {i !== 0 && (isEdited || isDeleted) && (
+      {!data.allWords && (isEdited || isDeleted) && (
         <input
           type="checkbox"
           // use name only for deleting collections
@@ -497,7 +493,7 @@ function Folder({
           </button>
         )}
         {/* Remove the first one (All) collection so it cannot be edited */}
-        {i !== 0 && isEdited && isChecked ? (
+        {!data.allWords && isEdited && isChecked ? (
           <input
             name={data._id}
             placeholder="new name"

@@ -33,11 +33,10 @@ export const getUser = cache(async () => {
 });
 
 export const getCollections = cache(async () => {
-  const session = await verifySession();
-  if (!session) return null;
+  const { isAuth, userId } = await verifySession();
   try {
     await dbConnect();
-    const user = await User.findById(session.userId).select("collections");
+    const user = await User.findById(userId).select("collections");
 
     const userObject = JSON.parse(JSON.stringify(user));
 
