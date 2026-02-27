@@ -20,8 +20,11 @@ import {
 import { Line, Pie } from "react-chartjs-2";
 import { getUserDev, getUserWordsDev } from "@/app/lib/helper";
 import { use, useEffect, useState } from "react";
+import { getUserWordsStatuses } from "@/app/lib/dal";
+import { TYPE_DISPLAY_MESSAGE } from "@/app/lib/config/type";
+import PMessage from "@/app/Components/PMessage";
 
-export default function Folder({
+export default function Collection({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -75,9 +78,9 @@ function LinkContent({ name }: { name: string }) {
 }
 
 function Graphs({ collectionId }: { collectionId: string }) {
-  const [wordStatusData, setWordStatusData] = useState<number[]>(
-    new Array(6).fill(0),
-  );
+  const [statuses, setStatuses] = useState<number[]>();
+  const [messageData, setMessageData] = useState<TYPE_DISPLAY_MESSAGE>();
+
   ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -89,45 +92,41 @@ function Graphs({ collectionId }: { collectionId: string }) {
     Legend,
   );
 
-  const accessToken = "iiii";
-
   useEffect(() => {
-    // I will connect it to server with await later
-    const setUserWordStates = async () => {
-      try {
-        const user = getUserDev(accessToken);
-        if (!user) throw new Error("User not found");
-
-        const userWords = getUserWordsDev(user._id, collectionId);
-
-        setWordStatusData((prev) => {
-          const newStatus = [...prev];
-          userWords.forEach((word) => {
-            newStatus[word.status] += 1;
-          });
-          return newStatus;
+    const fetchStatuses = async () => {
+      const statuses = await getUserWordsStatuses(collectionId);
+      if (!statuses) {
+        setMessageData({
+          type: "error",
+          message: "Error occured. Please try again this later 🙇‍♂️",
         });
-      } catch (err: unknown) {
-        console.error("Error", err);
+        return;
       }
+      setStatuses(statuses);
     };
-
-    (async () => await setUserWordStates())();
-  }, []);
+    fetchStatuses();
+  }, [collectionId]);
 
   return (
     <div className="w-full h-fit bg-gradient-to-tl from-red-600/50 to-red-400/50 px-3 py-5">
       <h2 className="text-xl">Your Progress</h2>
-      <div className="relative w-full h-fit bg-white rounded flex flex-col gap-8 mt-5 py-3 items-center">
-        <PieGraph wordStatusData={wordStatusData} />
-        {/* <LineGraph wordStatusData={wordStatusData} /> */}
-      </div>
+      {messageData && (
+        <PMessage type={messageData.type} message={messageData.message} />
+      )}
+      {statuses && statuses.length === 0 && (
+        <p className="w-full text-center mt-2">No words added yet</p>
+      )}
+      {statuses && statuses.length > 0 && (
+        <div className="relative w-full h-fit bg-white rounded flex flex-col gap-8 mt-5 py-3 items-center">
+          <PieGraph statuses={statuses} />
+          {/* <LineGraph wordStatusData={wordStatusData} /> */}
+        </div>
+      )}
     </div>
   );
 }
 
-// Change the data later
-function PieGraph({ wordStatusData }: { wordStatusData: number[] }) {
+function PieGraph({ statuses }: { statuses: number[] }) {
   return (
     <Pie
       options={{
@@ -151,7 +150,7 @@ function PieGraph({ wordStatusData }: { wordStatusData: number[] }) {
         datasets: [
           {
             label: "Number of words",
-            data: wordStatusData,
+            data: statuses,
             backgroundColor: [
               "rgba(255, 99, 132, 0.9)",
               "rgba(255, 206, 86, 0.9)",

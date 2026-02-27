@@ -33,7 +33,7 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
 
   const [numberOfColumns, setNumberOfColumns] = useState(2);
   const [collectionData, setCollectionData] = useState<{
-    collections: TYPE_COLLECTIONS[];
+    collections: TYPE_COLLECTIONS;
     numberOfCollections: number;
   }>({ collections: [], numberOfCollections: 0 });
 
@@ -76,7 +76,13 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
 
       const collections = await getCollectionDataCurPage(indexFrom, indexTo);
 
-      if (collections) setCollectionData(collections);
+      if (!collections)
+        return setMessageData({
+          type: "error",
+          message: "Error occured. Please try again this later 🙇‍♂️",
+        });
+
+      setCollectionData(collections);
     };
 
     fetchCollectionData();
@@ -147,7 +153,7 @@ function FolderContainer({
 }: {
   type: "main" | "addTo";
   numberOfColumns: number;
-  collections: TYPE_COLLECTION[];
+  collections: TYPE_COLLECTIONS;
   refreshKey: number;
   handleUpdate: () => void;
   onClickCreate: () => void;
@@ -468,7 +474,7 @@ function Folder({
 
   return (
     <div className="w-[90%] h-[85%] flex flex-row gap-2">
-      {/* Remove the first one (All) collection so it cannot be deleted or edited */}
+      {/* Remove the collection 'All' so it cannot be deleted or edited */}
       {!data.allWords && (isEdited || isDeleted) && (
         <input
           type="checkbox"
@@ -480,7 +486,7 @@ function Folder({
         ></input>
       )}
       <Link
-        href={`/folder/${data._id}`}
+        href={`/collection/${data._id}`}
         className={`relative w-full h-full bg-gradient-to-l from-red-500 to-orange-400 hover:from-orange-500 hover:to-yellow-400 rounded flex flex-row items-center text-center shadow-sm shadow-black/30 px-2 gap-1 overflow-hidden`}
       >
         {type === "addTo" && (

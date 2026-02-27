@@ -1,5 +1,9 @@
 "use server";
-import { TYPE_COLLECTION } from "@/app/lib/config/type";
+import {
+  TYPE_COLLECTIONS,
+  TYPE_WORD,
+  TYPE_WORD_BEFORE_SENT,
+} from "@/app/lib/config/type";
 import { verifySession } from "@/app/lib/dal";
 import dbConnect from "@/app/lib/database";
 import { FormStateWord, WordSchema } from "@/app/lib/definitions";
@@ -8,6 +12,34 @@ import { convertWordDataToSendServer } from "@/app/lib/helper";
 import { getNextReviewDate } from "@/app/lib/logics/quiz";
 import User from "@/app/lib/models/User";
 import Word from "@/app/lib/models/Word";
+
+const validateWord = (wordData: TYPE_WORD) => {
+  const result = WordSchema.safeParse(wordData);
+  if (result.success) return;
+
+  const fieldErrors = getError("zodError", "", undefined, result) as {
+    errors: {
+      name?: string[];
+      definitions?: string[];
+      collectionId?: string[];
+    };
+  };
+
+  const nameError = fieldErrors.errors?.name ? "Word name is required" : "";
+  const definitionsError = fieldErrors.errors.definitions
+    ? "Definitions are required"
+    : "";
+  const collectionIdError = fieldErrors.errors.collectionId
+    ? "Collection id is required"
+    : "";
+
+  const errors = [nameError, definitionsError, collectionIdError].filter(
+    (err) => err,
+  );
+  const err = new Error(errors.join(", "));
+  err.name = "zodError";
+  throw err;
+};
 
 export async function addWords(formState: FormStateWord, formData: FormData) {
   const { isAuth, userId } = await verifySession();
@@ -20,8 +52,6 @@ export async function addWords(formState: FormStateWord, formData: FormData) {
     const lastElementProperty = String(formDataArr.at(-1)?.at(0));
     // take the last letter(index) that is put on the key
     const lastWordIndex = Number(lastElementProperty.at(-1));
-
-    console.log(lastWordIndex);
 
     // Add 1 to index because index is 0 base
     const emptyArrToSetWords = new Array(lastWordIndex + 1).fill("");
@@ -50,52 +80,33 @@ export async function addWords(formState: FormStateWord, formData: FormData) {
     );
 
     // check if each data meets zod requirements
-    wordDataToSendServer.forEach((data) => {
-      const result = WordSchema.safeParse(data);
-      if (!result.success) {
-        const fieldErrors = getError("zodError", "", undefined, result) as {
-          errors: {
-            name?: string[];
-            definitions?: string[];
-            collectionId?: string[];
-          };
-        };
-
-        const nameError = fieldErrors.errors?.name
-          ? "Word name is required"
-          : "";
-        const definitionsError = fieldErrors.errors.definitions
-          ? "Definitions are required"
-          : "";
-        const collectionIdError = fieldErrors.errors.collectionId
-          ? "Collection id is required"
-          : "";
-
-        const errors = [nameError, definitionsError, collectionIdError].filter(
-          (err) => err,
-        );
-        const err = new Error(errors.join(", "));
-        err.name = "zodError";
-        throw err;
-      }
-    });
+    wordDataToSendServer.forEach((data) => validateWord(data));
 
     await dbConnect();
-    // const createWords = await Promise.all(
-    //   wordDataToSendServer.map((data) => Word.create(data)),
-    // );
-
-    // console.log(createWords);
+    // create words
+    await Promise.all(wordDataToSendServer.map((data) => Word.create(data)));
 
     const user = await User.findById(userId).select("collections");
     if (!user) return getError("notFound");
+    const collections: TYPE_COLLECTIONS = user.collections;
 
+    // get all collection ids
     const collectionIds = wordDataToSendServer.map((data) => data.collectionId);
-    const uniqueWordCollectionIds = new Set(collectionIds);
-    console.log(uniqueWordCollectionIds);
 
-    // collectionIds.forEach(id => )
-    // add collection numberOfWord next!
+    // add the number of words added to each collection numberOfWords
+    collectionIds.forEach((id) => {
+      // add 1 to the collection which a new word is added if the selected collection was not the collection 'All'
+      const collection = collections.find(
+        (col) => !col.allWords && String(col._id) === id,
+      );
+      if (collection) collection.numberOfWords += 1;
+
+      // add 1 to the collection 'All'
+      const collectionAll = collections.find((col) => col.allWords);
+      if (collectionAll) collectionAll.numberOfWords += 1;
+    });
+
+    await user.save();
 
     return {
       message: `Word${lastWordIndex + 1 === 1 ? "" : "s"} created successfully`,
@@ -109,5 +120,39 @@ export async function addWords(formState: FormStateWord, formData: FormData) {
       "Error occured.  Please try again this later 🙇‍♂️",
       err,
     );
+  }
+}
+
+export async function updateWord(
+  formState: FormStateWord,
+  wordData: TYPE_WORD_BEFORE_SENT,
+) {
+  const { isAuth, userId } = await verifySession();
+  try {
+    const wordDataWithUserId = { userId: String(userId), ...wordData };
+    // separate _id and other properties to update (because _id cannot be modified)
+    const { _id, ...others } =
+      await convertWordDataToSendServer(wordDataWithUserId);
+
+    // validate with zod validation
+    validateWord(others);
+
+    await dbConnect();
+    await Word.findByIdAndUpdate(_id, others);
+
+    return { message: "Word updated successfully" };
+  } catch (err: unknown) {
+    return getError("other", "", err);
+  }
+}
+
+export async function deleteWords(
+  formState: FormStateWord,
+  formData: FormData,
+) {
+  try {
+    console.log([...formData]);
+  } catch (err: unknown) {
+    return getError("other", "", err);
   }
 }

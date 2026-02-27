@@ -49,20 +49,21 @@ export type TYPE_DICTIONARY = {
 };
 
 export type TYPE_WORD_BEFORE_SENT = {
-  userId: string;
+  _id?: string;
+  userId?: string;
   collectionId: string;
   name: string;
-  audio?: File | undefined;
+  audio?: File;
   definitions: string;
   examples: string;
-  imageName?: File | undefined;
-  imageDefinitions?: File | undefined;
+  imageName?: File;
+  imageDefinitions?: File;
   status: number;
   nextReviewAt: string;
 };
 
 export type TYPE_WORD = {
-  _id: string;
+  _id?: string;
   userId: string;
   collectionId: string;
   name: string;

@@ -1,21 +1,19 @@
 "use client";
-import {
-  useActionState,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useActionState, useEffect, useState } from "react";
+// components
 import ButtonPlus from "@/app/Components/ButtonPlus";
-import { nanoid } from "nanoid";
-import { getSubmittedWordData, wait } from "../lib/helper";
 import ImageWord from "../Components/ImageWord";
 import AudioWord from "../Components/AudioWord";
-import { getCollections } from "../lib/dal";
-import { TYPE_COLLECTIONS, TYPE_DISPLAY_MESSAGE } from "../lib/config/type";
 import PMessage from "../Components/PMessage";
+// methods
+import { getCollections } from "../lib/dal";
 import { addWords } from "../actions/auth/words";
+import { wait } from "../lib/helper";
+// types
+import { TYPE_COLLECTIONS, TYPE_DISPLAY_MESSAGE } from "../lib/config/type";
 import { FormStateWord } from "../lib/definitions";
+// libraries
+import { nanoid } from "nanoid";
 
 export default function Add() {
   const [vocabKeys, setVocabKeys] = useState([{ id: nanoid() }]);
@@ -31,14 +29,6 @@ export default function Add() {
 
   const [isDictionaryOpen, setIsDectionaryOpen] = useState(false);
   const [dictionaryIndex, setDictionaryIndex] = useState<number | null>(null);
-  // const [allVocabData, setAllVocabData] = useState<object[] | []>([]);
-  // const [isSubmitted, setIsSubmitted] = useState(false);
-
-  async function displayMessage(msgData: TYPE_DISPLAY_MESSAGE) {
-    setMessageData(msgData);
-    await wait();
-    setMessageData(undefined);
-  }
 
   function handleClickPlus() {
     setVocabKeys((prev) => [...prev, { id: nanoid() }]);
@@ -57,31 +47,20 @@ export default function Add() {
     setIsDectionaryOpen(false);
   }
 
-  // const collectAllData = useCallback((data: object) => {
-  //   setAllVocabData((prev) => [...prev, data]);
-  // }, []);
-
-  // function handleClickSubmit() {
-  //   setIsSubmitted(true);
-  // }
-
   useEffect(() => {
     const fetchCollections = async () => {
       const data = await getCollections();
+      if (!data)
+        return setMessageData({
+          type: "error",
+          message: "Error occured. Please try again this later 🙇‍♂️",
+        });
+
       setCollections(data);
     };
 
     fetchCollections();
   }, []);
-
-  // When all Word data is collected, send it to the server
-  // useEffect(() => {
-  //   function handleSubmitData() {
-  //     console.log(allVocabData);
-  //   }
-
-  //   if (allVocabData.length === vocabKeys.length) handleSubmitData();
-  // }, [allVocabData, vocabKeys]);
 
   return (
     <form
@@ -101,10 +80,8 @@ export default function Add() {
           key={keyObj.id}
           i={i}
           collections={collections}
-          // isSubmitted={isSubmitted}
           onClickDelete={() => handleClickDelete(i)}
           onClickOpenDictionary={() => handleOpenDictionary(i)}
-          // collectAllData={collectAllData}
         />
       ))}
       <div className="mt-11">
@@ -114,7 +91,6 @@ export default function Add() {
         <button
           type="submit"
           className="bg-green-400 p-1 shadow-sm shadow-black/20 rounded text-white transition-all duration-200 hover:-translate-y-[1px] hover:bg-yellow-400"
-          // onClick={handleClickSubmit}
         >
           Submit
         </button>
@@ -124,38 +100,17 @@ export default function Add() {
 }
 
 function Word({
-  // isSubmitted,
   i,
   collections,
   onClickDelete,
   onClickOpenDictionary,
-  // collectAllData,
 }: {
-  // isSubmitted: boolean;
   i: number;
   collections: TYPE_COLLECTIONS | undefined;
   onClickDelete: () => void;
   onClickOpenDictionary: () => void;
-  // collectAllData: (data: object) => void;
 }) {
-  // const formRef = useRef<HTMLFormElement>(null);
-  const textareaClassName = "w-[65%]";
-
-  // useEffect(() => {
-  //   async function sendDataToParent() {
-  //     try {
-  //       const target = formRef.current;
-  //       const wordData = await getSubmittedWordData(target);
-  //       if (!wordData) return;
-
-  //       collectAllData(wordData);
-  //     } catch (err: unknown) {
-  //       console.error("Error", err);
-  //     }
-  //   }
-
-  //   if (isSubmitted) sendDataToParent();
-  // }, [isSubmitted, collectAllData]);
+  const textareaClassName = "w-[65%] aspect-[1/0.4] leading-tight text-[15px]";
 
   return (
     <div className="relative w-[90%] h-fit bg-gradient-to-l from-red-500 to-yellow-500 rounded-md shadow-md shadow-black/20 p-3">

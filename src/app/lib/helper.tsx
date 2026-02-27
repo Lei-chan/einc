@@ -11,6 +11,7 @@ import {
   MIN_NUMBER_EACH_PASSWORD,
   PASSWORD_REGEX,
 } from "./config/settings";
+import { getNextReviewDate } from "./logics/quiz";
 
 export const getRandomNumber = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -86,7 +87,7 @@ const convertFilesToBuffersWithNames = async (files: (File | undefined)[]) => {
     const buffers = await Promise.all(bufferPromises);
     // Add file names to buffers
     const buffersWithNames = buffers.map((buffer, i) => {
-      return buffer ? { name: files[i]?.name, buffer } : undefined;
+      return buffer ? { name: files[i]?.name || "", buffer } : undefined;
     });
 
     return buffersWithNames;
@@ -97,9 +98,8 @@ const convertFilesToBuffersWithNames = async (files: (File | undefined)[]) => {
 
 export const convertWordDataToSendServer = async (
   wordData: TYPE_WORD_BEFORE_SENT,
-) => {
+): Promise<TYPE_WORD> => {
   try {
-    console.log(wordData);
     // make image size smaller
     const resizedImages = (await resizeImages([
       wordData.imageName,
@@ -111,52 +111,17 @@ export const convertWordDataToSendServer = async (
       await convertFilesToBuffersWithNames([wordData.audio, ...resizedImages]);
 
     return {
-      userId: wordData.userId,
+      ...(wordData._id ? { _id: wordData._id } : {}),
+      userId: wordData.userId || "",
       collectionId: wordData.collectionId,
       name: wordData.name.trim(),
       audio: audioBuffer,
-      definitions: wordData.definitions.split("\n"),
-      examples: wordData.examples.split("\n"),
+      definitions: wordData.definitions.split("\n").filter((def) => def),
+      examples: wordData.examples.split("\n").filter((exam) => exam),
       imageName: imageNameBuffer,
       imageDefinitions: imageDefinitionsBuffer,
       status: wordData.status,
       nextReviewAt: wordData.nextReviewAt,
-    };
-  } catch (err) {
-    throw err;
-  }
-};
-
-export const getSubmittedWordData = async (
-  formElement: HTMLFormElement | null,
-) => {
-  try {
-    if (!formElement) return;
-
-    const formData = new FormData(formElement);
-    const audioData = formData.get("audio") as File;
-    const imageNameData = formData.get("imageName") as File;
-    const imageDefinitionsData = formData.get("imageDefinitions") as File;
-
-    // make image size smaller
-    const resizedImages = (await resizeImages([
-      imageNameData,
-      imageDefinitionsData,
-    ])) as (File | undefined)[];
-
-    // convert files into buffer
-    const [audioBuffer, imageNameBuffer, imageDefinitionsBuffer] =
-      await convertFilesToBuffersWithNames([audioData, ...resizedImages]);
-
-    return {
-      name: formData.get("name"),
-      audio: audioBuffer,
-      definitions: String(formData.get("definitions")).split("\n"),
-      examples: String(formData.get("examples")).split("\n"),
-      imageName: imageNameBuffer,
-      imageDefinitions: imageDefinitionsBuffer,
-      // it's going to be a folder id
-      folder: formData.get("folder"),
     };
   } catch (err) {
     throw err;
