@@ -1,12 +1,12 @@
 import { useState } from "react";
 
 export default function AudioWord({
-  audioName,
   audioTitle,
+  audioName,
   onClickRemove,
 }: {
-  audioName: string;
   audioTitle: string;
+  audioName: string;
   onClickRemove?: () => void;
 }) {
   const [inputValue, setInputValue] = useState("");
@@ -31,7 +31,7 @@ export default function AudioWord({
           <input
             type="file"
             value={inputValue}
-            name={audioName}
+            name={audioName || "audio"}
             accept="audio/*"
             className="w-[60%] border-none my-1 p-0 text-sm cursor-pointer rounded-none"
             onChange={handleChangeInput}

@@ -9,7 +9,6 @@ import dbConnect from "@/app/lib/database";
 import { FormStateWord, WordSchema } from "@/app/lib/definitions";
 import { getError, isError } from "@/app/lib/errorHandler";
 import { convertWordDataToSendServer } from "@/app/lib/helper";
-import { getNextReviewDate } from "@/app/lib/logics/quiz";
 import User from "@/app/lib/models/User";
 import Word from "@/app/lib/models/Word";
 
@@ -41,42 +40,16 @@ const validateWord = (wordData: TYPE_WORD) => {
   throw err;
 };
 
-export async function addWords(formState: FormStateWord, formData: FormData) {
+export async function addWords(
+  formState: FormStateWord,
+  wordData: TYPE_WORD_BEFORE_SENT[],
+) {
   const { isAuth, userId } = await verifySession();
   try {
-    const formDataArr = [...formData];
-    if (!formDataArr.length)
-      return getError("other", "At least one word is required.");
-
-    // get a property key of  the last element
-    const lastElementProperty = String(formDataArr.at(-1)?.at(0));
-    // take the last letter(index) that is put on the key
-    const lastWordIndex = Number(lastElementProperty.at(-1));
-
-    // Add 1 to index because index is 0 base
-    const emptyArrToSetWords = new Array(lastWordIndex + 1).fill("");
-
-    const commonData = {
-      userId: String(userId),
-      status: 0,
-      nextReviewAt: getNextReviewDate(0),
-    };
-
-    const addedWords = emptyArrToSetWords.map((_, i) => {
-      return {
-        collectionId: String(formData.get(`collection ${i}`) || ""),
-        name: String(formData.get(`name ${i}`) || ""),
-        audio: formData.get(`audio ${i}`) as File,
-        definitions: String(formData.get(`definitions ${i}`) || ""),
-        examples: String(formData.get(`examples ${i}`) || ""),
-        imageName: formData.get(`imageName ${i}`) as File,
-        imageDefinitions: formData.get(`imageDefinitions ${i}`) as File,
-        ...commonData,
-      };
-    });
-
     const wordDataToSendServer = await Promise.all(
-      addedWords.map((word) => convertWordDataToSendServer(word)),
+      wordData.map((word) =>
+        convertWordDataToSendServer({ ...word, userId: String(userId) }),
+      ),
     );
 
     // check if each data meets zod requirements
@@ -109,7 +82,7 @@ export async function addWords(formState: FormStateWord, formData: FormData) {
     await user.save();
 
     return {
-      message: `Word${lastWordIndex + 1 === 1 ? "" : "s"} created successfully`,
+      message: `Word created successfully`,
     };
   } catch (err: unknown) {
     if (isError(err) && err.name === "zodError")
@@ -136,6 +109,8 @@ export async function updateWord(
 
     // validate with zod validation
     validateWord(others);
+
+    console.log(others);
 
     await dbConnect();
     await Word.findByIdAndUpdate(_id, others);

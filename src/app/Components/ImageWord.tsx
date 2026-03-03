@@ -7,19 +7,20 @@ export default function ImageWord({
   imageTitle,
   onClickRemove,
 }: {
-  type: string;
+  type: "name" | "definitions";
   index?: number;
   imageTitle: string;
   onClickRemove?: (type: string) => void;
 }) {
+  const inputName = type === "name" ? "imageName" : "imageDefinitions";
   const [inputValue, setInputValue] = useState("");
   const [imgName, setImgName] = useState(imageTitle);
 
-  const cammeledImageTitle =
-    `image ${type}`
-      .split(" ")
-      .map((t, i) => (i !== 0 ? t.at(0)?.toUpperCase() + t.slice(1) : t))
-      .join("") + ` ${index || index === 0 ? index : ""}`;
+  // const cammeledImageTitle =
+  //   `image ${type}`
+  //     .split(" ")
+  //     .map((t, i) => (i !== 0 ? t.at(0)?.toUpperCase() + t.slice(1) : t))
+  //     .join("") + ` ${index || index === 0 ? index : ""}`;
 
   function handleChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
     setInputValue(e.currentTarget.value);
@@ -40,7 +41,7 @@ export default function ImageWord({
           <input
             type="file"
             value={inputValue}
-            name={cammeledImageTitle}
+            name={inputName}
             accept="image/*"
             className="w-[75%] border-none my-1 p-0 text-sm cursor-pointer rounded-none"
             onChange={handleChangeInput}
@@ -52,7 +53,7 @@ export default function ImageWord({
             className="h-fit bg-purple-800 text-white px-1 py-[2px] rounded text-xs"
             onClick={() => {
               handleRemoveImage();
-              if (onClickRemove) onClickRemove(cammeledImageTitle);
+              if (onClickRemove) onClickRemove(inputName);
             }}
           >
             Remove

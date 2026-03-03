@@ -1,5 +1,7 @@
 import Resizer from "react-image-file-resizer";
 import {
+  MediaDatabase,
+  MongoBuffer,
   TYPE_WORD,
   TYPE_WORD_BEFORE_SENT,
   TYPE_WORD_TO_DISPLAY,
@@ -11,7 +13,6 @@ import {
   MIN_NUMBER_EACH_PASSWORD,
   PASSWORD_REGEX,
 } from "./config/settings";
-import { getNextReviewDate } from "./logics/quiz";
 
 export const getRandomNumber = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -53,12 +54,23 @@ export const getWordFromCammelCase = (word: string) =>
     )
     .join("");
 
-export const resizeImages = (imageFiles: (File | undefined)[]) => {
+export const convertBufferToFile = (data: MediaDatabase | File) => {
+  if (!data || data instanceof File) return data;
+
+  const blob = new Blob([new Uint8Array((data.buffer as MongoBuffer).data)]);
+  const file = new File([blob], data.name);
+
+  return file;
+};
+
+export const resizeImages = (
+  imageFiles: (File | null)[],
+): Promise<(File | null)[]> => {
   const resizePromises = imageFiles.map(
     (file) =>
       new Promise((resolve) => {
         if (!file?.size) {
-          resolve(undefined);
+          resolve(null);
           return;
         }
 
@@ -75,19 +87,21 @@ export const resizeImages = (imageFiles: (File | undefined)[]) => {
       }),
   );
 
-  return Promise.all(resizePromises);
+  return Promise.all(resizePromises) as Promise<(File | null)[]>;
 };
 
-const convertFilesToBuffersWithNames = async (files: (File | undefined)[]) => {
+const convertFilesToBuffersWithNames = async (files: (File | null)[]) => {
   try {
     const bufferPromises = files.map((file) =>
-      file?.size ? file.arrayBuffer() : undefined,
+      file?.size ? file.arrayBuffer() : null,
     );
 
-    const buffers = await Promise.all(bufferPromises);
+    const arrayBuffers = await Promise.all(bufferPromises);
     // Add file names to buffers
-    const buffersWithNames = buffers.map((buffer, i) => {
-      return buffer ? { name: files[i]?.name || "", buffer } : undefined;
+    const buffersWithNames = arrayBuffers.map((arrBuffer, i) => {
+      return arrBuffer
+        ? { name: files[i]?.name || "", buffer: Buffer.from(arrBuffer) }
+        : null;
     });
 
     return buffersWithNames;
@@ -100,19 +114,17 @@ export const convertWordDataToSendServer = async (
   wordData: TYPE_WORD_BEFORE_SENT,
 ): Promise<TYPE_WORD> => {
   try {
-    // make image size smaller
-    const resizedImages = (await resizeImages([
-      wordData.imageName,
-      wordData.imageDefinitions,
-    ])) as (File | undefined)[];
-
     // convert files into buffer
     const [audioBuffer, imageNameBuffer, imageDefinitionsBuffer] =
-      await convertFilesToBuffersWithNames([wordData.audio, ...resizedImages]);
+      await convertFilesToBuffersWithNames([
+        wordData.audio,
+        wordData.imageName,
+        wordData.imageDefinitions,
+      ]);
 
     return {
       ...(wordData._id ? { _id: wordData._id } : {}),
-      userId: wordData.userId || "",
+      ...(wordData.userId ? { userId: wordData.userId } : {}),
       collectionId: wordData.collectionId,
       name: wordData.name.trim(),
       audio: audioBuffer,
@@ -141,13 +153,16 @@ export const getWordDataToDisplay = (
   const [audio, imageName, imageDefinitions] = mediaBuffers
     .map(
       (media) =>
-        media?.buffer && { name: media.name, data: new Blob([media.buffer]) },
+        media?.buffer && {
+          name: media.name,
+          data: new Blob([new Uint8Array((media.buffer as MongoBuffer).data)]),
+        },
     )
     .map(
       (blobWithName) =>
         blobWithName && {
           name: blobWithName.name,
-          data: window.URL.createObjectURL(blobWithName.data),
+          data: URL.createObjectURL(blobWithName.data),
         },
     );
 

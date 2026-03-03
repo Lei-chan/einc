@@ -48,30 +48,39 @@ export type TYPE_DICTIONARY = {
   synonyms: string[];
 };
 
+export type MongoBuffer = { type: "Buffer"; data: number[] };
+
+export type MediaDatabase = {
+  name: string;
+  buffer: Buffer | MongoBuffer;
+} | null;
+
+export type MediaToDisplay = { name: string; data: string } | null;
+
 export type TYPE_WORD_BEFORE_SENT = {
   _id?: string;
   userId?: string;
   collectionId: string;
   name: string;
-  audio?: File;
+  audio: File | null;
   definitions: string;
   examples: string;
-  imageName?: File;
-  imageDefinitions?: File;
+  imageName: File | null;
+  imageDefinitions: File | null;
   status: number;
   nextReviewAt: string;
 };
 
 export type TYPE_WORD = {
   _id?: string;
-  userId: string;
+  userId?: string;
   collectionId: string;
   name: string;
-  audio?: { name: string; buffer: ArrayBuffer } | undefined;
+  audio?: MediaDatabase;
   definitions: string[];
   examples?: string[];
-  imageName?: { name: string; buffer: ArrayBuffer } | undefined;
-  imageDefinitions?: { name: string; buffer: ArrayBuffer } | undefined;
+  imageName?: MediaDatabase;
+  imageDefinitions?: MediaDatabase;
   status: number;
   nextReviewAt: string;
 };
@@ -80,11 +89,11 @@ export type TYPE_WORD_TO_DISPLAY = {
   _id: string;
   userId: string;
   name: string;
-  audio?: { name: string; data: string } | undefined;
+  audio?: MediaToDisplay;
   definitions: string[];
   examples: string[];
-  imageName?: { name: string; data: string } | undefined;
-  imageDefinitions?: { name: string; data: string } | undefined;
+  imageName?: MediaToDisplay;
+  imageDefinitions?: MediaToDisplay;
   collectionId: string;
   status: number;
   nextReviewAt: string;

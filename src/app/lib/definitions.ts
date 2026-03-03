@@ -54,21 +54,22 @@ export const updatePasswordSchema = z.object({
     .trim(),
 });
 
+const mediaSchema = z
+  .xor([
+    z.object({ name: z.string().trim(), buffer: z.instanceof(Buffer) }),
+    z.null(),
+  ])
+  .optional();
+
 export const WordSchema = z.object({
   userId: z.string(),
   collectionId: z.string(),
   name: z.string().trim().min(1),
-  audio: z
-    .object({ name: z.string().trim(), data: z.instanceof(ArrayBuffer) })
-    .optional(),
+  audio: mediaSchema,
   definitions: z.array(z.string().trim().min(1)),
   examples: z.array(z.string().trim()),
-  imageName: z
-    .object({ name: z.string().trim(), data: z.instanceof(ArrayBuffer) })
-    .optional(),
-  imageDefinitions: z
-    .object({ name: z.string().trim(), data: z.instanceof(ArrayBuffer) })
-    .optional(),
+  imageName: mediaSchema,
+  imageDefinitions: mediaSchema,
   status: z.number().gte(0).lte(5),
   nextReviewAt: z.iso.datetime(),
 });

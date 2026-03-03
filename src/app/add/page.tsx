@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 // components
 import ButtonPlus from "@/app/Components/ButtonPlus";
 import ImageWord from "../Components/ImageWord";
@@ -8,24 +8,32 @@ import PMessage from "../Components/PMessage";
 // methods
 import { getCollections } from "../lib/dal";
 import { addWords } from "../actions/auth/words";
-import { wait } from "../lib/helper";
+import { resizeImages, wait } from "../lib/helper";
 // types
-import { TYPE_COLLECTIONS, TYPE_DISPLAY_MESSAGE } from "../lib/config/type";
+import {
+  TYPE_COLLECTIONS,
+  TYPE_DISPLAY_MESSAGE,
+  TYPE_WORD_BEFORE_SENT,
+} from "../lib/config/type";
 import { FormStateWord } from "../lib/definitions";
 // libraries
 import { nanoid } from "nanoid";
+import { getNextReviewDate } from "../lib/logics/quiz";
+import { useRouter } from "next/navigation";
 
 export default function Add() {
+  const router = useRouter();
+
   const [vocabKeys, setVocabKeys] = useState([{ id: nanoid() }]);
   const [collections, setCollections] = useState<
     TYPE_COLLECTIONS | undefined
   >();
   const [messageData, setMessageData] = useState<TYPE_DISPLAY_MESSAGE>();
 
-  const [state, action, isPending] = useActionState<FormStateWord, FormData>(
-    addWords,
-    undefined,
-  );
+  const [state, action, isPending] = useActionState<
+    FormStateWord,
+    TYPE_WORD_BEFORE_SENT[]
+  >(addWords, undefined);
 
   const [isDictionaryOpen, setIsDectionaryOpen] = useState(false);
   const [dictionaryIndex, setDictionaryIndex] = useState<number | null>(null);
@@ -47,6 +55,60 @@ export default function Add() {
     setIsDectionaryOpen(false);
   }
 
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    try {
+      e.preventDefault();
+
+      // reset message data
+      setMessageData(undefined);
+
+      const formData = new FormData(e.currentTarget);
+      const formDataArr = [...formData];
+      if (!formDataArr.length) throw new Error("At least one word is required");
+
+      // get a property key of  the last element
+      const lastElementProperty = String(formDataArr.at(-1)?.at(0));
+      // take the last letter(index) that is put on the key
+      const lastWordIndex = Number(lastElementProperty.at(-1));
+
+      // Add 1 to index because index is 0 base
+      const emptyArrToSetWords = new Array(lastWordIndex + 1).fill("");
+
+      const resizedImages = await Promise.all(
+        emptyArrToSetWords.map((_, i) =>
+          resizeImages([
+            formData.get(`imageName ${i}`) as File,
+            formData.get(`imageDefinitions ${i}`) as File,
+          ]),
+        ),
+      );
+
+      const addedWords = emptyArrToSetWords.map((_, i) => {
+        const [imageName, imageDefinitions] = resizedImages[i];
+
+        return {
+          collectionId: String(formData.get(`collection ${i}`) || ""),
+          name: String(formData.get(`name ${i}`) || ""),
+          audio: formData.get(`audio ${i}`) as File,
+          definitions: String(formData.get(`definitions ${i}`) || ""),
+          examples: String(formData.get(`examples ${i}`) || ""),
+          imageName,
+          imageDefinitions,
+          status: 0,
+          nextReviewAt: getNextReviewDate(0),
+        };
+      });
+
+      startTransition(() => action(addedWords));
+    } catch (err: unknown) {
+      console.error("Error occured.", err);
+      setMessageData({
+        type: "error",
+        message: "Unexpected error occured. Please try again this later 🙇‍♂️",
+      });
+    }
+  }
+
   useEffect(() => {
     const fetchCollections = async () => {
       const data = await getCollections();
@@ -62,10 +124,22 @@ export default function Add() {
     fetchCollections();
   }, []);
 
+  useEffect(() => {
+    if (!state?.message) return;
+
+    const displayMessageAndNavigate = async () => {
+      setMessageData({ type: "success", message: state.message || "" });
+      await wait(2);
+      router.push("/main");
+    };
+
+    displayMessageAndNavigate();
+  }, [state, state?.message, router]);
+
   return (
     <form
       className="w-full min-h-screen max-h-fit flex flex-col items-center py-6 gap-5"
-      action={action}
+      onSubmit={handleSubmit}
     >
       {messageData && (
         <PMessage type={messageData.type} message={messageData.message} />
@@ -74,7 +148,6 @@ export default function Add() {
       {state?.error && (
         <PMessage type="error" message={state.error.message || ""} />
       )}
-      {state?.message && <PMessage type="success" message={state.message} />}
       {vocabKeys.map((keyObj, i) => (
         <Word
           key={keyObj.id}

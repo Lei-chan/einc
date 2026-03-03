@@ -32,8 +32,14 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
   const [words, setWords] = useState<TYPE_WORD[]>([]);
   const [numberOfPages, setNumberOfPages] = useState(1);
   const [curPage, dispatch] = useReducer(paginationReducer, 1);
+  // use resetKey to fetch data again
+  const [resetKey, setResetKey] = useState(0);
 
   const [messageData, setMessageData] = useState<TYPE_DISPLAY_MESSAGE>();
+
+  function handleUpdateUI() {
+    setResetKey((prev) => prev + 1);
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -63,7 +69,7 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
     };
 
     setWordsNumberOfPages();
-  }, [id, searchValue, curPage]);
+  }, [id, searchValue, curPage, resetKey]);
 
   return (
     <div
@@ -77,6 +83,7 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
         data={words}
         numberOfPages={numberOfPages}
         curPage={curPage}
+        handleUpdateUI={handleUpdateUI}
         dispatch={dispatch}
       />
     </div>
@@ -113,11 +120,13 @@ function Bottom({
   data,
   numberOfPages,
   curPage,
+  handleUpdateUI,
   dispatch,
 }: {
   data: TYPE_WORD[] | [];
   numberOfPages: number;
   curPage: number;
+  handleUpdateUI: () => void;
   dispatch: (action: TYPE_ACTION_PAGINATION) => void;
 }) {
   const [isSelected, setIsSelected] = useState(false);
@@ -164,6 +173,7 @@ function Bottom({
             data={data}
             isSelected={isSelected}
             isAllChecked={isAllChecked}
+            handleUpdateUI={handleUpdateUI}
           />
           <ButtonPagination
             numberOfPages={numberOfPages}
@@ -242,10 +252,12 @@ function WordLists({
   data,
   isSelected,
   isAllChecked,
+  handleUpdateUI,
 }: {
-  data: TYPE_WORD[] | [];
+  data: TYPE_WORD[];
   isSelected: boolean;
   isAllChecked: boolean;
+  handleUpdateUI: () => void;
 }) {
   return (
     <ul className="w-[90%] flex flex-col gap-5 py-5">
@@ -256,6 +268,7 @@ function WordLists({
           word={word}
           isSelected={isSelected}
           isAllChecked={isAllChecked}
+          handleUpdateUI={handleUpdateUI}
         />
       ))}
     </ul>
