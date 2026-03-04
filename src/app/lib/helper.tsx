@@ -162,15 +162,15 @@ export const getWordDataToDisplay = (
       (blobWithName) =>
         blobWithName && {
           name: blobWithName.name,
-          data: URL.createObjectURL(blobWithName.data),
+          data: window.URL.createObjectURL(blobWithName.data),
         },
     );
 
   // replace mediaBuffers with links
   const newWordData = { ...wordData } as TYPE_WORD_TO_DISPLAY;
-  newWordData.audio = audio;
-  newWordData.imageName = imageName;
-  newWordData.imageDefinitions = imageDefinitions;
+  newWordData.audio = audio || null;
+  newWordData.imageName = imageName || null;
+  newWordData.imageDefinitions = imageDefinitions || null;
 
   return newWordData;
 };
@@ -206,4 +206,55 @@ export const getInputErrorMessage = (
     return `※ Please enter password at least ${MIN_LENGTH_PASSWORD} characters long, with more than ${MIN_NUMBER_EACH_PASSWORD} lowercase, ${MIN_NUMBER_EACH_PASSWORD} uppercase, and ${MIN_NUMBER_EACH_PASSWORD} digit`;
 
   return "";
+};
+
+export const getNextReviewDate = (status: number) => {
+  const datePlus = [0, 1, 3, 7, 14, 30];
+  const datePlusMilliseconds = datePlus.map(
+    (date) => date * 24 * 60 * 60 * 1000,
+  );
+  return new Date(Date.now() + datePlusMilliseconds[status]).toISOString();
+};
+
+export const convertWordsToQuizData = (
+  wordDataToDisplay: TYPE_WORD_TO_DISPLAY[],
+) => {
+  const quizData = wordDataToDisplay.flatMap((word) => {
+    const nameData = {
+      name: word.name,
+      audio: word.audio,
+      image: word.imageName,
+    };
+    const definitionsData = {
+      definitions: word.definitions,
+      image: word.imageDefinitions,
+    };
+    const commonData = {
+      // display just 2 examples
+      afterSentence: word.examples.slice(0, 2).join("\n"),
+      id: word._id || "",
+      status: word.status,
+    };
+
+    const wordAnswerMeaning = {
+      question: {
+        sentence: "Please answer the meaning of this word.",
+        ...nameData,
+      },
+      answer: definitionsData,
+      ...commonData,
+    };
+    const wordAnsweringWord = {
+      question: {
+        sentence: "Please answer the word of this meaning",
+        ...definitionsData,
+      },
+      answer: nameData,
+      ...commonData,
+    };
+
+    return [wordAnswerMeaning, wordAnsweringWord];
+  });
+
+  return quizData;
 };

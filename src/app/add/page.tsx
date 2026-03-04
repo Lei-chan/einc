@@ -8,7 +8,7 @@ import PMessage from "../Components/PMessage";
 // methods
 import { getCollections } from "../lib/dal";
 import { addWords } from "../actions/auth/words";
-import { resizeImages, wait } from "../lib/helper";
+import { getNextReviewDate, resizeImages, wait } from "../lib/helper";
 // types
 import {
   TYPE_COLLECTIONS,
@@ -18,7 +18,6 @@ import {
 import { FormStateWord } from "../lib/definitions";
 // libraries
 import { nanoid } from "nanoid";
-import { getNextReviewDate } from "../lib/logics/quiz";
 import { useRouter } from "next/navigation";
 
 export default function Add() {

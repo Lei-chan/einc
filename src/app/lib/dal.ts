@@ -9,8 +9,18 @@ import { getError } from "./errorHandler";
 import dbConnect from "./database";
 import Word from "./models/Word";
 import { isArray } from "chart.js/helpers";
-import { TYPE_COLLECTION, TYPE_WORD } from "./config/type";
-import { LISTS_ONE_PAGE } from "./config/settings";
+import {
+  TYPE_COLLECTION,
+  TYPE_COLLECTIONS,
+  TYPE_WORD,
+  TYPE_WORD_TO_DISPLAY,
+} from "./config/type";
+import { FLASHCARD_QUIZ_ONE_TURN, LISTS_ONE_PAGE } from "./config/settings";
+import {
+  getNextReviewDate,
+  getRandomNumber,
+  getWordDataToDisplay,
+} from "./helper";
 
 export const verifySession = cache(async () => {
   const cookie = (await cookies()).get("session")?.value;
@@ -45,7 +55,7 @@ export const getCollections = cache(async () => {
 
     const userObject = JSON.parse(JSON.stringify(user));
 
-    return userObject.collections;
+    return userObject.collections as TYPE_COLLECTIONS;
   } catch (err: unknown) {
     console.error("Fetch failed", err);
     return null;
@@ -57,10 +67,25 @@ export const getCollectionDataCurPage = cache(
     const collections = await getCollections();
     if (!collections) return null;
 
-    const collectionsCurPage = collections.slice(indexFrom, indexTo);
+    const collectionsCurPage = collections.slice(
+      indexFrom,
+      indexTo,
+    ) as TYPE_COLLECTIONS;
+
+    // get numberOfWords for collections on current page
+    const numberOfWordsCollections = await Promise.all(
+      collectionsCurPage.map((col: TYPE_COLLECTION) =>
+        // if it's collection 'All' => counts all words, otherwise => counts words in the collection
+        col.allWords
+          ? Word.countDocuments()
+          : Word.countDocuments({ collectionId: col._id }),
+      ),
+    );
 
     return {
-      collections: collectionsCurPage,
+      collections: collectionsCurPage.map((col, i) => {
+        return { ...col, numberOfWords: numberOfWordsCollections[i] };
+      }),
       numberOfCollections: collections.length,
     };
   },
@@ -139,5 +164,74 @@ export const getMatchedWordsCurPage = cache(
       numberOfMatchedWords: matchedWords.length,
       matchedWordsCurPage: matchedWordsCurPage,
     };
+  },
+);
+
+// flashcard
+export const getRandomWordsFlashcard = cache(async (collectionId: string) => {
+  const wordsForCollection = await getUserWordsCollection(collectionId);
+  if (!wordsForCollection) return null;
+  // if no words, return []
+  if (isArray(wordsForCollection) && !wordsForCollection.length) return [];
+
+  const numberOfWords = wordsForCollection.length;
+
+  //   If totalNumberOfWords is less than maxWordsOneTurn, set all words
+  if (FLASHCARD_QUIZ_ONE_TURN > numberOfWords) return wordsForCollection;
+
+  const randomNumbersSet: Set<number> = new Set([]);
+
+  //   until set gets 20 random numbers
+  while (randomNumbersSet.size < FLASHCARD_QUIZ_ONE_TURN) {
+    // minus 1 because it's gonna be used as an index and indexes are 0 base
+    randomNumbersSet.add(getRandomNumber(0, numberOfWords - 1));
+  }
+
+  const randomNumbersArray = Array.from(randomNumbersSet);
+
+  //   get random words using random numbers as indexes
+  const randomWords = randomNumbersArray.map((num) => wordsForCollection[num]);
+
+  return randomWords;
+});
+
+export const getRandomWordsOneTurnQuiz = cache(async (collectionId: string) => {
+  const wordsForCollection = await getUserWordsCollection(collectionId);
+  if (!wordsForCollection) return null;
+  // if no words, return []
+  if (isArray(wordsForCollection) && !wordsForCollection.length) return [];
+
+  //   get words nextReviewAt time is now or before now
+  const wordsToReview = (wordsForCollection as TYPE_WORD[]).filter(
+    (word) => Date.now() - new Date(word.nextReviewAt).getTime() >= 0,
+  );
+
+  // get only words that are needed for one turn
+  const wordsToReviewCurTurn = wordsToReview.slice(0, FLASHCARD_QUIZ_ONE_TURN);
+
+  return wordsToReviewCurTurn;
+});
+
+const getNextStatus = (currentStatus: number, isCorrect: boolean) => {
+  if (isCorrect) return currentStatus === 5 ? 5 : currentStatus + 1;
+
+  return currentStatus === 0 ? 0 : currentStatus - 1;
+};
+
+export const updateStatusNextReviewDate = cache(
+  async (wordId: string, isCorrect: boolean) => {
+    try {
+      await dbConnect();
+      const word = await Word.findById(wordId);
+      if (!word) return getError("notFound", "Word not found");
+
+      const nextStatus = getNextStatus(word.status, isCorrect);
+      word.status = nextStatus;
+      word.nextReviewAt = getNextReviewDate(nextStatus);
+
+      await word.save();
+    } catch (err: unknown) {
+      return getError("other", "", err);
+    }
   },
 );

@@ -76,11 +76,11 @@ export type TYPE_WORD = {
   userId?: string;
   collectionId: string;
   name: string;
-  audio?: MediaDatabase;
+  audio: MediaDatabase;
   definitions: string[];
-  examples?: string[];
-  imageName?: MediaDatabase;
-  imageDefinitions?: MediaDatabase;
+  examples: string[];
+  imageName: MediaDatabase;
+  imageDefinitions: MediaDatabase;
   status: number;
   nextReviewAt: string;
 };
@@ -89,11 +89,11 @@ export type TYPE_WORD_TO_DISPLAY = {
   _id: string;
   userId: string;
   name: string;
-  audio?: MediaToDisplay;
+  audio: MediaToDisplay;
   definitions: string[];
   examples: string[];
-  imageName?: MediaToDisplay;
-  imageDefinitions?: MediaToDisplay;
+  imageName: MediaToDisplay;
+  imageDefinitions: MediaToDisplay;
   collectionId: string;
   status: number;
   nextReviewAt: string;
@@ -105,15 +105,15 @@ export type TYPE_QUIZ_QUESTION = {
   sentence: string;
   name?: string;
   definitions?: string[];
-  audio?: { name: string; data: string } | undefined;
-  image: { name: string; data: string } | undefined;
+  audio?: MediaToDisplay;
+  image: MediaToDisplay;
 };
 
 export type TYPE_QUIZ_ANSWER = {
   name?: string;
   definitions?: string[];
-  audio?: { name: string; data: string } | undefined;
-  image: { name: string; data: string } | undefined;
+  audio?: MediaToDisplay;
+  image: MediaToDisplay;
 };
 
 export type TYPE_QUIZ_DATA = {

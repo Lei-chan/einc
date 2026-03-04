@@ -26,7 +26,6 @@ export const SignupSchema = z.object({
   collections: z.array(
     z.object({
       name: z.string().trim(),
-      numberOfWords: z.number(),
       allWords: z.boolean().optional(),
     }),
   ),
@@ -119,12 +118,11 @@ export type FormStateCollection =
 
 export type FormStateWord =
   | {
-      // errors?: {
-      //   collectionId?: string[];
-      //   name?: string[];
-      //   definitions?: string[];
-      // };
       error?: { status?: number; message?: string };
       message?: string;
     }
   | undefined;
+
+export type CheckedDataList = { _id: string; checked: boolean }[];
+
+export type DefinitionsDataQuiz = { wordId: string; newDefinitions: string[] };

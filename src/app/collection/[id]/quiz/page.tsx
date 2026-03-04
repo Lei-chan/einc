@@ -1,6 +1,14 @@
 "use client";
 // React
-import { use, useEffect, useReducer, useState } from "react";
+import {
+  startTransition,
+  use,
+  useActionState,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 // Next.js
 import Image from "next/image";
 import Link from "next/link";
@@ -11,9 +19,12 @@ import { paginationReducer } from "@/app/lib/reducers";
 import ButtonAudio from "@/app/Components/ButtonAudio";
 // Methods
 import {
+  convertWordsToQuizData,
   getRandomNumber,
+  getWordDataToDisplay,
   joinWithCommas,
   joinWithLineBreaks,
+  wait,
 } from "@/app/lib/helper";
 // Types
 import {
@@ -22,45 +33,52 @@ import {
   TYPE_QUIZ_QUESTION,
 } from "@/app/lib/config/type";
 import {
-  convertWordsToQuizData,
-  getNextQuizAndIndex,
-  getWordsToReview,
+  getRandomWordsOneTurnQuiz,
   updateStatusNextReviewDate,
-} from "@/app/lib/logics/quiz";
+} from "@/app/lib/dal";
+import { addDefinitions } from "@/app/actions/auth/words";
+import { DefinitionsDataQuiz, FormStateWord } from "@/app/lib/definitions";
+import PMessage from "@/app/Components/PMessage";
 // libraries
 // import distance from "jaro-winkler";
 
 export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  // const [numberOfQuiz, setNumberOfQuiz] = useState(0);
+  const [quiz, setQuiz] = useState<TYPE_QUIZ_DATA[]>();
   const [numberOfQuiz, setNumberOfQuiz] = useState(0);
-  const [quiz, setQuiz] = useState<TYPE_QUIZ_DATA[]>([]);
+
   const [curQuizIndex, setCurQuizIndex] = useState<number>();
   const [curQuizPage, dispatch] = useReducer(paginationReducer, 1);
   const [isAnswering, setIsAnswering] = useState(true);
   const [isCorrect, setIsCorrect] = useState(true);
 
-  //   For dev
-  const accessToken = "iiii";
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    // I will connect it to server with await later!
     const getWordsForQuiz = async () => {
-      try {
-        const wordsToReview = getWordsToReview(accessToken, id);
-        const quizData = convertWordsToQuizData(wordsToReview);
-        setQuiz(quizData);
-
-        const numOfQuiz = quizData.length;
-        setNumberOfQuiz(numOfQuiz);
-
-        setCurQuizIndex(getRandomNumber(0, numberOfQuiz - 1));
-      } catch (err: unknown) {
-        console.error("Error", err);
+      const quizWords = await getRandomWordsOneTurnQuiz(id);
+      if (!quizWords) {
+        setMessage("Unexpected error occured. Please try again this later 🙇‍♂️");
+        return;
       }
+
+      const quizDataToDisplay = quizWords.map((word) =>
+        getWordDataToDisplay(word),
+      );
+      const structuredQuizData = convertWordsToQuizData(quizDataToDisplay);
+
+      setQuiz(structuredQuizData);
+
+      const numOfQuiz = structuredQuizData.length;
+
+      setNumberOfQuiz(numOfQuiz);
+
+      setCurQuizIndex(getRandomNumber(0, numOfQuiz - 1));
     };
 
-    (async () => await getWordsForQuiz())();
-  }, [id, numberOfQuiz]);
+    getWordsForQuiz();
+  }, [id]);
 
   function toggleIsAnswering() {
     setIsAnswering(!isAnswering);
@@ -70,14 +88,19 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
     setIsCorrect((prev) => (option === "toggle" ? !prev : option));
   }
 
-  function handleClickNext() {
+  async function handleClickNext() {
+    if (!quiz) return;
     if (!curQuizIndex && curQuizIndex !== 0) return;
 
     const wordId = quiz[curQuizIndex].id;
-    updateStatusNextReviewDate(accessToken, id, wordId, isCorrect);
+    await updateStatusNextReviewDate(wordId, isCorrect);
 
-    const { newQuiz, newQuizIndex } = getNextQuizAndIndex(quiz, curQuizIndex);
+    // get rid of current quiz from quiz
+    const newQuiz = quiz.toSpliced(curQuizIndex, 1);
     setQuiz(newQuiz);
+
+    // new random index for next quiz
+    const newQuizIndex = getRandomNumber(0, newQuiz.length - 1);
     setCurQuizIndex(newQuizIndex);
 
     dispatch("add");
@@ -85,21 +108,32 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   }
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center">
+    <div className="w-screen min-h-screen max-h-fit flex flex-col items-center justify-center py-10">
       <p className="absolute top-2 right-3">
         {curQuizPage} / {numberOfQuiz}
       </p>
-      <QuizContent
-        curQuiz={
-          curQuizIndex || curQuizIndex === 0 ? quiz[curQuizIndex] : undefined
-        }
-        isQuizFinished={curQuizPage === numberOfQuiz}
-        isAnswering={isAnswering}
-        isCorrect={isCorrect}
-        toggleIsAnswering={toggleIsAnswering}
-        handleChangeIsCorrect={handleChangeIsCorrect}
-        onClickNext={handleClickNext}
-      />
+      <p>
+        {message
+          ? message
+          : !quiz
+            ? "Loading..."
+            : quiz && !numberOfQuiz
+              ? "No words are registered yet"
+              : ""}
+      </p>
+      {quiz && numberOfQuiz && (
+        <QuizContent
+          curQuiz={
+            curQuizIndex || curQuizIndex === 0 ? quiz[curQuizIndex] : undefined
+          }
+          isQuizFinished={curQuizPage === numberOfQuiz}
+          isAnswering={isAnswering}
+          isCorrect={isCorrect}
+          toggleIsAnswering={toggleIsAnswering}
+          handleChangeIsCorrect={handleChangeIsCorrect}
+          onClickNext={handleClickNext}
+        />
+      )}
     </div>
   );
 }
@@ -123,6 +157,12 @@ function QuizContent({
 }) {
   const answer = curQuiz?.answer;
   const [userAnswer, setUserAnswer] = useState<string[]>([]);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const [state, action, isPending] = useActionState<
+    FormStateWord,
+    DefinitionsDataQuiz
+  >(addDefinitions, undefined);
 
   const convertStringToCompare = (str: string) =>
     str
@@ -151,7 +191,10 @@ function QuizContent({
 
     if (answer?.definitions) {
       // split by lines and get rid of empty spaces
-      const values = value.split("\n").filter((answer) => answer);
+      const values = value
+        .split("\n")
+        .map((value) => value.trim())
+        .filter((answer) => answer);
       setUserAnswer(values);
 
       const valuesToCompare = values.map((answer) =>
@@ -174,8 +217,33 @@ function QuizContent({
     toggleIsAnswering();
   }
 
+  async function handleClickAddDefinitions() {
+    if (!curQuiz?.id) return;
+
+    startTransition(() =>
+      action({ wordId: curQuiz.id, newDefinitions: userAnswer }),
+    );
+  }
+
+  useEffect(() => {
+    const displaySuccessMessage = async () => {
+      if (!state?.message) return;
+
+      setSuccessMessage(state.message);
+      await wait();
+      setSuccessMessage("");
+    };
+
+    displaySuccessMessage();
+  }, [state?.message]);
+
   return (
     <div className="w-[80%] h-full flex flex-col items-center justify-center">
+      {isPending && <PMessage type="pending" message="Adding definitions..." />}
+      {state?.error && (
+        <PMessage type="error" message={state.error.message || ""} />
+      )}
+      {successMessage && <PMessage type="success" message={successMessage} />}
       {isAnswering ? (
         <QuizAnswer question={curQuiz?.question} onSubmitForm={handleSubmit} />
       ) : (
@@ -187,6 +255,7 @@ function QuizContent({
           isQuizFinished={isQuizFinished}
           onClickCorrect={handleChangeIsCorrect}
           onClickNext={onClickNext}
+          onClickAddDefinitions={handleClickAddDefinitions}
         />
       )}
     </div>
@@ -207,7 +276,7 @@ function QuizAnswer({
   return (
     <form className="flex flex-col items-center gap-3" onSubmit={onSubmitForm}>
       <h2 className="text-xl">{question?.sentence}</h2>
-      <div>
+      <div className="flex flex-row">
         <p
           className={`text-2xl font-bold tracking-wide ${question.name ? "text-center" : "text-left"}`}
         >
@@ -255,6 +324,7 @@ function QuizResult({
   isQuizFinished,
   onClickCorrect,
   onClickNext,
+  onClickAddDefinitions,
 }: {
   answer: TYPE_QUIZ_ANSWER | undefined;
   afterSentence: string | undefined;
@@ -263,6 +333,7 @@ function QuizResult({
   isQuizFinished: boolean;
   onClickCorrect: (option: true | false | "toggle") => void;
   onClickNext: () => void;
+  onClickAddDefinitions: () => void;
 }) {
   const pAnswerClassName = "w-full text-xl";
   const buttonClassName =
@@ -326,9 +397,10 @@ function QuizResult({
                 <br />
                 correct
               </button>
-              {answer?.definitions && (
+              {answer?.definitions && userAnswer.length > 0 && (
                 <button
                   className={`${buttonClassName} bg-orange-500 hover:bg-yellow-500 p-1`}
+                  onClick={onClickAddDefinitions}
                 >
                   Add to
                   <br />

@@ -1,6 +1,14 @@
 "use client";
 // react
-import { use, useActionState, useEffect, useReducer, useState } from "react";
+import {
+  startTransition,
+  use,
+  useActionState,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 // reducers
 import { paginationReducer } from "@/app/lib/reducers";
 // components
@@ -8,7 +16,7 @@ import ButtonPagination from "@/app/Components/ButtonPagination";
 import WordCard from "@/app/Components/WordCard";
 import PMessage from "@/app/Components/PMessage";
 // methods
-import { getNumberOfPages } from "@/app/lib/helper";
+import { getNumberOfPages, wait } from "@/app/lib/helper";
 import { getMatchedWordsCurPage } from "@/app/lib/dal";
 // settings
 import {
@@ -21,7 +29,7 @@ import {
   TYPE_DISPLAY_MESSAGE,
   TYPE_WORD,
 } from "@/app/lib/config/type";
-import { FormStateWord } from "@/app/lib/definitions";
+import { CheckedDataList, FormStateWord } from "@/app/lib/definitions";
 import { deleteWords } from "@/app/actions/auth/words";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
@@ -80,6 +88,7 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
         <PMessage type={messageData.type} message={messageData.message} />
       )}
       <Bottom
+        collectionId={id}
         data={words}
         numberOfPages={numberOfPages}
         curPage={curPage}
@@ -117,13 +126,15 @@ function SearchBar({
 }
 
 function Bottom({
+  collectionId,
   data,
   numberOfPages,
   curPage,
   handleUpdateUI,
   dispatch,
 }: {
-  data: TYPE_WORD[] | [];
+  collectionId: string;
+  data: TYPE_WORD[];
   numberOfPages: number;
   curPage: number;
   handleUpdateUI: () => void;
@@ -131,11 +142,28 @@ function Bottom({
 }) {
   const [isSelected, setIsSelected] = useState(false);
   const [isAllChecked, setIsAllChecked] = useState(false);
-
-  const [state, action, isPending] = useActionState<FormStateWord, FormData>(
-    deleteWords,
-    undefined,
+  const [areWordsChecked, setAreWordsChecked] = useState(
+    data.map((data) => {
+      return { _id: data._id || "", checked: false };
+    }),
   );
+
+  const [successMessage, setSuccessMessage] = useState("");
+  const lastHandledDeleteRef = useRef<FormStateWord>(null);
+
+  const [state, action, isPending] = useActionState<
+    FormStateWord,
+    { collectionId: string; checkedData: CheckedDataList }
+  >(deleteWords, undefined);
+
+  function handleToggleChecked(index: number) {
+    // toggle checked only for clicked input, otherwise just return the same data
+    setAreWordsChecked((prev) =>
+      prev.map((data, i) =>
+        index === i ? { _id: data._id, checked: !data.checked } : data,
+      ),
+    );
+  }
 
   function handleToggleSelected() {
     setIsSelected((prev) => {
@@ -155,10 +183,79 @@ function Bottom({
     dispatch(type);
   }
 
+  function handleClickDelete() {
+    startTransition(() =>
+      action({ collectionId, checkedData: areWordsChecked }),
+    );
+  }
+
+  // set initial areWordsChecked data from data
+  useEffect(() => {
+    if (!data.length) return;
+
+    const setInitialCheckedData = () =>
+      setAreWordsChecked(
+        data.map((data) => {
+          return { _id: data._id || "", checked: false };
+        }),
+      );
+
+    setInitialCheckedData();
+  }, [data]);
+
+  // when user finished selecting, reset isChecked for the checkbox
+  // When user change the input of isAllSelected, change isChecked accordingly
+  useEffect(() => {
+    const changeAllCheckToFalse = () =>
+      setAreWordsChecked((prev) =>
+        prev.map((data) => {
+          return { _id: data._id, checked: false };
+        }),
+      );
+
+    const changeAllCheckToTrue = () =>
+      setAreWordsChecked((prev) =>
+        prev.map((data) => {
+          return { _id: data._id, checked: true };
+        }),
+      );
+
+    if (!isSelected || !isAllChecked) changeAllCheckToFalse();
+
+    if (isAllChecked) changeAllCheckToTrue();
+  }, [isSelected, isAllChecked]);
+
+  // handle success
+  useEffect(() => {
+    // if it's executed already => return
+    if (state === lastHandledDeleteRef.current || !state?.message) return;
+
+    const displaySuccessMsg = async () => {
+      const successMsg = state?.message;
+      if (!successMsg) return;
+
+      handleToggleSelected();
+      handleUpdateUI();
+      setSuccessMessage(successMsg);
+      await wait();
+      setSuccessMessage("");
+    };
+
+    displaySuccessMsg();
+    lastHandledDeleteRef.current = state;
+  }, [state, handleUpdateUI]);
+
   return (
     <div className="w-[90%] min-h-[80vh] max-h-fit flex flex-col items-center justify-center">
       {data.length !== 0 ? (
         <>
+          {isPending && <PMessage type="pending" message="Deleting word..." />}
+          {state?.error && (
+            <PMessage type="error" message={state.error.message || ""} />
+          )}
+          {successMessage && (
+            <PMessage type="success" message={successMessage} />
+          )}
           <NumberOfLists
             passedWords={curPage * data.length}
             numberOfMatchedWords={numberOfPages * LISTS_ONE_PAGE}
@@ -167,12 +264,13 @@ function Bottom({
             isSelected={isSelected}
             onClickSelected={handleToggleSelected}
             onChangeSelectAll={handleChangeAllSelected}
-            onClickDeleteAction={action}
+            onClickDelete={handleClickDelete}
           />
           <WordLists
             data={data}
             isSelected={isSelected}
-            isAllChecked={isAllChecked}
+            areWordsChecked={areWordsChecked}
+            onChangeInput={handleToggleChecked}
             handleUpdateUI={handleUpdateUI}
           />
           <ButtonPagination
@@ -209,21 +307,21 @@ function Selector({
   isSelected,
   onClickSelected,
   onChangeSelectAll,
-  onClickDeleteAction,
+  onClickDelete,
 }: {
   isSelected: boolean;
   onClickSelected: () => void;
   onChangeSelectAll: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onClickDeleteAction: (formData: FormData) => void;
+  onClickDelete: () => void;
 }) {
   return (
     <div className="w-full flex flex-row justify-end gap-2 text-sm items-center mt-3">
       {isSelected && (
         <>
           <button
-            type="submit"
+            type="button"
             className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
-            formAction={onClickDeleteAction}
+            onClick={onClickDelete}
           ></button>
           <label className="w-fit h-full flex flex-row items-center">
             Select all:&nbsp;
@@ -251,25 +349,30 @@ function Selector({
 function WordLists({
   data,
   isSelected,
-  isAllChecked,
+  areWordsChecked,
+  onChangeInput,
   handleUpdateUI,
 }: {
   data: TYPE_WORD[];
   isSelected: boolean;
-  isAllChecked: boolean;
+  areWordsChecked: { _id: string; checked: boolean }[];
+  onChangeInput: (index: number) => void;
   handleUpdateUI: () => void;
 }) {
   return (
     <ul className="w-[90%] flex flex-col gap-5 py-5">
       {data.map((word, i) => (
-        <WordCard
-          key={i}
-          type="list"
-          word={word}
-          isSelected={isSelected}
-          isAllChecked={isAllChecked}
-          handleUpdateUI={handleUpdateUI}
-        />
+        <div key={i} className="flex flex-row gap-3">
+          {isSelected && (
+            <input
+              type="checkbox"
+              checked={areWordsChecked[i].checked}
+              className="w-5"
+              onChange={() => onChangeInput(i)}
+            ></input>
+          )}
+          <WordCard type="list" word={word} handleUpdateUI={handleUpdateUI} />
+        </div>
       ))}
     </ul>
   );

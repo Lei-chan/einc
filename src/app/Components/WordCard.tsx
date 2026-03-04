@@ -5,14 +5,11 @@ import {
   useActionState,
   useCallback,
   useEffect,
-  useReducer,
   useRef,
   useState,
 } from "react";
 // next.js
 import Image from "next/image";
-// reducers
-import { checkboxReducer } from "../lib/reducers";
 // components
 import AudioWord from "./AudioWord";
 import ImageWord from "./ImageWord";
@@ -22,7 +19,6 @@ import { updateWord } from "../actions/auth/words";
 // methods
 import {
   convertBufferToFile,
-  convertWordDataToSendServer,
   getWordDataToDisplay,
   resizeImages,
   wait,
@@ -35,21 +31,17 @@ import ButtonAudio from "./ButtonAudio";
 export default function WordCard({
   type,
   word,
-  isSelected,
-  isAllChecked,
   handleUpdateUI,
 }: {
   type: "list" | "flashcard";
   word: TYPE_WORD;
-  isSelected?: boolean;
-  isAllChecked?: boolean;
   handleUpdateUI?: () => void;
 }) {
   const maxPage = 3;
   const originalWordData = word;
   const wordDataToDisplay = getWordDataToDisplay(word);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isChecked, dispatch] = useReducer(checkboxReducer, false);
+  // const [isChecked, dispatch] = useReducer(checkboxReducer, false);
   const [isEdited, setIsEdited] = useState(false);
   const [wordData, setWordData] = useState<TYPE_WORD | TYPE_WORD_BEFORE_SENT>(
     originalWordData,
@@ -88,10 +80,6 @@ export default function WordCard({
   function handleClickList(e: React.MouseEvent<HTMLDivElement>) {
     if (e.currentTarget === e.target)
       setCurrentPage((prev) => (prev === maxPage ? 1 : prev + 1));
-  }
-
-  function handleToggleChecked() {
-    dispatch("toggle");
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -144,16 +132,6 @@ export default function WordCard({
       );
     }
   }
-
-  // when user finished selecting, reset isChecked for the checkbox
-  useEffect(() => {
-    if (!isSelected) dispatch(false);
-  }, [isSelected]);
-
-  // When user change the input of isAllSelected, change isChecked accordingly
-  useEffect(() => {
-    if (isAllChecked) dispatch(isAllChecked);
-  }, [isAllChecked]);
 
   useEffect(() => {
     const message = state?.message;
@@ -320,41 +298,28 @@ export default function WordCard({
   };
 
   return (
-    <div className="flex flex-row gap-3">
-      {isSelected && (
-        <input
-          type="checkbox"
-          name={wordDataToDisplay._id}
-          checked={isChecked}
-          className="w-5"
-          onChange={handleToggleChecked}
-        ></input>
-      )}
-      <div
-        className="relative w-full min-h-44 max-h-fit bg-yellow-100 shadow-md shadow-black/20 rounded flex flex-col items-center justify-center cursor-pointer py-3"
-        onClick={handleClickList}
-      >
-        <div className="absolute w-full top-1 flex flex-col items-center z-10">
-          {isPending && <PMessage type="pending" message="Updating word..." />}
-          {(state?.error || errorMessage) && (
-            <PMessage
-              type="error"
-              message={state?.error?.message || errorMessage || ""}
-            />
-          )}
-          {successMessage && (
-            <PMessage type="success" message={successMessage} />
-          )}
-        </div>
-        {type === "list" && (
-          <button
-            type="button"
-            className="absolute w-4 aspect-square bg-[url('/icons/edit.svg')] bg-center bg-contain bg-no-repeat right-3 top-2 transition-all duration-150 hover:translate-y-[-2px]"
-            onClick={handleToggleEdit}
-          ></button>
+    <div
+      className="relative w-full min-h-44 max-h-fit bg-yellow-100 shadow-md shadow-black/20 rounded flex flex-col items-center justify-center cursor-pointer py-3"
+      onClick={handleClickList}
+    >
+      <div className="absolute w-full top-1 flex flex-col items-center z-10">
+        {isPending && <PMessage type="pending" message="Updating word..." />}
+        {(state?.error || errorMessage) && (
+          <PMessage
+            type="error"
+            message={state?.error?.message || errorMessage || ""}
+          />
         )}
-        {getContent()}
+        {successMessage && <PMessage type="success" message={successMessage} />}
       </div>
+      {type === "list" && (
+        <button
+          type="button"
+          className="absolute w-4 aspect-square bg-[url('/icons/edit.svg')] bg-center bg-contain bg-no-repeat right-3 top-2 transition-all duration-150 hover:translate-y-[-2px]"
+          onClick={handleToggleEdit}
+        ></button>
+      )}
+      {getContent()}
     </div>
   );
 }

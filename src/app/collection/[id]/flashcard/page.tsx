@@ -5,15 +5,12 @@ import { use, useEffect, useReducer, useState } from "react";
 import Link from "next/link";
 // reducers
 import { paginationReducer } from "@/app/lib/reducers";
-// models
-import wordsDev from "@/app/ModelsDev/UserWord";
 // components
 import ButtonPagination from "@/app/Components/ButtonPagination";
 import WordCard from "@/app/Components/WordCard";
 // types
 import { TYPE_WORD } from "@/app/lib/config/type";
-import { getRandomWords } from "@/app/lib/logics/flashcard";
-
+import { getRandomWordsFlashcard } from "@/app/lib/dal";
 export default function Flashcard({
   params,
 }: {
@@ -22,12 +19,21 @@ export default function Flashcard({
   const { id } = use(params);
   const [words, setWords] = useState<TYPE_WORD[]>();
   const [curCard, dispatch] = useReducer(paginationReducer, 1);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const setRandomWords = () => setWords(getRandomWords(wordsDev.length));
+    const setRandomWords = async () => {
+      const randomWords = await getRandomWordsFlashcard(id);
+      if (!randomWords) {
+        setMessage("Unexpected error occured. Please try again this later 🙇‍♂️");
+        return;
+      }
+
+      setWords(randomWords);
+    };
 
     setRandomWords();
-  }, []);
+  }, [id]);
 
   function handleClickNextSession() {
     window.location.reload();
@@ -35,8 +41,17 @@ export default function Flashcard({
 
   return (
     <div className="w-screen h-screen flex flex-col items-center justify-center">
-      <div className=" w-[90%] flex flex-col gap-10">
-        {words && (
+      <div className=" w-[90%] flex flex-col gap-10 items-center">
+        <p>
+          {message
+            ? message
+            : !words
+              ? "Loading..."
+              : words && words.length === 0
+                ? "No words are registered yet"
+                : ""}
+        </p>
+        {words && words.length !== 0 && (
           <>
             <RemainingWords curCard={curCard} numberOfWords={words.length} />
             <WordCard type="flashcard" word={words[curCard - 1]} />
@@ -57,7 +72,7 @@ export default function Flashcard({
                 </button>
               )}
               <Link
-                href={`/folder/${id}`}
+                href={`/collection/${id}`}
                 className=" text-purple-600 hover:text-purple-400"
               >
                 Exit

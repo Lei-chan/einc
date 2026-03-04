@@ -1,16 +1,18 @@
 "use server";
-import {
-  TYPE_COLLECTIONS,
-  TYPE_WORD,
-  TYPE_WORD_BEFORE_SENT,
-} from "@/app/lib/config/type";
-import { verifySession } from "@/app/lib/dal";
-import dbConnect from "@/app/lib/database";
-import { FormStateWord, WordSchema } from "@/app/lib/definitions";
-import { getError, isError } from "@/app/lib/errorHandler";
-import { convertWordDataToSendServer } from "@/app/lib/helper";
-import User from "@/app/lib/models/User";
+// database
 import Word from "@/app/lib/models/Word";
+import dbConnect from "@/app/lib/database";
+// methods
+import { verifySession } from "@/app/lib/dal";
+import { convertWordDataToSendServer } from "@/app/lib/helper";
+import { getError, isError } from "@/app/lib/errorHandler";
+// types
+import { TYPE_WORD, TYPE_WORD_BEFORE_SENT } from "@/app/lib/config/type";
+import {
+  DefinitionsDataQuiz,
+  FormStateWord,
+  WordSchema,
+} from "@/app/lib/definitions";
 
 const validateWord = (wordData: TYPE_WORD) => {
   const result = WordSchema.safeParse(wordData);
@@ -59,28 +61,6 @@ export async function addWords(
     // create words
     await Promise.all(wordDataToSendServer.map((data) => Word.create(data)));
 
-    const user = await User.findById(userId).select("collections");
-    if (!user) return getError("notFound");
-    const collections: TYPE_COLLECTIONS = user.collections;
-
-    // get all collection ids
-    const collectionIds = wordDataToSendServer.map((data) => data.collectionId);
-
-    // add the number of words added to each collection numberOfWords
-    collectionIds.forEach((id) => {
-      // add 1 to the collection which a new word is added if the selected collection was not the collection 'All'
-      const collection = collections.find(
-        (col) => !col.allWords && String(col._id) === id,
-      );
-      if (collection) collection.numberOfWords += 1;
-
-      // add 1 to the collection 'All'
-      const collectionAll = collections.find((col) => col.allWords);
-      if (collectionAll) collectionAll.numberOfWords += 1;
-    });
-
-    await user.save();
-
     return {
       message: `Word created successfully`,
     };
@@ -110,8 +90,6 @@ export async function updateWord(
     // validate with zod validation
     validateWord(others);
 
-    console.log(others);
-
     await dbConnect();
     await Word.findByIdAndUpdate(_id, others);
 
@@ -123,10 +101,48 @@ export async function updateWord(
 
 export async function deleteWords(
   formState: FormStateWord,
-  formData: FormData,
+  data: {
+    collectionId: string;
+    checkedData: { _id: string; checked: boolean }[];
+  },
+) {
+  const { isAuth, userId } = await verifySession();
+  try {
+    // only take checked word data
+    const wordsToDelete = data.checkedData.filter((data) => data.checked);
+
+    if (!wordsToDelete.length) return;
+
+    // delete words using Promise.all
+    await dbConnect();
+    await Promise.all(
+      wordsToDelete.map((word) => Word.findByIdAndDelete(word._id)),
+    );
+
+    return {
+      message: `Word${wordsToDelete.length === 1 ? "" : "s"} deleted successfully`,
+    };
+  } catch (err: unknown) {
+    return getError("other", "", err);
+  }
+}
+
+export async function addDefinitions(
+  formState: FormStateWord,
+  data: DefinitionsDataQuiz,
 ) {
   try {
-    console.log([...formData]);
+    await dbConnect();
+    const word = await Word.findById(data.wordId).select("definitions");
+    if (!word) return getError("notFound", "Word not found");
+
+    data.newDefinitions.forEach((def) => word.definitions.push(def));
+
+    await word.save();
+
+    return {
+      message: `New definition${data.newDefinitions.length === 1 ? "" : "s"} added successfully`,
+    };
   } catch (err: unknown) {
     return getError("other", "", err);
   }
