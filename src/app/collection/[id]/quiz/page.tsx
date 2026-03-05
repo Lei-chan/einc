@@ -32,12 +32,16 @@ import {
   TYPE_QUIZ_DATA,
   TYPE_QUIZ_QUESTION,
 } from "@/app/lib/config/type";
+import { getRandomWordsOneTurnQuiz } from "@/app/lib/dal";
 import {
-  getRandomWordsOneTurnQuiz,
+  addDefinitions,
   updateStatusNextReviewDate,
-} from "@/app/lib/dal";
-import { addDefinitions } from "@/app/actions/auth/words";
-import { DefinitionsDataQuiz, FormStateWord } from "@/app/lib/definitions";
+} from "@/app/actions/auth/words";
+import {
+  DefinitionsDataQuiz,
+  FormStateWord,
+  UpdateStatusReviewDateDataQuiz,
+} from "@/app/lib/definitions";
 import PMessage from "@/app/Components/PMessage";
 // libraries
 // import distance from "jaro-winkler";
@@ -54,6 +58,11 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   const [isCorrect, setIsCorrect] = useState(true);
 
   const [message, setMessage] = useState("");
+
+  const [state, action] = useActionState<
+    FormStateWord,
+    UpdateStatusReviewDateDataQuiz
+  >(updateStatusNextReviewDate, undefined);
 
   useEffect(() => {
     const getWordsForQuiz = async () => {
@@ -93,7 +102,7 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
     if (!curQuizIndex && curQuizIndex !== 0) return;
 
     const wordId = quiz[curQuizIndex].id;
-    await updateStatusNextReviewDate(wordId, isCorrect);
+    startTransition(() => action({ wordId, isCorrect }));
 
     // get rid of current quiz from quiz
     const newQuiz = quiz.toSpliced(curQuizIndex, 1);
@@ -109,19 +118,24 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <div className="w-screen min-h-screen max-h-fit flex flex-col items-center justify-center py-10">
-      <p className="absolute top-2 right-3">
-        {curQuizPage} / {numberOfQuiz}
-      </p>
+      {quiz && numberOfQuiz > 0 && (
+        <p className="absolute top-2 right-3">
+          {curQuizPage} / {numberOfQuiz}
+        </p>
+      )}
+      {state?.error && (
+        <PMessage type="error" message={state.error.message || ""} />
+      )}
       <p>
         {message
           ? message
           : !quiz
             ? "Loading..."
             : quiz && !numberOfQuiz
-              ? "No words are registered yet"
+              ? "There're no words to review"
               : ""}
       </p>
-      {quiz && numberOfQuiz && (
+      {quiz && numberOfQuiz > 0 && (
         <QuizContent
           curQuiz={
             curQuizIndex || curQuizIndex === 0 ? quiz[curQuizIndex] : undefined

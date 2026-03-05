@@ -4,46 +4,33 @@ import Word from "@/app/lib/models/Word";
 import dbConnect from "@/app/lib/database";
 // methods
 import { verifySession } from "@/app/lib/dal";
-import { convertWordDataToSendServer } from "@/app/lib/helper";
+import {
+  convertWordDataToSendServer,
+  getNextReviewDate,
+} from "@/app/lib/helper";
 import { getError, isError } from "@/app/lib/errorHandler";
 // types
 import { TYPE_WORD, TYPE_WORD_BEFORE_SENT } from "@/app/lib/config/type";
 import {
   DefinitionsDataQuiz,
-  FormStateWord,
+  FormStateWordJournal,
+  UpdateStatusReviewDateDataQuiz,
   WordSchema,
 } from "@/app/lib/definitions";
 
-const validateWord = (wordData: TYPE_WORD) => {
-  const result = WordSchema.safeParse(wordData);
-  if (result.success) return;
+// const validateWord = (wordData: TYPE_WORD) => {
+//   const result = WordSchema.safeParse(wordData);
+//   if (result.success) return;
 
-  const fieldErrors = getError("zodError", "", undefined, result) as {
-    errors: {
-      name?: string[];
-      definitions?: string[];
-      collectionId?: string[];
-    };
-  };
+//   const fieldErrors = getError("prettyZodError", "", undefined, result);
 
-  const nameError = fieldErrors.errors?.name ? "Word name is required" : "";
-  const definitionsError = fieldErrors.errors.definitions
-    ? "Definitions are required"
-    : "";
-  const collectionIdError = fieldErrors.errors.collectionId
-    ? "Collection id is required"
-    : "";
-
-  const errors = [nameError, definitionsError, collectionIdError].filter(
-    (err) => err,
-  );
-  const err = new Error(errors.join(", "));
-  err.name = "zodError";
-  throw err;
-};
+//   const err = new Error(fieldErrors.error?.message);
+//   err.name = "zodError";
+//   throw err;
+// };
 
 export async function addWords(
-  formState: FormStateWord,
+  formState: FormStateWordJournal,
   wordData: TYPE_WORD_BEFORE_SENT[],
 ) {
   const { isAuth, userId } = await verifySession();
@@ -55,7 +42,15 @@ export async function addWords(
     );
 
     // check if each data meets zod requirements
-    wordDataToSendServer.forEach((data) => validateWord(data));
+    wordDataToSendServer.forEach((data) => {
+      const result = WordSchema.safeParse(wordData);
+      if (!result.success) {
+        const fieldErrors = getError("prettyZodError", "", undefined, result);
+        const err = new Error(fieldErrors.error?.message);
+        err.name = "zodError";
+        throw err;
+      }
+    });
 
     await dbConnect();
     // create words
@@ -70,14 +65,14 @@ export async function addWords(
 
     return getError(
       "other",
-      "Error occured.  Please try again this later 🙇‍♂️",
+      "Error occured. Please try again this later 🙇‍♂️",
       err,
     );
   }
 }
 
 export async function updateWord(
-  formState: FormStateWord,
+  formState: FormStateWordJournal,
   wordData: TYPE_WORD_BEFORE_SENT,
 ) {
   const { isAuth, userId } = await verifySession();
@@ -88,7 +83,9 @@ export async function updateWord(
       await convertWordDataToSendServer(wordDataWithUserId);
 
     // validate with zod validation
-    validateWord(others);
+    const result = WordSchema.safeParse(wordData);
+    if (!result.success)
+      return getError("prettyZodError", "", undefined, result);
 
     await dbConnect();
     await Word.findByIdAndUpdate(_id, others);
@@ -100,13 +97,13 @@ export async function updateWord(
 }
 
 export async function deleteWords(
-  formState: FormStateWord,
+  formState: FormStateWordJournal,
   data: {
     collectionId: string;
     checkedData: { _id: string; checked: boolean }[];
   },
 ) {
-  const { isAuth, userId } = await verifySession();
+  await verifySession();
   try {
     // only take checked word data
     const wordsToDelete = data.checkedData.filter((data) => data.checked);
@@ -128,9 +125,10 @@ export async function deleteWords(
 }
 
 export async function addDefinitions(
-  formState: FormStateWord,
+  formState: FormStateWordJournal,
   data: DefinitionsDataQuiz,
 ) {
+  await verifySession();
   try {
     await dbConnect();
     const word = await Word.findById(data.wordId).select("definitions");
@@ -143,6 +141,34 @@ export async function addDefinitions(
     return {
       message: `New definition${data.newDefinitions.length === 1 ? "" : "s"} added successfully`,
     };
+  } catch (err: unknown) {
+    return getError("other", "", err);
+  }
+}
+
+const getNextStatus = (currentStatus: number, isCorrect: boolean) => {
+  if (isCorrect) return currentStatus === 5 ? 5 : currentStatus + 1;
+
+  return currentStatus === 0 ? 0 : currentStatus - 1;
+};
+
+export async function updateStatusNextReviewDate(
+  formState: FormStateWordJournal,
+  data: UpdateStatusReviewDateDataQuiz,
+) {
+  await verifySession();
+  try {
+    await dbConnect();
+    const word = await Word.findById(data.wordId);
+    if (!word) return getError("notFound", "Word not found");
+
+    const nextStatus = getNextStatus(word.status, data.isCorrect);
+    word.status = nextStatus;
+    word.nextReviewAt = getNextReviewDate(nextStatus);
+
+    await word.save();
+
+    return { message: "Status and review date updated successfully" };
   } catch (err: unknown) {
     return getError("other", "", err);
   }

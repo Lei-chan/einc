@@ -9,18 +9,10 @@ import { getError } from "./errorHandler";
 import dbConnect from "./database";
 import Word from "./models/Word";
 import { isArray } from "chart.js/helpers";
-import {
-  TYPE_COLLECTION,
-  TYPE_COLLECTIONS,
-  TYPE_WORD,
-  TYPE_WORD_TO_DISPLAY,
-} from "./config/type";
+import { TYPE_COLLECTION, TYPE_COLLECTIONS, TYPE_WORD } from "./config/type";
 import { FLASHCARD_QUIZ_ONE_TURN, LISTS_ONE_PAGE } from "./config/settings";
-import {
-  getNextReviewDate,
-  getRandomNumber,
-  getWordDataToDisplay,
-} from "./helper";
+import { areDatesSame, getRandomNumber } from "./helper";
+import Journal from "@/app/lib/models/Journal";
 
 export const verifySession = cache(async () => {
   const cookie = (await cookies()).get("session")?.value;
@@ -212,26 +204,26 @@ export const getRandomWordsOneTurnQuiz = cache(async (collectionId: string) => {
   return wordsToReviewCurTurn;
 });
 
-const getNextStatus = (currentStatus: number, isCorrect: boolean) => {
-  if (isCorrect) return currentStatus === 5 ? 5 : currentStatus + 1;
-
-  return currentStatus === 0 ? 0 : currentStatus - 1;
-};
-
-export const updateStatusNextReviewDate = cache(
-  async (wordId: string, isCorrect: boolean) => {
+// journal
+export const getJournalDataDate = cache(
+  async (collectionId: string, date: Date | string) => {
+    await verifySession();
     try {
       await dbConnect();
-      const word = await Word.findById(wordId);
-      if (!word) return getError("notFound", "Word not found");
+      const journalsCollection = await Journal.find({
+        collectionId,
+      }).exec();
+      if (!journalsCollection) return {};
 
-      const nextStatus = getNextStatus(word.status, isCorrect);
-      word.status = nextStatus;
-      word.nextReviewAt = getNextReviewDate(nextStatus);
+      console.log(journalsCollection);
+      const journalDataDate = journalsCollection.find((col) =>
+        areDatesSame(col.journal.date, date),
+      );
 
-      await word.save();
+      return journalDataDate ? JSON.parse(JSON.stringify(journalDataDate)) : {};
     } catch (err: unknown) {
-      return getError("other", "", err);
+      console.error("Unexpected error occured.", err);
+      return null;
     }
   },
 );

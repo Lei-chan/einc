@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 const JournalSchema = new mongoose.Schema({
   userId: String,
   collectionId: String,
-  journals: {
-    date: Date,
+  journal: {
+    date: String,
     content: [String],
   },
 });

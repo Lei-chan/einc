@@ -127,12 +127,12 @@ export type TYPE_QUIZ_DATA = {
 export type TYPE_JOURNAL_DATA_DATABASE = {
   //  MongoDB _id
   _id: string;
-  userId: string;
+  userId?: string;
   collectionId: string;
-  journals: TYPE_JOURNAL_DATA_TO_DISPLAY[];
+  journal: TYPE_JOURNAL_DATA;
 };
 
-export type TYPE_JOURNAL_DATA_TO_DISPLAY = {
+export type TYPE_JOURNAL_DATA = {
   date: Date | string;
   content: string[];
 };

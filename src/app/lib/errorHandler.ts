@@ -1,4 +1,4 @@
-import { ZodSafeParseResult } from "zod";
+import z, { ZodSafeParseResult } from "zod";
 import { TYPE_ERROR } from "./config/type";
 
 export const isError = (err: unknown): err is TYPE_ERROR => {
@@ -12,6 +12,7 @@ export const getError = (
     | "passwordBlank"
     | "bothBlank"
     | "zodError"
+    | "prettyZodError"
     | "wrongPassword"
     | "fetchFailed"
     | "other",
@@ -42,6 +43,14 @@ export const getError = (
 
   if (type === "zodError" && zodValidationResult)
     return { errors: zodValidationResult.error?.flatten()?.fieldErrors };
+
+  if (type === "prettyZodError" && zodValidationResult?.error)
+    return {
+      error: {
+        status: 400,
+        message: z.prettifyError(zodValidationResult.error),
+      },
+    };
 
   if (type === "wrongPassword") {
     console.error("Unauthorized");

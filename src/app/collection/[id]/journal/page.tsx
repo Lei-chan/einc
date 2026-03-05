@@ -1,15 +1,28 @@
 "use client";
-import Dictionary from "@/app/Components/Dictionary";
-import { MILLISECONDS_A_DAY } from "@/app/lib/config/settings";
-import { TYPE_JOURNAL_DATA_TO_DISPLAY } from "@/app/lib/config/type";
-import { formatDate, joinWithLineBreaks } from "@/app/lib/helper";
+// react
 import {
-  checkIsDateToday,
-  getJournalDataDate,
-  getJournalDataMonth,
-} from "@/app/lib/logics/journal";
-import journals from "@/app/ModelsDev/UserJournal";
-import React, { JSX, use, useEffect, useRef, useState } from "react";
+  startTransition,
+  use,
+  useActionState,
+  useEffect,
+  useState,
+} from "react";
+// components
+import Dictionary from "@/app/Components/Dictionary";
+import PMessage from "@/app/Components/PMessage";
+// action
+import { addUpdateJournal } from "@/app/actions/auth/journal";
+// methods
+import { getJournalDataDate } from "@/app/lib/dal";
+import { areDatesSame, formatDate, isObjectEmpty } from "@/app/lib/helper";
+// settings
+import {
+  GENERAL_ERROR_MSG,
+  MILLISECONDS_A_DAY,
+} from "@/app/lib/config/settings";
+// types
+import { TYPE_JOURNAL_DATA_DATABASE } from "@/app/lib/config/type";
+import { FormStateWordJournal } from "@/app/lib/definitions";
 
 export default function Journal({
   params,
@@ -38,15 +51,28 @@ function Middle({ collectionId }: { collectionId: string }) {
   const arrowButtonClassName =
     "w-5 aspect-square bg-[url('/icons/arrow.svg')] bg-no-repeat bg-center bg-contain";
 
-  const [date, setDate] = useState<Date | string>(new Date());
-  const [journalDataMonth, setJournalDataMonth] =
-    useState<TYPE_JOURNAL_DATA_TO_DISPLAY[]>();
+  const [date, setDate] = useState<Date | string>(new Date().toISOString());
   const [journalDataDate, setJournalDataDate] =
-    useState<TYPE_JOURNAL_DATA_TO_DISPLAY>();
-  const [journalToDisplay, setJournalToDisplay] = useState<string[]>();
+    useState<TYPE_JOURNAL_DATA_DATABASE>({
+      _id: "",
+      collectionId,
+      journal: {
+        date: "",
+        content: [],
+      },
+    });
+  const journalContent = journalDataDate.journal.content;
+
   const [isDictionaryOpen, setIsDectionaryOpen] = useState(false);
   const [isContentEditableFocused, setIsContentEditableFocused] =
     useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const [state, action] = useActionState<
+    FormStateWordJournal,
+    TYPE_JOURNAL_DATA_DATABASE
+  >(addUpdateJournal, undefined);
 
   function handleToggleDictionary() {
     setIsDectionaryOpen(!isDictionaryOpen);
@@ -63,42 +89,66 @@ function Middle({ collectionId }: { collectionId: string }) {
           ? prevTimeStamp - MILLISECONDS_A_DAY
           : prevTimeStamp + MILLISECONDS_A_DAY;
 
-      return new Date(newTimeStamp);
+      return new Date(newTimeStamp).toISOString();
     });
   }
 
   function handleChangeTextarea(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const value = e.currentTarget.value;
-    console.log(value);
 
-    setJournalToDisplay(value.split("\n"));
+    setJournalDataDate((prev) => {
+      const newData = { ...prev };
+      newData.journal.content = value.split("\n");
+      return newData;
+    });
   }
 
   function handleToggleFocusContentEditable() {
     setIsContentEditableFocused(!isContentEditableFocused);
   }
 
-  function handleBlurContentEditable(e: React.FocusEvent<HTMLTextAreaElement>) {
+  function handleBlurContentEditable() {
     handleToggleFocusContentEditable();
-    const target = e.currentTarget;
-    const value = target.value.split("\n");
 
-    // send data to server
-    setJournalDataDate({ ...journalDataDate, content: value, date });
-    setJournalToDisplay(value);
+    const { journal, ...others } = journalDataDate;
+
+    startTransition(() =>
+      action({ journal: { date, content: journal.content }, ...others }),
+    );
   }
 
   useEffect(() => {
-    (() => {
-      const journalDate = getJournalDataDate(collectionId, date);
+    const fetchJournalForDate = async () => {
+      const journalDate = await getJournalDataDate(collectionId, date);
+      if (!journalDate) {
+        setErrorMessage(GENERAL_ERROR_MSG);
+        return;
+      }
 
-      setJournalDataDate(journalDate);
-      setJournalToDisplay(journalDate ? journalDate.content : undefined);
-    })();
+      // if object is empty => set a default data, otherwise => set a real data
+      setJournalDataDate(
+        isObjectEmpty(journalDate)
+          ? {
+              _id: "",
+              collectionId,
+              journal: {
+                date: "",
+                content: [],
+              },
+            }
+          : journalDate,
+      );
+    };
+
+    fetchJournalForDate();
   }, [collectionId, date]);
 
   return (
     <div className={`w-full h-[90%] pt-3 gap-3 items-center flex flex-col`}>
+      {errorMessage && <PMessage type="error" message={errorMessage} />}
+      {state?.error && (
+        <PMessage type="error" message={state.error.message || ""} />
+      )}
       <div
         className={`w-[90%] overflow-y-auto my-3 ${!isDictionaryOpen ? "flex-[1.7]" : "flex-1"}`}
       >
@@ -113,13 +163,13 @@ function Middle({ collectionId }: { collectionId: string }) {
           </p>
           <button
             name="next"
-            className={`${arrowButtonClassName} ${checkIsDateToday(date) ? "opacity-0 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+            className={`${arrowButtonClassName} ${areDatesSame(new Date(), date) ? "opacity-0 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
             onClick={handleChangeDate}
           ></button>
         </div>
         <textarea
           suppressContentEditableWarning={true}
-          value={journalToDisplay ? journalToDisplay.join("\n") : ""}
+          value={journalContent.length > 0 ? journalContent.join("\n") : ""}
           className="w-full aspect-[1/1.5] mt-3 p-1 text-sm bg-transparent border-none resize-none"
           onChange={handleChangeTextarea}
           onFocus={handleToggleFocusContentEditable}

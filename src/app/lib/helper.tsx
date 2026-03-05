@@ -13,6 +13,7 @@ import {
   MIN_NUMBER_EACH_PASSWORD,
   PASSWORD_REGEX,
 } from "./config/settings";
+import { isArray } from "chart.js/helpers";
 
 export const getRandomNumber = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -208,6 +209,12 @@ export const getInputErrorMessage = (
   return "";
 };
 
+export const isArrayEmpty = (array: unknown[]) =>
+  isArray(array) && !array.length;
+
+export const isObjectEmpty = (object: object) =>
+  typeof object === "object" && !Object.keys(object).length;
+
 export const getNextReviewDate = (status: number) => {
   const datePlus = [0, 1, 3, 7, 14, 30];
   const datePlusMilliseconds = datePlus.map(
@@ -257,4 +264,15 @@ export const convertWordsToQuizData = (
   });
 
   return quizData;
+};
+
+export const areDatesSame = (date1: Date | string, date2: Date | string) => {
+  const dateOne = new Date(date1);
+  const dateTwo = new Date(date2);
+
+  const isSameYear = dateOne.getFullYear() === dateTwo.getFullYear();
+  const isSameMonth = dateOne.getMonth() === dateTwo.getMonth();
+  const isSameDate = dateOne.getDate() === dateTwo.getDate();
+
+  return isSameYear && isSameMonth && isSameDate ? true : false;
 };

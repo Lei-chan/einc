@@ -3,6 +3,7 @@ import {
   MIN_LENGTH_PASSWORD,
   MIN_NUMBER_EACH_PASSWORD,
 } from "./config/settings";
+import { TYPE_JOURNAL_DATA } from "./config/type";
 
 export const SignupSchema = z.object({
   email: z.email({ error: "Please enter a valid email." }).trim(),
@@ -76,7 +77,7 @@ export const WordSchema = z.object({
 export const JournalSchema = z.object({
   userId: z.string(),
   collectionId: z.string(),
-  journals: z.object({ date: z.iso.datetime(), content: z.array(z.string()) }),
+  journal: z.object({ date: z.iso.datetime(), content: z.array(z.string()) }),
 });
 
 export type FormStateAccount =
@@ -116,7 +117,7 @@ export type FormStateCollection =
     }
   | undefined;
 
-export type FormStateWord =
+export type FormStateWordJournal =
   | {
       error?: { status?: number; message?: string };
       message?: string;
@@ -126,3 +127,8 @@ export type FormStateWord =
 export type CheckedDataList = { _id: string; checked: boolean }[];
 
 export type DefinitionsDataQuiz = { wordId: string; newDefinitions: string[] };
+
+export type UpdateStatusReviewDateDataQuiz = {
+  wordId: string;
+  isCorrect: boolean;
+};
