@@ -1,5 +1,6 @@
 import Resizer from "react-image-file-resizer";
 import {
+  Language,
   MediaDatabase,
   MongoBuffer,
   TYPE_WORD,
@@ -20,16 +21,6 @@ export const getRandomNumber = (min: number, max: number) =>
 
 export const wait = (seconds: number = 3) =>
   new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-
-export const getUserDev = (accessToken: string) =>
-  users.find((user) => user.accessToken === accessToken);
-
-export const getUserWordsDev = (userId: string, collectionId?: string) => {
-  const userWords = wordsDev.filter((word) => word.userId === userId);
-  if (!collectionId) return userWords;
-
-  return userWords.filter((word) => word.collectionId === collectionId);
-};
 
 export const getNumberOfPages = (
   numContentsPage: number,
@@ -54,6 +45,14 @@ export const getWordFromCammelCase = (word: string) =>
       letter === letter.toUpperCase() ? " " + letter.toLowerCase() : letter,
     )
     .join("");
+
+export const getLanguageFromPathname = (pathname: string): Language =>
+  doesPathnameContainLanguage(pathname)
+    ? (pathname.slice(1, 3) as Language)
+    : "en";
+
+export const doesPathnameContainLanguage = (pathname: string) =>
+  pathname.startsWith("/en") || pathname.startsWith("/ja");
 
 export const convertBufferToFile = (data: MediaDatabase | File) => {
   if (!data || data instanceof File) return data;

@@ -11,7 +11,7 @@ import Word from "./models/Word";
 import { isArray } from "chart.js/helpers";
 import { TYPE_COLLECTION, TYPE_COLLECTIONS, TYPE_WORD } from "./config/type";
 import { FLASHCARD_QUIZ_ONE_TURN, LISTS_ONE_PAGE } from "./config/settings";
-import { areDatesSame, getRandomNumber } from "./helper";
+import { areDatesSame, getRandomNumber, isArrayEmpty } from "./helper";
 import Journal from "@/app/lib/models/Journal";
 
 export const verifySession = cache(async () => {
@@ -56,30 +56,36 @@ export const getCollections = cache(async () => {
 
 export const getCollectionDataCurPage = cache(
   async (indexFrom: number, indexTo: number) => {
-    const collections = await getCollections();
-    if (!collections) return null;
+    const { isAuth, userId } = await verifySession();
+    try {
+      const collections = await getCollections();
+      if (!collections) return null;
 
-    const collectionsCurPage = collections.slice(
-      indexFrom,
-      indexTo,
-    ) as TYPE_COLLECTIONS;
+      const collectionsCurPage = collections.slice(
+        indexFrom,
+        indexTo,
+      ) as TYPE_COLLECTIONS;
 
-    // get numberOfWords for collections on current page
-    const numberOfWordsCollections = await Promise.all(
-      collectionsCurPage.map((col: TYPE_COLLECTION) =>
-        // if it's collection 'All' => counts all words, otherwise => counts words in the collection
-        col.allWords
-          ? Word.countDocuments()
-          : Word.countDocuments({ collectionId: col._id }),
-      ),
-    );
+      // get numberOfWords for collections on current page
+      const numberOfWordsCollections = await Promise.all(
+        collectionsCurPage.map((col: TYPE_COLLECTION) =>
+          // if it's collection 'All' => counts all user words, otherwise => counts words in the collection
+          col.allWords
+            ? Word.countDocuments({ userId })
+            : Word.countDocuments({ collectionId: col._id }),
+        ),
+      );
 
-    return {
-      collections: collectionsCurPage.map((col, i) => {
-        return { ...col, numberOfWords: numberOfWordsCollections[i] };
-      }),
-      numberOfCollections: collections.length,
-    };
+      return {
+        collections: collectionsCurPage.map((col, i) => {
+          return { ...col, numberOfWords: numberOfWordsCollections[i] };
+        }),
+        numberOfCollections: collections.length,
+      };
+    } catch (err: unknown) {
+      console.error("Unexpected error occured.", err);
+      return null;
+    }
   },
 );
 
@@ -164,7 +170,7 @@ export const getRandomWordsFlashcard = cache(async (collectionId: string) => {
   const wordsForCollection = await getUserWordsCollection(collectionId);
   if (!wordsForCollection) return null;
   // if no words, return []
-  if (isArray(wordsForCollection) && !wordsForCollection.length) return [];
+  if (isArrayEmpty(wordsForCollection)) return [];
 
   const numberOfWords = wordsForCollection.length;
 
@@ -191,7 +197,7 @@ export const getRandomWordsOneTurnQuiz = cache(async (collectionId: string) => {
   const wordsForCollection = await getUserWordsCollection(collectionId);
   if (!wordsForCollection) return null;
   // if no words, return []
-  if (isArray(wordsForCollection) && !wordsForCollection.length) return [];
+  if (isArrayEmpty(wordsForCollection)) return [];
 
   //   get words nextReviewAt time is now or before now
   const wordsToReview = (wordsForCollection as TYPE_WORD[]).filter(
@@ -215,7 +221,6 @@ export const getJournalDataDate = cache(
       }).exec();
       if (!journalsCollection) return {};
 
-      console.log(journalsCollection);
       const journalDataDate = journalsCollection.find((col) =>
         areDatesSame(col.journal.date, date),
       );

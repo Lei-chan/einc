@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 // database
 import dbConnect from "@/app/lib/database";
 import User from "@/app/lib/models/User";
+import Word from "@/app/lib/models/Word";
+import Journal from "@/app/lib/models/Journal";
 // methods
 import { verifySession } from "@/app/lib/dal";
 import { deleteSession } from "@/app/lib/session";
@@ -21,9 +23,8 @@ export async function updateEmail(
   formState: FormStateAccount,
   formData: FormData,
 ) {
+  const { isAuth, userId } = await verifySession();
   try {
-    const { isAuth, userId } = await verifySession();
-
     const email = formData.get("email");
 
     // validate email
@@ -52,9 +53,8 @@ export async function updatePassword(
   formState: FormStateAccount,
   formData: FormData,
 ) {
+  const { isAuth, userId } = await verifySession();
   try {
-    const { isAuth, userId } = await verifySession();
-
     const curPassword = String(formData.get("currentPassword")).trim() || "";
     const newPassword = String(formData.get("newPassword")).trim() || "";
 
@@ -97,15 +97,14 @@ export async function updatePassword(
   }
 }
 
-export async function deleteAccount(
-  formState: FormStateAccount,
-  formData: FormData,
-) {
+export async function deleteAccount(formState: FormStateAccount, _: FormData) {
+  const { isAuth, userId } = await verifySession();
   try {
-    const { isAuth, userId } = await verifySession();
-
     await dbConnect();
     await User.findByIdAndDelete(userId);
+    await Word.deleteMany({ userId });
+    await Journal.deleteMany({ userId });
+
     await deleteSession();
   } catch (err: unknown) {
     return getError("other", "", err);

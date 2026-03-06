@@ -140,3 +140,5 @@ export type TYPE_JOURNAL_DATA = {
 export type TYPE_DISPLAY_MESSAGE =
   | { type: TYPE_MESSAGE; message: string }
   | undefined;
+
+export type Language = "en" | "ja";

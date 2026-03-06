@@ -48,11 +48,11 @@ export async function signupViaUserInfo(
 
 export async function signupViaGoogle(
   formState: FormStateAccount,
-  formData: FormData,
+  email: string,
 ) {
   try {
     const validatedFields = SignupSchema.safeParse({
-      email: formData.get("email"),
+      email: email.trim(),
       isGoogleConnected: true,
       collections: [{ name: "All", allWords: true }],
     });

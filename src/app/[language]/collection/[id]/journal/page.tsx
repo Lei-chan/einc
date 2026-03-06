@@ -1,0 +1,201 @@
+"use client";
+// react
+import {
+  startTransition,
+  use,
+  useActionState,
+  useEffect,
+  useState,
+} from "react";
+// components
+import Dictionary from "@/app/[language]/Components/Dictionary";
+import PMessage from "@/app/[language]/Components/PMessage";
+// action
+import { addUpdateJournal } from "@/app/actions/auth/journal";
+// methods
+import { getJournalDataDate } from "@/app/lib/dal";
+import { areDatesSame, formatDate, isObjectEmpty } from "@/app/lib/helper";
+// settings
+import {
+  GENERAL_ERROR_MSG,
+  MILLISECONDS_A_DAY,
+} from "@/app/lib/config/settings";
+// types
+import { TYPE_JOURNAL_DATA_DATABASE } from "@/app/lib/config/type";
+import { FormStateWordJournal } from "@/app/lib/definitions";
+
+export default function Journal({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+
+  return (
+    <div className="w-screen h-screen">
+      <Top />
+      <Middle collectionId={id} />
+    </div>
+  );
+}
+
+function Top() {
+  return (
+    <h1 className="w-full h-[10%] text-2xl text-white bg-gradient-to-t from-amber-800 to-amber-700 tracking-wide py-2 shadow-sm shadow-black/40 text-center">
+      Journal
+    </h1>
+  );
+}
+
+function Middle({ collectionId }: { collectionId: string }) {
+  const arrowButtonClassName =
+    "w-5 aspect-square bg-[url('/icons/arrow.svg')] bg-no-repeat bg-center bg-contain";
+
+  const [date, setDate] = useState<Date | string>(new Date().toISOString());
+  const [journalDataDate, setJournalDataDate] =
+    useState<TYPE_JOURNAL_DATA_DATABASE>({
+      _id: "",
+      collectionId,
+      journal: {
+        date: "",
+        content: [],
+      },
+    });
+  const journalContent = journalDataDate.journal.content;
+
+  const [isDictionaryOpen, setIsDectionaryOpen] = useState(false);
+  const [isContentEditableFocused, setIsContentEditableFocused] =
+    useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const [state, action] = useActionState<
+    FormStateWordJournal,
+    TYPE_JOURNAL_DATA_DATABASE
+  >(addUpdateJournal, undefined);
+
+  function handleToggleDictionary() {
+    setIsDectionaryOpen(!isDictionaryOpen);
+  }
+
+  function handleChangeDate(e: React.MouseEvent<HTMLButtonElement>) {
+    const name = e.currentTarget.name;
+
+    // set new date
+    setDate((prev) => {
+      const prevTimeStamp = new Date(prev).getTime();
+      const newTimeStamp =
+        name === "prev"
+          ? prevTimeStamp - MILLISECONDS_A_DAY
+          : prevTimeStamp + MILLISECONDS_A_DAY;
+
+      return new Date(newTimeStamp).toISOString();
+    });
+  }
+
+  function handleChangeTextarea(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const value = e.currentTarget.value;
+
+    setJournalDataDate((prev) => {
+      const newData = { ...prev };
+      newData.journal.content = value.split("\n");
+      return newData;
+    });
+  }
+
+  function handleToggleFocusContentEditable() {
+    setIsContentEditableFocused(!isContentEditableFocused);
+  }
+
+  function handleBlurContentEditable() {
+    handleToggleFocusContentEditable();
+
+    const { journal, ...others } = journalDataDate;
+
+    startTransition(() =>
+      action({ journal: { date, content: journal.content }, ...others }),
+    );
+  }
+
+  useEffect(() => {
+    const fetchJournalForDate = async () => {
+      const journalDate = await getJournalDataDate(collectionId, date);
+      if (!journalDate) {
+        setErrorMessage(GENERAL_ERROR_MSG);
+        return;
+      }
+
+      // if object is empty => set a default data, otherwise => set a real data
+      setJournalDataDate(
+        isObjectEmpty(journalDate)
+          ? {
+              _id: "",
+              collectionId,
+              journal: {
+                date: "",
+                content: [],
+              },
+            }
+          : journalDate,
+      );
+    };
+
+    fetchJournalForDate();
+  }, [collectionId, date]);
+
+  return (
+    <div className={`w-full h-[90%] pt-3 gap-3 items-center flex flex-col`}>
+      {errorMessage && <PMessage type="error" message={errorMessage} />}
+      {state?.error && (
+        <PMessage type="error" message={state.error.message || ""} />
+      )}
+      <div
+        className={`w-[90%] overflow-y-auto my-3 ${!isDictionaryOpen ? "flex-[1.7]" : "flex-1"}`}
+      >
+        <div className="flex flex-row justify-center gap-10">
+          <button
+            name="prev"
+            className={`${arrowButtonClassName} rotate-180`}
+            onClick={handleChangeDate}
+          ></button>
+          <p className="text-center">
+            {formatDate(new Date(date), "en-US", true)}
+          </p>
+          <button
+            name="next"
+            className={`${arrowButtonClassName} ${areDatesSame(new Date(), date) ? "opacity-0 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+            onClick={handleChangeDate}
+          ></button>
+        </div>
+        <textarea
+          suppressContentEditableWarning={true}
+          value={journalContent.length > 0 ? journalContent.join("\n") : ""}
+          className="w-full aspect-[1/1.5] mt-3 p-1 text-sm bg-transparent border-none resize-none"
+          onChange={handleChangeTextarea}
+          onFocus={handleToggleFocusContentEditable}
+          onBlur={handleBlurContentEditable}
+        ></textarea>
+      </div>
+      {!isDictionaryOpen ? (
+        <div className="flex-[0.3] flex flex-col justify-center">
+          <button
+            className="w-fit h-fit bg-green-400 hover:bg-green-300 text-white px-2 rounded"
+            onClick={handleToggleDictionary}
+          >
+            Search words with dictionary
+          </button>
+        </div>
+      ) : (
+        <div className="relative overflow-y-auto flex-1">
+          <button
+            className="absolute font-bold top-[2px] right-2 text-sm hover:text-amber-700"
+            onClick={handleToggleDictionary}
+          >
+            &#10005;
+          </button>
+          <Dictionary widthClassName="w-screen" heightClassName="h-full" />
+        </div>
+      )}
+    </div>
+  );
+}

@@ -43,10 +43,10 @@ export async function addWords(
 
     // check if each data meets zod requirements
     wordDataToSendServer.forEach((data) => {
-      const result = WordSchema.safeParse(wordData);
+      const result = WordSchema.safeParse(data);
       if (!result.success) {
         const fieldErrors = getError("prettyZodError", "", undefined, result);
-        const err = new Error(fieldErrors.error?.message);
+        const err = new Error(fieldErrors.error?.message || "");
         err.name = "zodError";
         throw err;
       }

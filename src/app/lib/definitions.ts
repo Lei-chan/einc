@@ -3,7 +3,6 @@ import {
   MIN_LENGTH_PASSWORD,
   MIN_NUMBER_EACH_PASSWORD,
 } from "./config/settings";
-import { TYPE_JOURNAL_DATA } from "./config/type";
 
 export const SignupSchema = z.object({
   email: z.email({ error: "Please enter a valid email." }).trim(),
@@ -64,9 +63,11 @@ const mediaSchema = z
 export const WordSchema = z.object({
   userId: z.string(),
   collectionId: z.string(),
-  name: z.string().trim().min(1),
+  name: z.string().trim().min(1, "Word is required"),
   audio: mediaSchema,
-  definitions: z.array(z.string().trim().min(1)),
+  definitions: z
+    .array(z.string().trim().min(1, "Definition cannot be empty"))
+    .min(1, "At least one definition is required"),
   examples: z.array(z.string().trim()),
   imageName: mediaSchema,
   imageDefinitions: mediaSchema,

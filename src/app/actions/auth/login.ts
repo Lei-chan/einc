@@ -42,13 +42,11 @@ export async function loginViaUserInfo(
 
 export async function loginViaGoogle(
   formState: FormStateAccount,
-  formData: FormData,
+  email: string,
 ) {
   try {
-    const email = String(formData.get("email")).trim();
-
     await dbConnect();
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.trim() });
     if (!user) return getError("notFound");
 
     await createSession(user._id);
