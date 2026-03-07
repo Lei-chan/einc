@@ -8,26 +8,18 @@ import {
   convertWordDataToSendServer,
   getNextReviewDate,
 } from "@/app/lib/helper";
-import { getError, isError } from "@/app/lib/errorHandler";
+import { getError, isZodError } from "@/app/lib/errorHandler";
 // types
-import { TYPE_WORD, TYPE_WORD_BEFORE_SENT } from "@/app/lib/config/type";
+import {
+  TYPE_ERROR_WITH_ZOD_DATA,
+  TYPE_WORD_BEFORE_SENT,
+} from "@/app/lib/config/type";
 import {
   DefinitionsDataQuiz,
   FormStateWordJournal,
   UpdateStatusReviewDateDataQuiz,
   WordSchema,
 } from "@/app/lib/definitions";
-
-// const validateWord = (wordData: TYPE_WORD) => {
-//   const result = WordSchema.safeParse(wordData);
-//   if (result.success) return;
-
-//   const fieldErrors = getError("prettyZodError", "", undefined, result);
-
-//   const err = new Error(fieldErrors.error?.message);
-//   err.name = "zodError";
-//   throw err;
-// };
 
 export async function addWords(
   formState: FormStateWordJournal,
@@ -45,9 +37,16 @@ export async function addWords(
     wordDataToSendServer.forEach((data) => {
       const result = WordSchema.safeParse(data);
       if (!result.success) {
-        const fieldErrors = getError("prettyZodError", "", undefined, result);
-        const err = new Error(fieldErrors.error?.message || "");
+        const fieldErrors = getError(
+          "zodError",
+          undefined,
+          undefined,
+          undefined,
+          result,
+        );
+        const err = new Error("") as TYPE_ERROR_WITH_ZOD_DATA;
         err.name = "zodError";
+        err.zodErrorData = fieldErrors;
         throw err;
       }
     });
@@ -57,17 +56,13 @@ export async function addWords(
     await Promise.all(wordDataToSendServer.map((data) => Word.create(data)));
 
     return {
-      message: `Word created successfully`,
+      message: { en: `Word created successfully`, ja: "単語が作成されました" },
     };
   } catch (err: unknown) {
-    if (isError(err) && err.name === "zodError")
-      return getError("other", "", err);
+    if (isZodError(err) && err.name === "zodError" && err.zodErrorData)
+      return err.zodErrorData;
 
-    return getError(
-      "other",
-      "Error occured. Please try again this later 🙇‍♂️",
-      err,
-    );
+    return getError("other", undefined, err);
   }
 }
 
@@ -85,14 +80,16 @@ export async function updateWord(
     // validate with zod validation
     const result = WordSchema.safeParse(wordData);
     if (!result.success)
-      return getError("prettyZodError", "", undefined, result);
+      return getError("zodError", undefined, undefined, undefined, result);
 
     await dbConnect();
     await Word.findByIdAndUpdate(_id, others);
 
-    return { message: "Word updated successfully" };
+    return {
+      message: { en: "Word updated successfully", ja: "単語が更新されました" },
+    };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 }
 
@@ -117,10 +114,13 @@ export async function deleteWords(
     );
 
     return {
-      message: `Word${wordsToDelete.length === 1 ? "" : "s"} deleted successfully`,
+      message: {
+        en: `Word${wordsToDelete.length === 1 ? "" : "s"} deleted successfully`,
+        ja: "単語が削除されました",
+      },
     };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 }
 
@@ -132,17 +132,24 @@ export async function addDefinitions(
   try {
     await dbConnect();
     const word = await Word.findById(data.wordId).select("definitions");
-    if (!word) return getError("notFound", "Word not found");
+    if (!word)
+      return getError("notFound", {
+        en: "Word not found",
+        ja: "単語が見つかりません",
+      });
 
     data.newDefinitions.forEach((def) => word.definitions.push(def));
 
     await word.save();
 
     return {
-      message: `New definition${data.newDefinitions.length === 1 ? "" : "s"} added successfully`,
+      message: {
+        en: `New definition${data.newDefinitions.length === 1 ? "" : "s"} added successfully`,
+        ja: "新しい意味が追加されました",
+      },
     };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 }
 
@@ -160,7 +167,11 @@ export async function updateStatusNextReviewDate(
   try {
     await dbConnect();
     const word = await Word.findById(data.wordId);
-    if (!word) return getError("notFound", "Word not found");
+    if (!word)
+      return getError("notFound", {
+        en: "Word not found",
+        ja: "単語が見つかりません",
+      });
 
     const nextStatus = getNextStatus(word.status, data.isCorrect);
     word.status = nextStatus;
@@ -168,8 +179,13 @@ export async function updateStatusNextReviewDate(
 
     await word.save();
 
-    return { message: "Status and review date updated successfully" };
+    return {
+      message: {
+        en: "Status and review date updated successfully",
+        ja: "Statusとreview dateが更新されました",
+      },
+    };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 }

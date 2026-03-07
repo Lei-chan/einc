@@ -14,15 +14,19 @@ import PMessage from "@/app/[language]/Components/PMessage";
 import { addUpdateJournal } from "@/app/actions/auth/journal";
 // methods
 import { getJournalDataDate } from "@/app/lib/dal";
-import { areDatesSame, formatDate, isObjectEmpty } from "@/app/lib/helper";
-// settings
 import {
-  GENERAL_ERROR_MSG,
-  MILLISECONDS_A_DAY,
-} from "@/app/lib/config/settings";
+  areDatesSame,
+  formatDate,
+  getGenericErrorMessage,
+  getLanguageFromPathname,
+  isObjectEmpty,
+} from "@/app/lib/helper";
+// settings
+import { MILLISECONDS_A_DAY } from "@/app/lib/config/settings";
 // types
-import { TYPE_JOURNAL_DATA_DATABASE } from "@/app/lib/config/type";
+import { Language, TYPE_JOURNAL_DATA_DATABASE } from "@/app/lib/config/type";
 import { FormStateWordJournal } from "@/app/lib/definitions";
+import { usePathname } from "next/navigation";
 
 export default function Journal({
   params,
@@ -30,24 +34,32 @@ export default function Journal({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const pathname = usePathname();
+  const language = getLanguageFromPathname(pathname);
 
   return (
     <div className="w-screen h-screen">
-      <Top />
-      <Middle collectionId={id} />
+      <Top language={language} />
+      <Middle language={language} collectionId={id} />
     </div>
   );
 }
 
-function Top() {
+function Top({ language }: { language: Language }) {
   return (
     <h1 className="w-full h-[10%] text-2xl text-white bg-gradient-to-t from-amber-800 to-amber-700 tracking-wide py-2 shadow-sm shadow-black/40 text-center">
-      Journal
+      {language === "en" ? "Journal" : "ジャーナル"}
     </h1>
   );
 }
 
-function Middle({ collectionId }: { collectionId: string }) {
+function Middle({
+  language,
+  collectionId,
+}: {
+  language: Language;
+  collectionId: string;
+}) {
   const arrowButtonClassName =
     "w-5 aspect-square bg-[url('/icons/arrow.svg')] bg-no-repeat bg-center bg-contain";
 
@@ -121,7 +133,7 @@ function Middle({ collectionId }: { collectionId: string }) {
     const fetchJournalForDate = async () => {
       const journalDate = await getJournalDataDate(collectionId, date);
       if (!journalDate) {
-        setErrorMessage(GENERAL_ERROR_MSG);
+        setErrorMessage(getGenericErrorMessage(language));
         return;
       }
 
@@ -141,13 +153,13 @@ function Middle({ collectionId }: { collectionId: string }) {
     };
 
     fetchJournalForDate();
-  }, [collectionId, date]);
+  }, [collectionId, date, language]);
 
   return (
     <div className={`w-full h-[90%] pt-3 gap-3 items-center flex flex-col`}>
       {errorMessage && <PMessage type="error" message={errorMessage} />}
-      {state?.error && (
-        <PMessage type="error" message={state.error.message || ""} />
+      {state?.error?.message && (
+        <PMessage type="error" message={state.error.message[language]} />
       )}
       <div
         className={`w-[90%] overflow-y-auto my-3 ${!isDictionaryOpen ? "flex-[1.7]" : "flex-1"}`}
@@ -182,7 +194,9 @@ function Middle({ collectionId }: { collectionId: string }) {
             className="w-fit h-fit bg-green-400 hover:bg-green-300 text-white px-2 rounded"
             onClick={handleToggleDictionary}
           >
-            Search words with dictionary
+            {language === "en"
+              ? "Search words with dictionary"
+              : "辞書で単語を検索する"}
           </button>
         </div>
       ) : (

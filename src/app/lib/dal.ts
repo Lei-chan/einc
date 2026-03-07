@@ -34,7 +34,8 @@ export const getUser = cache(async () => {
 
     return userObject;
   } catch (err: unknown) {
-    return getError("fetchFailed", "", err);
+    console.error("Unexpected error occured.", err);
+    return null;
   }
 });
 

@@ -1,14 +1,20 @@
 "use client";
 // react
 import { startTransition, useActionState, useEffect, useState } from "react";
+// next.js
+import { usePathname } from "next/navigation";
 // components
 import Logo from "./Logo";
 import ErrorMessageInput from "./ErrorMessageInput";
 import PMessage from "./PMessage";
 import EmailInput from "./EmailInput";
 import PasswordInput from "./PasswordInput";
+// actions
+import { signupViaGoogle, signupViaUserInfo } from "../../actions/auth/signup";
+import { loginViaGoogle, loginViaUserInfo } from "../../actions/auth/login";
 // methods
 import { getError } from "../../lib/errorHandler";
+import { getLanguageFromPathname } from "@/app/lib/helper";
 // types
 import {
   Language,
@@ -18,10 +24,6 @@ import { ErrorFormState, FormStateAccount } from "../../lib/definitions";
 // libraries
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
-import { signupViaGoogle, signupViaUserInfo } from "../../actions/auth/signup";
-import { loginViaGoogle, loginViaUserInfo } from "../../actions/auth/login";
-import { usePathname } from "next/navigation";
-import { getLanguageFromPathname } from "@/app/lib/helper";
 
 export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   const pathname = usePathname();
@@ -53,7 +55,7 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
     if (!err) return;
 
     setIsPending(false);
-    setError(err?.error?.message || "");
+    if (err.error?.message) setError(err.error.message[language]);
   }
 
   return (
@@ -102,14 +104,14 @@ function ViaUserInfo({
 }) {
   const pClassName = "w-[12rem] text-left";
 
-  const [state, action, pending] = useActionState<FormStateAccount, FormData>(
+  const [state, action, isPending] = useActionState<FormStateAccount, FormData>(
     typeToDisplay === "Sign up" ? signupViaUserInfo : loginViaUserInfo,
     undefined,
   );
 
   useEffect(() => {
-    handlePending(pending);
-  }, [handlePending, pending]);
+    handlePending(isPending);
+  }, [handlePending, isPending]);
 
   useEffect(() => {
     if (!state?.error) return;
@@ -135,7 +137,9 @@ function ViaUserInfo({
         <EmailInput
           placeholder={language === "en" ? "email" : "メールアドレス"}
           defaultValue=""
-          errorMessage={state?.errors?.email}
+          errorMessage={
+            state?.errors?.email ? state.errors.email[language] : ""
+          }
         />
         <p className={`${pClassName} mt-2`}>
           {language === "en" ? "Password" : "パスワード"}
@@ -143,7 +147,9 @@ function ViaUserInfo({
         <PasswordInput
           language={language}
           showExplanation={typeToDisplay === "Sign up" ? true : false}
-          errorMessage={state?.errors?.password}
+          errorMessage={
+            state?.errors?.password ? state.errors.password[language] : ""
+          }
         />
         <button
           type="submit"
@@ -152,7 +158,7 @@ function ViaUserInfo({
           {typeToDisplayForLanguage}
         </button>
       </form>
-      <p className="opacity-70">or</p>
+      <p className="opacity-70">{language === "en" ? "or" : "または"}</p>
     </div>
   );
 }
@@ -173,14 +179,14 @@ function ViaGoogle({
   const errorMessage = `${typeToDisplay} Failed. Please try this later or try another mathod.`;
 
   const [email, setEmail] = useState("");
-  const [state, action, pending] = useActionState<FormStateAccount, string>(
+  const [state, action, isPending] = useActionState<FormStateAccount, string>(
     typeToDisplay === "Sign up" ? signupViaGoogle : loginViaGoogle,
     undefined,
   );
 
   useEffect(() => {
-    handlePending(pending);
-  }, [handlePending, pending]);
+    handlePending(isPending);
+  }, [handlePending, isPending]);
 
   useEffect(() => {
     if (!state?.error) return;
@@ -209,10 +215,10 @@ function ViaGoogle({
               return handleError({
                 error: {
                   status: 401,
-                  message:
-                    language === "en"
-                      ? "Error. No credential provided."
-                      : "エラーが発生しました。クレデンシャルが与えられませんでした。",
+                  message: {
+                    en: "Error. No credential provided.",
+                    ja: "エラーが発生しました。クレデンシャルが与えられませんでした。",
+                  },
                 },
               });
             }
@@ -233,7 +239,7 @@ function ViaGoogle({
               startTransition(() => action(email));
           } catch (err: unknown) {
             console.error("Error occured", err);
-            return getError("other", "", err);
+            return getError("other", undefined, err);
           }
         }}
         onError={() => {
@@ -242,10 +248,10 @@ function ViaGoogle({
         }}
       />
       {state?.errors?.email && (
-        <ErrorMessageInput errorMessage={state?.errors?.email} />
+        <ErrorMessageInput errorMessage={state.errors.email[language]} />
       )}
       {state?.errors?.password && (
-        <ErrorMessageInput errorMessage={state?.errors?.password} />
+        <ErrorMessageInput errorMessage={state.errors.password[language]} />
       )}
       {/* only when it's sign up, submit when user select an account and click the sign up button */}
       {typeToDisplay === "Sign up" && email && (

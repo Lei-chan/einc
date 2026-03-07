@@ -1,3 +1,5 @@
+import { Message } from "../definitions";
+
 export type TYPE_DECODED_GOOGLE_CREDENTIAL = {
   iss: string;
   nbf: number;
@@ -17,6 +19,13 @@ export type TYPE_DECODED_GOOGLE_CREDENTIAL = {
 
 export interface TYPE_ERROR extends Error {
   status?: number;
+}
+
+export interface TYPE_ERROR_WITH_ZOD_DATA extends Error {
+  status?: number;
+  zodErrorData:
+    | { errors: { [key: string]: Message } }
+    | { error: { status: number; message: Message } };
 }
 
 export type TYPE_MESSAGE = "pending" | "error" | "success";
@@ -102,7 +111,7 @@ export type TYPE_WORD_TO_DISPLAY = {
 export type TYPE_ACTION_PAGINATION = "add" | "reduce" | "reset";
 
 export type TYPE_QUIZ_QUESTION = {
-  sentence: string;
+  sentence: Message;
   name?: string;
   definitions?: string[];
   audio?: MediaToDisplay;

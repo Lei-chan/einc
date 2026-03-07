@@ -1,30 +1,45 @@
 "use client";
 // react
 import { useActionState, useEffect, useReducer, useRef, useState } from "react";
+// next.js
+import Link from "next/link";
 // components
 import CreateFolder from "./CreateFolder";
 import ButtonPagination from "./ButtonPagination";
+import PMessage from "./PMessage";
 // reducer
 import { checkboxReducer, paginationReducer } from "../../lib/reducers";
+// actions
+import {
+  deleteCollection,
+  updateCollection,
+} from "../../actions/auth/collections";
+// dal
+import { getCollectionDataCurPage } from "../../lib/dal";
+// methods
+import {
+  getGenericErrorMessage,
+  getLanguageFromPathname,
+  getNumberOfPages,
+  wait,
+} from "../../lib/helper";
 // type
 import {
+  Language,
   TYPE_ACTION_PAGINATION,
   TYPE_COLLECTION,
   TYPE_COLLECTIONS,
   TYPE_DISPLAY_MESSAGE,
 } from "../../lib/config/type";
-import { getNumberOfPages, wait } from "../../lib/helper";
-import Link from "next/link";
-import { getCollectionDataCurPage } from "../../lib/dal";
-import {
-  deleteCollection,
-  updateCollection,
-} from "../../actions/auth/collections";
 import { FormStateCollection } from "../../lib/definitions";
+// library
 import { nanoid } from "nanoid";
-import PMessage from "./PMessage";
+import { usePathname } from "next/navigation";
 
 export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
+  const pathname = usePathname();
+  const language = getLanguageFromPathname(pathname);
+
   // design
   const sm = 640;
   const md = 768;
@@ -36,7 +51,6 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
     collections: TYPE_COLLECTIONS;
     numberOfCollections: number;
   }>({ collections: [], numberOfCollections: 0 });
-  console.log(collectionData);
 
   const numberOfCollectionsPage = numberOfRows * numberOfColumns;
   const numberOfPages = getNumberOfPages(
@@ -80,7 +94,7 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
       if (!collections) {
         setMessageData({
           type: "error",
-          message: "Error occured. Please try again this later 🙇‍♂️",
+          message: getGenericErrorMessage(language),
         });
         return;
       }
@@ -89,7 +103,7 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
     };
 
     fetchCollectionData();
-  }, [refreshKey, curPage, numberOfCollectionsPage]);
+  }, [refreshKey, curPage, numberOfCollectionsPage, language]);
 
   // Set numberOfColumns when it's rendered
   useEffect(() => {
@@ -120,6 +134,7 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
         <PMessage type={messageData.type} message={messageData.message} />
       )}
       <FolderContainer
+        language={language}
         type={type}
         numberOfColumns={numberOfColumns}
         collections={collectionData.collections}
@@ -146,6 +161,7 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
 }
 
 function FolderContainer({
+  language,
   type,
   numberOfColumns,
   collections,
@@ -154,6 +170,7 @@ function FolderContainer({
   onClickCreate,
   displayMessage,
 }: {
+  language: Language;
   type: "main" | "addTo";
   numberOfColumns: number;
   collections: TYPE_COLLECTIONS;
@@ -212,6 +229,7 @@ function FolderContainer({
     <form className="w-full flex-[4.5] p-[5%] flex flex-col items-center">
       {type === "main" && (
         <Selector
+          language={language}
           isSelected={isSelected}
           isEdited={isEdited}
           isDeleted={isDeleted}
@@ -234,6 +252,7 @@ function FolderContainer({
           collections.map((collection, i) => (
             <Folder
               key={nanoid()}
+              language={language}
               type={type}
               data={collection}
               isSelected={isSelected}
@@ -248,6 +267,7 @@ function FolderContainer({
 }
 
 function Selector({
+  language,
   isSelected,
   isEdited,
   isDeleted,
@@ -259,6 +279,7 @@ function Selector({
   onClickEdit,
   displayMessage,
 }: {
+  language: Language;
   isSelected: boolean;
   isEdited: boolean;
   isDeleted: boolean;
@@ -293,10 +314,16 @@ function Selector({
 
   useEffect(() => {
     if (!prevUpdatePendingRef.current && updateIsPending)
-      displayMessage({ type: "pending", message: "Updating collections..." });
+      displayMessage({
+        type: "pending",
+        message:
+          language === "en"
+            ? "Updating collections..."
+            : "コレクションを更新中...",
+      });
 
     prevUpdatePendingRef.current = updateIsPending;
-  }, [updateIsPending, displayMessage]);
+  }, [updateIsPending, language, displayMessage]);
 
   useEffect(() => {
     // if update state was the same as update state that was handled last time
@@ -305,11 +332,10 @@ function Selector({
 
     lastHandledUpdateStateRef.current = updateState;
 
-    if (updateState?.error) {
+    if (updateState?.error?.message) {
       displayMessage({
         type: "error",
-        message:
-          updateState?.error?.message || "Error occured. Plase try again.",
+        message: updateState.error.message[language],
       });
       return;
     }
@@ -317,19 +343,25 @@ function Selector({
     if (updateState?.message) {
       displayMessage({
         type: "success",
-        message: updateState?.message || "Collection updated",
+        message: updateState.message[language],
       });
 
       handleUpdate();
     }
-  }, [updateState, handleUpdate, displayMessage]);
+  }, [updateState, language, handleUpdate, displayMessage]);
 
   useEffect(() => {
     if (!prevDeletePendingRef.current && deleteIsPending)
-      displayMessage({ type: "pending", message: "Deleting collection..." });
+      displayMessage({
+        type: "pending",
+        message:
+          language === "en"
+            ? "Deleting collection..."
+            : "コレクションを削除中...",
+      });
 
     prevDeletePendingRef.current = deleteIsPending;
-  }, [deleteIsPending, displayMessage]);
+  }, [deleteIsPending, language, displayMessage]);
 
   useEffect(() => {
     // if delete state was the same as delete state that was handled last time
@@ -338,11 +370,10 @@ function Selector({
 
     lastHandledDeleteStateRef.current = deleteState;
 
-    if (deleteState?.error) {
+    if (deleteState.error?.message) {
       displayMessage({
         type: "error",
-        message:
-          deleteState.error.message || "Error occured. Please try again.",
+        message: deleteState.error.message[language],
       });
       return;
     }
@@ -350,12 +381,12 @@ function Selector({
     if (deleteState?.message) {
       displayMessage({
         type: "success",
-        message: deleteState.message || "Collection deleted",
+        message: deleteState.message[language],
       });
 
       handleUpdate();
     }
-  }, [deleteState, deleteIsPending, displayMessage, handleUpdate]);
+  }, [deleteState, deleteIsPending, language, displayMessage, handleUpdate]);
 
   return (
     <div className="w-[92%] flex flex-row justify-end gap-2 text-sm items-center">
@@ -368,7 +399,7 @@ function Selector({
               onClick={onClickButton}
             >
               <span className="text-xl mr-1">+</span>
-              New collection
+              {language === "en" ? "New collection" : "新しいコレクション"}
             </button>
           ) : (
             <>
@@ -379,7 +410,7 @@ function Selector({
                     className={btnEditClassName}
                     onClick={onClickEdit}
                   >
-                    Edit name
+                    {language === "en" ? "Edit name" : "名前を編集"}
                   </button>
                 ) : (
                   <button
@@ -387,7 +418,7 @@ function Selector({
                     className={btnEditClassName}
                     formAction={updateAction}
                   >
-                    Finish editing
+                    {language === "en" ? "Finish editing" : "編集を完了"}
                   </button>
                 ))}
               {!isEdited &&
@@ -397,7 +428,7 @@ function Selector({
                     className="bg-orange-500 text-white py-[1px] px-1 mr-1 rounded"
                     onClick={onClickDelete}
                   >
-                    Delete
+                    {language === "en" ? "Delete" : "削除"}
                   </button>
                 ) : (
                   <button
@@ -408,7 +439,7 @@ function Selector({
                 ))}
               {(isEdited || isDeleted) && (
                 <label className="w-fit h-full flex flex-row items-center">
-                  Select all:&nbsp;
+                  {language === "en" ? "Select all" : "全てを選択"}:&nbsp;
                   <input
                     type="checkbox"
                     className="w-4 aspect-square"
@@ -423,7 +454,8 @@ function Selector({
             className={`${btnNewSelectClassName} bg-orange-500 hover:bg-yellow-500 py-[2px]`}
             onClick={onClickSelect}
           >
-            {isSelected ? "Finish" : "Select"}
+            {isSelected && language === "en" ? "Finish" : "終了"}
+            {!isSelected && language === "en" ? "Select" : "選択"}
           </button>
         </>
       }
@@ -432,6 +464,7 @@ function Selector({
 }
 
 function Folder({
+  language,
   data,
   type,
   isSelected,
@@ -439,6 +472,7 @@ function Folder({
   isDeleted,
   isEdited,
 }: {
+  language: Language;
   data: TYPE_COLLECTION;
   type: "main" | "addTo";
   isSelected: boolean;
@@ -505,7 +539,7 @@ function Folder({
         {!data.allWords && isEdited && isChecked ? (
           <input
             name={data._id}
-            placeholder="new name"
+            placeholder={language === "en" ? "new name" : "新しい名前"}
             value={name}
             className="w-full z-10"
             onChange={handleChangeName}

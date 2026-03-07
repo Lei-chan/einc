@@ -1,7 +1,14 @@
 "use client";
+// react
 import { useRef, useState } from "react";
-import { TYPE_DICTIONARY } from "../../lib/config/type";
+// next.js
+import { usePathname } from "next/navigation";
+// component
 import ButtonAudio from "./ButtonAudio";
+// method
+import { getLanguageFromPathname } from "@/app/lib/helper";
+// types
+import { Language, TYPE_DICTIONARY } from "../../lib/config/type";
 
 export default function Dictionary({
   widthClassName,
@@ -10,19 +17,22 @@ export default function Dictionary({
   widthClassName: string;
   heightClassName: string;
 }) {
+  const pathname = usePathname();
+  const language = getLanguageFromPathname(pathname);
+
   return (
     <div className={`${widthClassName} ${heightClassName} z-10`}>
-      <Top />
-      <WordContainer />
+      <Top language={language} />
+      <WordContainer language={language} />
     </div>
   );
 }
 
-function Top() {
-  const [language, setLanguage] = useState("english");
+function Top({ language }: { language: Language }) {
+  const [dictionaryLanguage, setDictionaryLanguage] = useState("english");
 
   function handleChangeSelect(e: React.ChangeEvent<HTMLSelectElement>) {
-    setLanguage(e.currentTarget.value);
+    setDictionaryLanguage(e.currentTarget.value);
   }
 
   return (
@@ -37,34 +47,56 @@ function Top() {
         type="submit"
         className="text-sm text-white bg-red-400 px-1 py-[2px] rounded shadow shadow-black/10"
       >
-        Search
+        {language === "en" ? "Search" : "検索"}
       </button>
       <select
         value={language}
         className="text-sm"
         onChange={handleChangeSelect}
       >
-        <option value="english">English</option>
-        <option value="japanese">Japanese</option>
-        <option value="german">German</option>
-        <option value="french">French</option>
-        <option value="spanish">Spanish</option>
-        <option value="chinese">Chinese</option>
-        <option value="korean">Korean</option>
+        <option value="english">
+          {language === "en" ? "English" : "英語"}
+        </option>
+        <option value="japanese">
+          {language === "en" ? "Japanese" : "日本語"}
+        </option>
+        <option value="german">
+          {language === "en" ? "German" : "ドイツ語"}
+        </option>
+        <option value="french">
+          {language === "en" ? "French" : "フランス語"}
+        </option>
+        <option value="spanish">
+          {language === "en" ? "Spanish" : "スペイン語"}
+        </option>
+        <option value="chinese">
+          {language === "en" ? "Chinese" : "中国語"}
+        </option>
+        <option value="korean">
+          {language === "en" ? "Korean" : "韓国語"}
+        </option>
       </select>
     </form>
   );
 }
 
-function WordContainer() {
+function WordContainer({ language }: { language: Language }) {
   return (
     <ul className="w-full h-full overflow-y-auto">
-      <Word name="Hello" id=""></Word>
+      <Word language={language} name="Hello" id=""></Word>
     </ul>
   );
 }
 
-function Word({ name, id }: { name: string; id: string }) {
+function Word({
+  language,
+  name,
+  id,
+}: {
+  language: Language;
+  name: string;
+  id: string;
+}) {
   const liClassName = "border-b-2 py-2 px-4";
   const h3ClassName = "text-lg text-black";
   const btnPlusRef = useRef<HTMLButtonElement>(null);
@@ -131,33 +163,42 @@ function Word({ name, id }: { name: string; id: string }) {
             <p
               className={`absolute w-fit left-[100%] transition-all duration-500 whitespace-nowrap pointer-events-none text-sm mt-[30%] ml-2 ${isPlusHovered ? "opacity-100" : "opacity-0"}`}
             >
-              Add this
+              {language === "en" ? "Add this" : "この単語を"}
               <br />
-              word
+              {language === "en" ? "word" : "追加する"}
             </p>
           </div>
         </div>
       </div>
       <div>
-        <h3 className={h3ClassName}>Definitions</h3>
+        <h3 className={h3ClassName}>
+          {language === "en" ? "Definitions" : "意味"}
+        </h3>
         {data.definitions.length ? (
           data.definitions.map((def, i) => <p key={i}>• {def}</p>)
         ) : (
-          <p>There&apos;re no definitions</p>
+          <p>{language === "en" ? "No definitions" : "意味はありません"}</p>
         )}
       </div>
       <div>
-        <h3 className={h3ClassName}>Examples</h3>
+        <h3 className={h3ClassName}>
+          {language === "en" ? "Examples" : "例文"}
+        </h3>
         {data.examples.length ? (
           data.examples.map((exam, i) => <p key={i}>• {exam}</p>)
         ) : (
-          <p>There&apos;re no examples</p>
+          <p>{language === "en" ? "No examples" : "例文はありません"}</p>
         )}
       </div>
       <div>
-        <h3 className={h3ClassName}>Synonym</h3>
+        <h3 className={h3ClassName}>
+          {language === "en" ? "Synonym" : "類義語"}
+        </h3>
         <p>
-          {data.synonyms.length ? data.synonyms.join(" / ") : "no synonyms"}
+          {data.synonyms.length > 0 && data.synonyms.join(" / ")}
+          {data.synonyms.length === 0 && language === "en"
+            ? "no synonyms"
+            : "類義語はありません"}
         </p>
       </div>
     </li>

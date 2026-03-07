@@ -81,18 +81,19 @@ export const JournalSchema = z.object({
   journal: z.object({ date: z.iso.datetime(), content: z.array(z.string()) }),
 });
 
+export type Message = { en: string; ja: string };
 export type FormStateAccount =
   | {
       errors?: {
-        email?: string[];
-        password?: string[];
-        isGoogleConnected?: string[];
-        collections?: string[];
-        curPassword?: string[];
-        newPassword?: string[];
+        email?: Message;
+        password?: Message;
+        isGoogleConnected?: Message;
+        collections?: Message;
+        curPassword?: Message;
+        newPassword?: Message;
       };
-      error?: { status?: number; message?: string };
-      message?: string;
+      error?: { status?: number; message?: Message };
+      message?: Message;
       data?: {
         email?: string;
       };
@@ -100,7 +101,10 @@ export type FormStateAccount =
   | undefined;
 
 export type ErrorFormState =
-  | { error?: { status?: number; message?: string } }
+  | {
+      error?: { status?: number; message?: Message };
+      errors?: { [key: string]: Message };
+    }
   | undefined;
 
 export type SessionPayload = {
@@ -111,17 +115,18 @@ export type SessionPayload = {
 export type FormStateCollection =
   | {
       errors?: {
-        name?: string[];
+        name?: Message;
       };
-      error?: { status?: number; message?: string };
-      message?: string;
+      error?: { status?: number; message?: Message };
+      message?: Message;
     }
   | undefined;
 
 export type FormStateWordJournal =
   | {
-      error?: { status?: number; message?: string };
-      message?: string;
+      error?: { status?: number; message?: Message };
+      errors?: { [key: string]: Message };
+      message?: Message;
     }
   | undefined;
 

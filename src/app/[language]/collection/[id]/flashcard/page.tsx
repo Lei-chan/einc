@@ -11,21 +11,30 @@ import WordCard from "@/app/[language]/Components/WordCard";
 // types
 import { TYPE_WORD } from "@/app/lib/config/type";
 import { getRandomWordsFlashcard } from "@/app/lib/dal";
+import { usePathname } from "next/navigation";
+import {
+  getGenericErrorMessage,
+  getLanguageFromPathname,
+} from "@/app/lib/helper";
+
 export default function Flashcard({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const pathname = usePathname();
+  const language = getLanguageFromPathname(pathname);
+
   const [words, setWords] = useState<TYPE_WORD[]>();
   const [curCard, dispatch] = useReducer(paginationReducer, 1);
-  const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const setRandomWords = async () => {
       const randomWords = await getRandomWordsFlashcard(id);
       if (!randomWords) {
-        setMessage("Unexpected error occured. Please try again this later 🙇‍♂️");
+        setErrorMessage(getGenericErrorMessage(language));
         return;
       }
 
@@ -33,7 +42,7 @@ export default function Flashcard({
     };
 
     setRandomWords();
-  }, [id]);
+  }, [id, language]);
 
   function handleClickNextSession() {
     window.location.reload();
@@ -43,13 +52,13 @@ export default function Flashcard({
     <div className="w-screen h-screen flex flex-col items-center justify-center">
       <div className=" w-[90%] flex flex-col gap-10 items-center">
         <p>
-          {message
-            ? message
-            : !words
-              ? "Loading..."
-              : words && words.length === 0
-                ? "No words are registered yet"
-                : ""}
+          {errorMessage && errorMessage}
+          {!words && (language === "en" ? "Loading..." : "ロード中...")}
+          {words &&
+            words.length === 0 &&
+            (language === "en"
+              ? "No words are registered yet"
+              : "単語が登録されていません")}
         </p>
         {words && words.length !== 0 && (
           <>
@@ -68,14 +77,16 @@ export default function Flashcard({
                   className="w-fit transition-all duration-150 bg-green-400  hover:bg-yellow-500 text-white px-1 rounded"
                   onClick={handleClickNextSession}
                 >
-                  Go to next session
+                  {language === "en"
+                    ? "Go to next session"
+                    : "次のセッションへ"}
                 </button>
               )}
               <Link
                 href={`/collection/${id}`}
                 className=" text-purple-600 hover:text-purple-400"
               >
-                Exit
+                {language === "en" ? "Exit" : "終了"}
               </Link>
             </div>
           </>

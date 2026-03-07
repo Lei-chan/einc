@@ -15,7 +15,10 @@ export async function createCollection(
 ) {
   try {
     const name = String(formData.get("name")).trim();
-    if (!name) return { errors: { name: ["Name is required."] } };
+    if (!name)
+      return getError("blank", undefined, undefined, [
+        { en: "Name", ja: "名前" },
+      ]);
 
     const { isAuth, userId } = await verifySession();
 
@@ -25,9 +28,14 @@ export async function createCollection(
     user.collections.push({ name, numberOfWords: 0 });
     await user.save();
 
-    return { message: `Collection ${name} created` };
+    return {
+      message: {
+        en: `Collection ${name} created`,
+        ja: `コレクション${name}が作成されました`,
+      },
+    };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 }
 
@@ -38,14 +46,20 @@ export async function updateCollection(
   try {
     const formDataArr = [...formData];
     if (!formDataArr.length)
-      return getError("other", "Please select at least one collection.");
+      return getError("other", {
+        en: "Please select at least one collection.",
+        ja: "最低一つ以上のコレクションを選択してください",
+      });
 
     const validFormDataArr = [...formData].filter((dataArr) =>
       String(dataArr[1]).trim(),
     );
 
     if (!validFormDataArr.length)
-      return getError("other", "Empty fields cannot be submitted.");
+      return getError("other", {
+        en: "Empty fields cannot be submitted.",
+        ja: "空欄の項目は送信できません",
+      });
 
     const collectionIds = formDataArr.map((dataArr) => dataArr[0]);
     const names = formDataArr.map((dataArr) => String(dataArr[1]).trim());
@@ -68,9 +82,14 @@ export async function updateCollection(
 
     await user.save();
 
-    return { message: "Collections updated" };
+    return {
+      message: {
+        en: "Collections updated",
+        ja: "コレクションが更新されました",
+      },
+    };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 }
 
@@ -81,7 +100,10 @@ export async function deleteCollection(
   try {
     const formDataArr = [...formData];
     if (!formDataArr.length)
-      return getError("other", "Please select at least one collection.");
+      return getError("other", {
+        en: "Please select at least one collection.",
+        ja: "最低一つ以上のコレクションを選択してください",
+      });
 
     const collectionIds = formDataArr.map((dataArr) => dataArr[0]);
 
@@ -95,9 +117,12 @@ export async function deleteCollection(
     await user.save();
 
     return {
-      message: `Collection${collectionIds.length === 1 ? "" : "s"} deleted`,
+      message: {
+        en: `Collection${collectionIds.length === 1 ? "" : "s"} deleted`,
+        ja: "コレクションが削除されました",
+      },
     };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 }

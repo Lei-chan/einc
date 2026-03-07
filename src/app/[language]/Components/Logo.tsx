@@ -1,7 +1,9 @@
 "use client";
-import { getLanguageFromPathname } from "@/app/lib/helper";
+// next.js
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+// method
+import { getLanguageFromPathname } from "@/app/lib/helper";
 
 export default function Logo({ topClassName }: { topClassName?: string }) {
   const pathname = usePathname();

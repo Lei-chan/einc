@@ -9,31 +9,39 @@ import {
   useRef,
   useState,
 } from "react";
-// reducers
-import { paginationReducer } from "@/app/lib/reducers";
+// next.js
+import { usePathname } from "next/navigation";
 // components
 import ButtonPagination from "@/app/[language]/Components/ButtonPagination";
 import WordCard from "@/app/[language]/Components/WordCard";
 import PMessage from "@/app/[language]/Components/PMessage";
+// reducer
+import { paginationReducer } from "@/app/lib/reducers";
+// action
+import { deleteWords } from "@/app/actions/auth/words";
 // methods
-import { getNumberOfPages, wait } from "@/app/lib/helper";
+import {
+  getGenericErrorMessage,
+  getLanguageFromPathname,
+  getNumberOfPages,
+  wait,
+} from "@/app/lib/helper";
 import { getMatchedWordsCurPage } from "@/app/lib/dal";
 // settings
-import {
-  GENERAL_ERROR_MSG_DATA,
-  LISTS_ONE_PAGE,
-} from "@/app/lib/config/settings";
+import { LISTS_ONE_PAGE } from "@/app/lib/config/settings";
 // type
 import {
+  Language,
   TYPE_ACTION_PAGINATION,
   TYPE_DISPLAY_MESSAGE,
   TYPE_WORD,
 } from "@/app/lib/config/type";
-import { CheckedDataList, FormStateWord } from "@/app/lib/definitions";
-import { deleteWords } from "@/app/actions/auth/words";
+import { CheckedDataList, FormStateWordJournal } from "@/app/lib/definitions";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const pathname = usePathname();
+  const language = getLanguageFromPathname(pathname);
 
   // states
   const [searchValue, setSearchValue] = useState("");
@@ -66,7 +74,10 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
       const wordData = await getMatchedWordsCurPage(id, searchValue, curPage);
 
       if (!wordData) {
-        setMessageData(GENERAL_ERROR_MSG_DATA);
+        setMessageData({
+          type: "error",
+          message: getGenericErrorMessage(language),
+        });
         return;
       }
 
@@ -77,17 +88,18 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
     };
 
     setWordsNumberOfPages();
-  }, [id, searchValue, curPage, resetKey]);
+  }, [id, searchValue, curPage, resetKey, language]);
 
   return (
     <div
       className={`w-full h-fit flex flex-col items-center ${messageData ? "gap-3" : ""}`}
     >
-      <SearchBar onSubmitSearch={handleSubmit} />
+      <SearchBar language={language} onSubmitSearch={handleSubmit} />
       {messageData && (
         <PMessage type={messageData.type} message={messageData.message} />
       )}
       <Bottom
+        language={language}
         collectionId={id}
         data={words}
         numberOfPages={numberOfPages}
@@ -100,8 +112,10 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
 }
 
 function SearchBar({
+  language,
   onSubmitSearch,
 }: {
+  language: Language;
   onSubmitSearch: (e: React.FormEvent<HTMLFormElement>) => void;
 }) {
   return (
@@ -112,20 +126,21 @@ function SearchBar({
       <input
         name="word"
         type="search"
-        placeholder="search by word"
+        placeholder={language === "en" ? "search by word" : "単語名で探す"}
         className="w-[70%] h-[40%] rounded-full"
       ></input>
       <button
         type="submit"
         className="text-sm text-white bg-green-400/80 px-1 py-[2px] rounded shadow shadow-black/10"
       >
-        Search
+        {language === "en" ? "Search" : "検索"}
       </button>
     </form>
   );
 }
 
 function Bottom({
+  language,
   collectionId,
   data,
   numberOfPages,
@@ -133,6 +148,7 @@ function Bottom({
   handleUpdateUI,
   dispatch,
 }: {
+  language: Language;
   collectionId: string;
   data: TYPE_WORD[];
   numberOfPages: number;
@@ -149,10 +165,10 @@ function Bottom({
   );
 
   const [successMessage, setSuccessMessage] = useState("");
-  const lastHandledDeleteRef = useRef<FormStateWord>(null);
+  const lastHandledDeleteRef = useRef<FormStateWordJournal>(null);
 
   const [state, action, isPending] = useActionState<
-    FormStateWord,
+    FormStateWordJournal,
     { collectionId: string; checkedData: CheckedDataList }
   >(deleteWords, undefined);
 
@@ -236,31 +252,40 @@ function Bottom({
 
       handleToggleSelected();
       handleUpdateUI();
-      setSuccessMessage(successMsg);
+      setSuccessMessage(successMsg[language]);
       await wait();
       setSuccessMessage("");
     };
 
     displaySuccessMsg();
     lastHandledDeleteRef.current = state;
-  }, [state, handleUpdateUI]);
+  }, [state, language, handleUpdateUI]);
 
   return (
     <div className="w-[90%] min-h-[80vh] max-h-fit flex flex-col items-center justify-center">
       {data.length !== 0 ? (
         <>
-          {isPending && <PMessage type="pending" message="Deleting word..." />}
-          {state?.error && (
-            <PMessage type="error" message={state.error.message || ""} />
+          {isPending && (
+            <PMessage
+              type="pending"
+              message={
+                language === "en" ? "Deleting word..." : "単語を削除中..."
+              }
+            />
+          )}
+          {state?.error?.message && (
+            <PMessage type="error" message={state.error.message[language]} />
           )}
           {successMessage && (
             <PMessage type="success" message={successMessage} />
           )}
           <NumberOfLists
+            language={language}
             passedWords={curPage * data.length}
             numberOfMatchedWords={numberOfPages * LISTS_ONE_PAGE}
           />
           <Selector
+            language={language}
             isSelected={isSelected}
             onClickSelected={handleToggleSelected}
             onChangeSelectAll={handleChangeAllSelected}
@@ -282,7 +307,7 @@ function Bottom({
         </>
       ) : (
         <p className="w-full text-center text-lg text-amber-800/90">
-          No words found
+          {language === "en" ? "No words found" : "単語が見つかりませんでした"}
         </p>
       )}
     </div>
@@ -290,25 +315,30 @@ function Bottom({
 }
 
 function NumberOfLists({
+  language,
   passedWords,
   numberOfMatchedWords,
 }: {
+  language: Language;
   passedWords: number;
   numberOfMatchedWords: number;
 }) {
   return (
     <p className=" text-right self-end mt-3 text-lg">
-      {passedWords} / {numberOfMatchedWords} words
+      {passedWords} / {numberOfMatchedWords}{" "}
+      {language === "en" ? "words" : "単語"}
     </p>
   );
 }
 
 function Selector({
+  language,
   isSelected,
   onClickSelected,
   onChangeSelectAll,
   onClickDelete,
 }: {
+  language: Language;
   isSelected: boolean;
   onClickSelected: () => void;
   onChangeSelectAll: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -324,7 +354,7 @@ function Selector({
             onClick={onClickDelete}
           ></button>
           <label className="w-fit h-full flex flex-row items-center">
-            Select all:&nbsp;
+            {language === "en" ? "Select all" : "全てを選択"}:&nbsp;
             <input
               type="checkbox"
               className="w-4 aspect-square"
@@ -338,7 +368,8 @@ function Selector({
         className="bg-orange-500 hover:bg-yellow-500 transition-all duration-300 text-white rounded py-[2px] px-1"
         onClick={onClickSelected}
       >
-        {isSelected ? "Finish" : "Select"}
+        {isSelected && (language === "en" ? "Finish" : "終了")}
+        {!isSelected && (language === "en" ? "Select" : "選択")}
       </button>
     </div>
   );

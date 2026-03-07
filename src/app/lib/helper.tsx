@@ -7,14 +7,17 @@ import {
   TYPE_WORD_BEFORE_SENT,
   TYPE_WORD_TO_DISPLAY,
 } from "./config/type";
-import users from "../ModelsDev/User";
-import wordsDev from "../ModelsDev/UserWord";
 import {
   MIN_LENGTH_PASSWORD,
   MIN_NUMBER_EACH_PASSWORD,
   PASSWORD_REGEX,
 } from "./config/settings";
 import { isArray } from "chart.js/helpers";
+
+export const getGenericErrorMessage = (language: Language) =>
+  language === "en"
+    ? "Unexpected error occured. Please try again this later 🙇‍♂️"
+    : "予期せぬエラーが発生しました。後ほどもう一度お試し下さい🙇‍♂️";
 
 export const getRandomNumber = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -244,7 +247,10 @@ export const convertWordsToQuizData = (
 
     const wordAnswerMeaning = {
       question: {
-        sentence: "Please answer the meaning of this word.",
+        sentence: {
+          en: "Please answer the meaning of this word",
+          ja: "この単語の意味を答えてください",
+        },
         ...nameData,
       },
       answer: definitionsData,
@@ -252,7 +258,10 @@ export const convertWordsToQuizData = (
     };
     const wordAnsweringWord = {
       question: {
-        sentence: "Please answer the word of this meaning",
+        sentence: {
+          en: "Please answer the word of this meaning",
+          ja: "この意味の単語を答えてください",
+        },
         ...definitionsData,
       },
       answer: nameData,

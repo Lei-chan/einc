@@ -1,3 +1,4 @@
+// type
 import { TYPE_MESSAGE } from "../../lib/config/type";
 
 export default function PMessage({

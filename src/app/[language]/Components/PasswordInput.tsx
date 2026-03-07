@@ -1,11 +1,16 @@
 "use client";
+// react
 import { useState } from "react";
-import { getWordFromCammelCase } from "../../lib/helper";
+// component
 import ErrorMessageInput from "./ErrorMessageInput";
+// method
+import { getWordFromCammelCase } from "../../lib/helper";
+// setting
 import {
   MIN_LENGTH_PASSWORD,
   MIN_NUMBER_EACH_PASSWORD,
 } from "../../lib/config/settings";
+// type
 import { Language } from "@/app/lib/config/type";
 
 export default function PasswordInput({
@@ -19,7 +24,7 @@ export default function PasswordInput({
   name?: string;
   classNameOptions?: string;
   showExplanation: boolean;
-  errorMessage: string[] | undefined;
+  errorMessage: string;
 }) {
   const buttonClassName =
     "absolute w-[10%] aspect-square bg-center bg-no-repeat bg-contain right-2";

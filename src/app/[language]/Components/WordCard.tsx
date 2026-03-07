@@ -14,19 +14,22 @@ import Image from "next/image";
 import AudioWord from "./AudioWord";
 import ImageWord from "./ImageWord";
 import PMessage from "./PMessage";
+import ButtonAudio from "./ButtonAudio";
 // actions
 import { updateWord } from "../../actions/auth/words";
 // methods
 import {
   convertBufferToFile,
+  getGenericErrorMessage,
+  getLanguageFromPathname,
   getWordDataToDisplay,
   resizeImages,
   wait,
 } from "../../lib/helper";
 // types
 import { TYPE_WORD, TYPE_WORD_BEFORE_SENT } from "../../lib/config/type";
-import { FormStateWord } from "../../lib/definitions";
-import ButtonAudio from "./ButtonAudio";
+import { FormStateWordJournal } from "../../lib/definitions";
+import { usePathname } from "next/navigation";
 
 export default function WordCard({
   type,
@@ -37,21 +40,24 @@ export default function WordCard({
   word: TYPE_WORD;
   handleUpdateUI?: () => void;
 }) {
+  const pathname = usePathname();
+  const language = getLanguageFromPathname(pathname);
+
   const maxPage = 3;
   const originalWordData = word;
   const wordDataToDisplay = getWordDataToDisplay(word);
+
   const [currentPage, setCurrentPage] = useState(1);
-  // const [isChecked, dispatch] = useReducer(checkboxReducer, false);
   const [isEdited, setIsEdited] = useState(false);
   const [wordData, setWordData] = useState<TYPE_WORD | TYPE_WORD_BEFORE_SENT>(
     originalWordData,
   );
 
   const [state, action, isPending] = useActionState<
-    FormStateWord,
+    FormStateWordJournal,
     TYPE_WORD_BEFORE_SENT
   >(updateWord, undefined);
-  const lastHandledUpdateRef = useRef<FormStateWord>(null);
+  const lastHandledUpdateRef = useRef<FormStateWordJournal>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -127,9 +133,7 @@ export default function WordCard({
       startTransition(() => action(submittedData));
     } catch (err: unknown) {
       console.log("Unexpected error", err);
-      setErrorMessage(
-        "Unexpected error occured. Please try again this later 🙇‍♂️",
-      );
+      setErrorMessage(getGenericErrorMessage(language));
     }
   }
 
@@ -142,14 +146,14 @@ export default function WordCard({
 
     const displayMessage = async () => {
       handleToggleEdit();
-      setSuccessMessage(message);
+      setSuccessMessage(message[language]);
       await wait();
       setSuccessMessage("");
     };
 
     displayMessage();
     if (handleUpdateUI) handleUpdateUI();
-  }, [state?.message, handleToggleEdit, state, handleUpdateUI]);
+  }, [state?.message, language, handleToggleEdit, state, handleUpdateUI]);
 
   const getContent = () => {
     const textareaClassName = "w-[65%]";
@@ -169,25 +173,27 @@ export default function WordCard({
         <>
           <form className="flex flex-col gap-2 p-3" onSubmit={handleSubmit}>
             <label>
-              Word: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              {language === "en" ? "Word" : "単語"}:
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               <input
                 name="name"
-                placeholder="word name"
+                placeholder={language === "en" ? "word name" : "単語名"}
                 value={wordData.name}
                 className="w-[55%]"
                 onChange={handleChangeInput}
               ></input>
             </label>
             <AudioWord
+              language={language}
               audioTitle={wordDataToDisplay.audio?.name || ""}
               audioName=""
               onClickRemove={() => handleClickRemove("audio")}
             />
             <label>
-              Definition:{" "}
+              {language === "en" ? "Definition" : "意味"}:{" "}
               <textarea
                 name="definitions"
-                placeholder="definitions"
+                placeholder={language === "en" ? "definitions" : "意味"}
                 value={
                   typeof wordData.definitions === "string"
                     ? wordData.definitions
@@ -198,10 +204,10 @@ export default function WordCard({
               ></textarea>
             </label>
             <label>
-              Examples:{" "}
+              {language === "en" ? "Examples" : "例文"}:{" "}
               <textarea
                 name="examples"
-                placeholder="example sentences"
+                placeholder={language === "en" ? "example sentences" : "例文"}
                 value={
                   typeof wordData.examples === "string"
                     ? wordData.examples
@@ -212,11 +218,13 @@ export default function WordCard({
               ></textarea>
             </label>
             <ImageWord
+              language={language}
               type="name"
               imageTitle={wordDataToDisplay.imageName?.name || ""}
               onClickRemove={handleClickRemove}
             />
             <ImageWord
+              language={language}
               type="definitions"
               imageTitle={wordDataToDisplay.imageDefinitions?.name || ""}
               onClickRemove={handleClickRemove}
@@ -257,7 +265,9 @@ export default function WordCard({
     if (currentPage === 2)
       return (
         <>
-          <h3 className={h3ClassName}>Definitions</h3>
+          <h3 className={h3ClassName}>
+            {language === "en" ? "Definitions" : "意味"}
+          </h3>
           <p className={pClassName}>
             {word.definitions.map((def, i) => (
               <span key={i}>
@@ -270,7 +280,9 @@ export default function WordCard({
             <Image
               src={wordDataToDisplay.imageDefinitions.data}
               alt={
-                wordDataToDisplay.imageDefinitions.name || "Definition image"
+                wordDataToDisplay.imageDefinitions.name || language === "en"
+                  ? "Definition image"
+                  : "意味の画像"
               }
               width={500}
               height={400}
@@ -282,7 +294,9 @@ export default function WordCard({
 
     return (
       <>
-        <h3 className={h3ClassName}>Examples</h3>
+        <h3 className={h3ClassName}>
+          {language === "en" ? "Examples" : "例文"}
+        </h3>
         {word.examples && word.examples?.length > 0 && (
           <p className={pClassName}>
             {word.examples.map((exam, i) => (
@@ -303,11 +317,20 @@ export default function WordCard({
       onClick={handleClickList}
     >
       <div className="absolute w-full top-1 flex flex-col items-center z-10">
-        {isPending && <PMessage type="pending" message="Updating word..." />}
-        {(state?.error || errorMessage) && (
+        {isPending && (
+          <PMessage
+            type="pending"
+            message={language === "en" ? "Updating word..." : "単語を更新中..."}
+          />
+        )}
+        {(state?.error?.message || errorMessage) && (
           <PMessage
             type="error"
-            message={state?.error?.message || errorMessage || ""}
+            message={
+              state?.error?.message
+                ? state.error.message[language]
+                : errorMessage
+            }
           />
         )}
         {successMessage && <PMessage type="success" message={successMessage} />}

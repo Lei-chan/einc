@@ -1,10 +1,15 @@
+// react
 import { useState } from "react";
+// types
+import { Language } from "@/app/lib/config/type";
 
 export default function AudioWord({
+  language,
   audioTitle,
   audioName,
   onClickRemove,
 }: {
+  language: Language;
   audioTitle: string;
   audioName: string;
   onClickRemove?: () => void;
@@ -24,7 +29,10 @@ export default function AudioWord({
   return (
     <>
       <div className="w-fit flex flex-row gap-2 items-center">
-        <span>Audio:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>
+          {language === "en" ? "Audio" : "オーディオ"}
+          :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </span>
         {title ? (
           <p>{title}</p>
         ) : (
@@ -46,7 +54,7 @@ export default function AudioWord({
               if (onClickRemove) onClickRemove();
             }}
           >
-            Remove
+            {language === "en" ? "Remove" : "取消"}
           </button>
         )}
       </div>

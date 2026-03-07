@@ -12,13 +12,23 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-// Reducers
-import { paginationReducer } from "@/app/lib/reducers";
 // Components
 import ButtonAudio from "@/app/[language]/Components/ButtonAudio";
+import PMessage from "@/app/[language]/Components/PMessage";
+// Reducers
+import { paginationReducer } from "@/app/lib/reducers";
+// actions
+import {
+  addDefinitions,
+  updateStatusNextReviewDate,
+} from "@/app/actions/auth/words";
+// dal
+import { getRandomWordsOneTurnQuiz } from "@/app/lib/dal";
 // Methods
 import {
   convertWordsToQuizData,
+  getGenericErrorMessage,
+  getLanguageFromPathname,
   getRandomNumber,
   getWordDataToDisplay,
   joinWithCommas,
@@ -27,27 +37,24 @@ import {
 } from "@/app/lib/helper";
 // Types
 import {
+  Language,
   TYPE_QUIZ_ANSWER,
   TYPE_QUIZ_DATA,
   TYPE_QUIZ_QUESTION,
 } from "@/app/lib/config/type";
-import { getRandomWordsOneTurnQuiz } from "@/app/lib/dal";
-import {
-  addDefinitions,
-  updateStatusNextReviewDate,
-} from "@/app/actions/auth/words";
 import {
   DefinitionsDataQuiz,
   FormStateWordJournal,
   UpdateStatusReviewDateDataQuiz,
 } from "@/app/lib/definitions";
-import PMessage from "@/app/[language]/Components/PMessage";
 // libraries
 // import distance from "jaro-winkler";
 
 export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  // const [numberOfQuiz, setNumberOfQuiz] = useState(0);
+  const pathname = usePathname();
+  const language = getLanguageFromPathname(pathname);
+
   const [quiz, setQuiz] = useState<TYPE_QUIZ_DATA[]>();
   const [numberOfQuiz, setNumberOfQuiz] = useState(0);
 
@@ -56,7 +63,7 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   const [isAnswering, setIsAnswering] = useState(true);
   const [isCorrect, setIsCorrect] = useState(true);
 
-  const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [state, action] = useActionState<
     FormStateWordJournal,
@@ -67,7 +74,7 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
     const getWordsForQuiz = async () => {
       const quizWords = await getRandomWordsOneTurnQuiz(id);
       if (!quizWords) {
-        setMessage("Unexpected error occured. Please try again this later 🙇‍♂️");
+        setErrorMessage(getGenericErrorMessage(language));
         return;
       }
 
@@ -86,7 +93,7 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
     };
 
     getWordsForQuiz();
-  }, [id]);
+  }, [id, language]);
 
   function toggleIsAnswering() {
     setIsAnswering(!isAnswering);
@@ -122,20 +129,21 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
           {curQuizPage} / {numberOfQuiz}
         </p>
       )}
-      {state?.error && (
-        <PMessage type="error" message={state.error.message || ""} />
+      {state?.error?.message && (
+        <PMessage type="error" message={state.error.message[language]} />
       )}
       <p>
-        {message
-          ? message
-          : !quiz
-            ? "Loading..."
-            : quiz && !numberOfQuiz
-              ? "There're no words to review"
-              : ""}
+        {errorMessage && errorMessage}
+        {!quiz && (language === "en" ? "Loading..." : "ロード中...")}
+        {quiz &&
+          !numberOfQuiz &&
+          (language === "en"
+            ? "There're no words to review"
+            : "復習する単語はありません")}
       </p>
       {quiz && numberOfQuiz > 0 && (
         <QuizContent
+          language={language}
           curQuiz={
             curQuizIndex || curQuizIndex === 0 ? quiz[curQuizIndex] : undefined
           }
@@ -152,6 +160,7 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
 }
 
 function QuizContent({
+  language,
   curQuiz,
   isQuizFinished,
   isAnswering,
@@ -160,6 +169,7 @@ function QuizContent({
   handleChangeIsCorrect,
   onClickNext,
 }: {
+  language: Language;
   curQuiz: TYPE_QUIZ_DATA | undefined;
   isQuizFinished: boolean;
   isAnswering: boolean;
@@ -242,25 +252,37 @@ function QuizContent({
     const displaySuccessMessage = async () => {
       if (!state?.message) return;
 
-      setSuccessMessage(state.message);
+      setSuccessMessage(state.message[language]);
       await wait();
       setSuccessMessage("");
     };
 
     displaySuccessMessage();
-  }, [state?.message]);
+  }, [state?.message, language]);
 
   return (
     <div className="w-[80%] h-full flex flex-col items-center justify-center">
-      {isPending && <PMessage type="pending" message="Adding definitions..." />}
-      {state?.error && (
-        <PMessage type="error" message={state.error.message || ""} />
+      {isPending && (
+        <PMessage
+          type="pending"
+          message={
+            language === "en" ? "Adding definitions..." : "意味を追加中..."
+          }
+        />
+      )}
+      {state?.error?.message && (
+        <PMessage type="error" message={state.error.message[language]} />
       )}
       {successMessage && <PMessage type="success" message={successMessage} />}
       {isAnswering ? (
-        <QuizAnswer question={curQuiz?.question} onSubmitForm={handleSubmit} />
+        <QuizAnswer
+          language={language}
+          question={curQuiz?.question}
+          onSubmitForm={handleSubmit}
+        />
       ) : (
         <QuizResult
+          language={language}
           answer={answer}
           afterSentence={curQuiz?.afterSentence}
           isCorrect={isCorrect}
@@ -276,9 +298,11 @@ function QuizContent({
 }
 
 function QuizAnswer({
+  language,
   question,
   onSubmitForm,
 }: {
+  language: Language;
   question: TYPE_QUIZ_QUESTION | undefined;
   onSubmitForm: (e: React.FormEvent<HTMLFormElement>) => void;
 }) {
@@ -288,7 +312,7 @@ function QuizAnswer({
 
   return (
     <form className="flex flex-col items-center gap-3" onSubmit={onSubmitForm}>
-      <h2 className="text-xl">{question?.sentence}</h2>
+      <h2 className="text-xl">{question.sentence[language]}</h2>
       <div className="flex flex-row">
         <p
           className={`text-2xl font-bold tracking-wide ${question.name ? "text-center" : "text-left"}`}
@@ -309,13 +333,13 @@ function QuizAnswer({
       {question?.name ? (
         <textarea
           name="answer"
-          placeholder="Your answer here"
+          placeholder={language === "en" ? "Your answer here" : "答えを入力"}
           className={`${textareaInputClassName} w-full aspect-[1/0.4] resize-none`}
         ></textarea>
       ) : (
         <input
           name="answer"
-          placeholder="Your answer here"
+          placeholder={language === "en" ? "Your answer here" : "答えを入力"}
           className={`${textareaInputClassName} w-52`}
         ></input>
       )}
@@ -330,6 +354,7 @@ function QuizAnswer({
 }
 
 function QuizResult({
+  language,
   answer,
   afterSentence,
   isCorrect,
@@ -339,6 +364,7 @@ function QuizResult({
   onClickNext,
   onClickAddDefinitions,
 }: {
+  language: Language;
   answer: TYPE_QUIZ_ANSWER | undefined;
   afterSentence: string | undefined;
   isCorrect: boolean;
@@ -360,25 +386,35 @@ function QuizResult({
       <p
         className={`text-2xl text-center ${isCorrect ? "text-red-500" : "text-blue-500"}`}
       >
-        {isCorrect ? "Correct" : "Wrong"}
+        {isCorrect && (language === "en" ? "Correct" : "正解")}
+        {!isCorrect && (language === "en" ? "Wrong" : "不正解")}
       </p>
       <div className="relative w-full min-h-56 mt-3 flex flex-col items-center justify-center">
         <Image
           src={`/icons/${isCorrect ? "circle" : "cross"}.svg`}
-          alt={isCorrect ? "Correct image" : "Wrong image"}
+          alt={
+            isCorrect && language === "en"
+              ? "Correct image"
+              : isCorrect && language === "ja"
+                ? "正解画像"
+                : !isCorrect && language === "en"
+                  ? "Wrong image"
+                  : "不正解画像"
+          }
           width={500}
           height={500}
           className="absolute w-56 aspect-square object-contain -z-10 opacity-55"
         ></Image>
         <div className="w-full flex flex-row items-center">
           <p className={pAnswerClassName}>
-            Correct answer:{" "}
+            {language === "en" ? "Correct answer" : "正しい回答"}:{" "}
             {answer.name || joinWithCommas(answer.definitions || [])}
           </p>
           {answer?.audio && <ButtonAudio src={answer.audio.data} />}
         </div>
         <p className={pAnswerClassName}>
-          Your answer: {joinWithCommas(userAnswer)}
+          {language === "en" ? "Your answer" : "あなたの回答"}:{" "}
+          {joinWithCommas(userAnswer)}
         </p>
         {answer?.image && (
           <Image
@@ -389,16 +425,18 @@ function QuizResult({
             className="w-[80%] aspect-[1/0.6] object-contain"
           ></Image>
         )}
-        <p className="mt-2">Examples: {afterSentence}</p>
+        <p className="mt-2">
+          {language === "en" ? "Examples" : "例文"}: {afterSentence}
+        </p>
         <div className="h-fit flex flex-row items-center gap-3 mt-5 text-white">
           {isCorrect ? (
             <button
               className={`${buttonClassName} bg-blue-500 hover:bg-blue-300 py-1 px-2`}
               onClick={() => onClickCorrect(false)}
             >
-              Mark as
+              {language === "en" ? "Mark as" : "不正解に"}
               <br />
-              wrong
+              {language === "en" ? "wrong" : "する"}
             </button>
           ) : (
             <>
@@ -406,18 +444,18 @@ function QuizResult({
                 className={`${buttonClassName} bg-red-500 hover:bg-orange-500 py-1 px-2`}
                 onClick={() => onClickCorrect(true)}
               >
-                Mark as
+                {language === "en" ? "Mark as" : "正解に"}
                 <br />
-                correct
+                {language === "en" ? "correct" : "する"}
               </button>
               {answer?.definitions && userAnswer.length > 0 && (
                 <button
                   className={`${buttonClassName} bg-orange-500 hover:bg-yellow-500 p-1`}
                   onClick={onClickAddDefinitions}
                 >
-                  Add to
+                  {language === "en" ? "Add this" : "この意味を"}
                   <br />
-                  definitions
+                  {language === "en" ? "definition" : "追加"}
                 </button>
               )}
             </>
@@ -427,14 +465,14 @@ function QuizResult({
               className={`${buttonClassName} bg-green-500 hover:bg-yellow-500 p-2`}
               onClick={onClickNext}
             >
-              Next
+              {language === "en" ? "Next" : "次へ"}
             </button>
           ) : (
             <Link
               href={pathnameToFolder}
               className={`${buttonClassName} bg-purple-500 hover:bg-pink-400 p-2`}
             >
-              Finish
+              {language === "en" ? "Finish" : "終了"}
             </Link>
           )}
         </div>

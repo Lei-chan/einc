@@ -28,9 +28,9 @@ export async function updateEmail(
     const email = formData.get("email");
 
     // validate email
-    const validationField = updateEmailSchema.safeParse({ email });
-    if (!validationField.success)
-      return getError("zodError", "", undefined, validationField);
+    const result = updateEmailSchema.safeParse({ email });
+    if (!result.success)
+      return getError("zodError", undefined, undefined, undefined, result);
 
     // update user
     await dbConnect();
@@ -45,7 +45,7 @@ export async function updateEmail(
 
     return { data: { email: userEmail } };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 }
 
@@ -59,15 +59,18 @@ export async function updatePassword(
     const newPassword = String(formData.get("newPassword")).trim() || "";
 
     // if curPassword or newPassword is falsy, return errors
-    if (!curPassword || !newPassword)
-      return {
-        errors: {
-          ...(!curPassword && {
-            curPassword: ["Current password is required."],
-          }),
-          ...(!newPassword && { newPassword: ["New password is required."] }),
-        },
-      };
+    const curPasswordName = { en: "currentPassword", ja: "現在のパスワード" };
+    const newPasswordName = { en: "newPassword", ja: "新しいパスワード" };
+
+    if (!curPassword && !newPassword)
+      return getError("blank", undefined, undefined, [
+        curPasswordName,
+        newPasswordName,
+      ]);
+    if (!curPassword)
+      return getError("blank", undefined, undefined, [curPasswordName]);
+    if (!newPassword)
+      return getError("blank", undefined, undefined, [newPasswordName]);
 
     // verify current password
     await dbConnect();
@@ -78,12 +81,12 @@ export async function updatePassword(
     if (!isRightPassword) return getError("wrongPassword");
 
     // validate new password
-    const validationField = updatePasswordSchema.safeParse({
+    const result = updatePasswordSchema.safeParse({
       password: newPassword,
     });
 
-    if (!validationField.success)
-      return getError("zodError", "", undefined, validationField);
+    if (!result.success)
+      return getError("zodError", undefined, undefined, undefined, result);
 
     // hash password
     const hashedPassword = await bcrypt.hash(newPassword as string, 10);
@@ -91,9 +94,14 @@ export async function updatePassword(
     // update password
     await User.findByIdAndUpdate(userId, { password: hashedPassword });
 
-    return { message: "Password updated successfully!" };
+    return {
+      message: {
+        en: "Password updated successfully",
+        ja: "パスワードが更新されました",
+      },
+    };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 }
 
@@ -107,7 +115,7 @@ export async function deleteAccount(formState: FormStateAccount, _: FormData) {
 
     await deleteSession();
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 
   // redirect to thank you page

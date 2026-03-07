@@ -8,9 +8,16 @@ import PMessage from "../Components/PMessage";
 // methods
 import { getCollections } from "../../lib/dal";
 import { addWords } from "../../actions/auth/words";
-import { getNextReviewDate, resizeImages, wait } from "../../lib/helper";
+import {
+  getGenericErrorMessage,
+  getLanguageFromPathname,
+  getNextReviewDate,
+  resizeImages,
+  wait,
+} from "../../lib/helper";
 // types
 import {
+  Language,
   TYPE_COLLECTIONS,
   TYPE_DISPLAY_MESSAGE,
   TYPE_WORD_BEFORE_SENT,
@@ -18,10 +25,12 @@ import {
 import { FormStateWordJournal } from "../../lib/definitions";
 // libraries
 import { nanoid } from "nanoid";
-import { useParams, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Add() {
   const router = useRouter();
+  const pathname = usePathname();
+  const language = getLanguageFromPathname(pathname);
 
   const [vocabKeys, setVocabKeys] = useState([{ id: nanoid() }]);
   const [collections, setCollections] = useState<
@@ -103,7 +112,7 @@ export default function Add() {
       console.error("Error occured.", err);
       setMessageData({
         type: "error",
-        message: "Unexpected error occured. Please try again this later 🙇‍♂️",
+        message: getGenericErrorMessage(language),
       });
     }
   }
@@ -114,26 +123,28 @@ export default function Add() {
       if (!data)
         return setMessageData({
           type: "error",
-          message: "Error occured. Please try again this later 🙇‍♂️",
+          message: getGenericErrorMessage(language),
         });
 
       setCollections(data);
     };
 
     fetchCollections();
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     if (!state?.message) return;
 
     const displayMessageAndNavigate = async () => {
-      setMessageData({ type: "success", message: state.message || "" });
-      await wait(2);
-      router.push("/main");
+      if (state.message) {
+        setMessageData({ type: "success", message: state.message[language] });
+        await wait(2);
+        router.push("/main");
+      }
     };
 
     displayMessageAndNavigate();
-  }, [state, state?.message, router]);
+  }, [state?.message, router, language]);
 
   return (
     <form
@@ -143,13 +154,19 @@ export default function Add() {
       {messageData && (
         <PMessage type={messageData.type} message={messageData.message} />
       )}
-      {isPending && <PMessage type="pending" message="Creating word..." />}
-      {state?.error && (
-        <PMessage type="error" message={state.error.message || ""} />
+      {isPending && (
+        <PMessage
+          type="pending"
+          message={language === "en" ? "Creating word..." : "単語を作成中..."}
+        />
+      )}
+      {state?.error?.message && (
+        <PMessage type="error" message={state.error.message[language]} />
       )}
       {vocabKeys.map((keyObj, i) => (
         <Word
           key={keyObj.id}
+          language={language}
           i={i}
           collections={collections}
           onClickDelete={() => handleClickDelete(i)}
@@ -164,7 +181,7 @@ export default function Add() {
           type="submit"
           className="bg-green-400 p-1 shadow-sm shadow-black/20 rounded text-white transition-all duration-200 hover:-translate-y-[1px] hover:bg-yellow-400"
         >
-          Submit
+          {language === "en" ? "Submit" : "完了"}
         </button>
       )}
     </form>
@@ -172,11 +189,13 @@ export default function Add() {
 }
 
 function Word({
+  language,
   i,
   collections,
   onClickDelete,
   onClickOpenDictionary,
 }: {
+  language: Language;
   i: number;
   collections: TYPE_COLLECTIONS | undefined;
   onClickDelete: () => void;
@@ -196,7 +215,6 @@ function Word({
     };
     setcollectionIdFromHash();
   }, [collections]);
-  console.log(selectedCollectionId);
 
   function handleChangeCollectionSelect(
     e: React.ChangeEvent<HTMLSelectElement>,
@@ -215,34 +233,40 @@ function Word({
       </button>
       <div className="flex flex-col gap-2 pb-3">
         <label>
-          Word: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          {language === "en" ? "Word" : "単語"}:
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <input
             name={`name ${i}`}
-            placeholder="word name"
+            placeholder={language === "en" ? "word name" : "単語の名前"}
             className="w-[55%]"
           ></input>
         </label>
-        <AudioWord audioName={`audio ${i}`} audioTitle="" />
+        <AudioWord language={language} audioName={`audio ${i}`} audioTitle="" />
         <label>
-          Definition:{" "}
+          {language === "en" ? "Definitions" : "意味"}:{" "}
           <textarea
             name={`definitions ${i}`}
-            placeholder="definitions"
+            placeholder={language === "en" ? "definitions" : "意味"}
             className={`${textareaClassName} resize-none`}
           ></textarea>
         </label>
         <label>
-          Examples:{" "}
+          {language === "en" ? "Examples" : "例文"}:{" "}
           <textarea
             name={`examples ${i}`}
             placeholder="example sentences"
             className={`${textareaClassName} resize-none`}
           ></textarea>
         </label>
-        <ImageWord type="name" index={i} imageTitle="" />
-        <ImageWord type="definitions" index={i} imageTitle="" />
+        <ImageWord language={language} type="name" index={i} imageTitle="" />
+        <ImageWord
+          language={language}
+          type="definitions"
+          index={i}
+          imageTitle=""
+        />
         <label>
-          Add this word to:{" "}
+          {language === "en" ? "Add this word to" : "追加するコレクション"}:{" "}
           {collections && (
             <select
               name={`collection ${i}`}
@@ -265,7 +289,9 @@ function Word({
           className="underline decoration-inherit"
           onClick={onClickOpenDictionary}
         >
-          Select word from dictionary
+          {language === "en"
+            ? "Select word from dictionary"
+            : "辞書から単語を選択する"}
         </button>
       </div>
     </div>

@@ -1,26 +1,28 @@
 "use client";
-import { useCallback, useState } from "react";
+import { Language } from "@/app/lib/config/type";
+import { useState } from "react";
 
 export default function ImageWord({
+  language,
   type,
   index,
   imageTitle,
   onClickRemove,
 }: {
+  language: Language;
   type: "name" | "definitions";
   index?: number;
   imageTitle: string;
   onClickRemove?: (type: string) => void;
 }) {
   const inputName = type === "name" ? "imageName" : "imageDefinitions";
+  const titleForLanguage =
+    language === "en"
+      ? `Image for the ${type}:`
+      : `${type === "name" ? "単語名" : "意味"}の画像`;
+
   const [inputValue, setInputValue] = useState("");
   const [imgName, setImgName] = useState(imageTitle);
-
-  // const cammeledImageTitle =
-  //   `image ${type}`
-  //     .split(" ")
-  //     .map((t, i) => (i !== 0 ? t.at(0)?.toUpperCase() + t.slice(1) : t))
-  //     .join("") + ` ${index || index === 0 ? index : ""}`;
 
   function handleChangeInput(e: React.ChangeEvent<HTMLInputElement>) {
     setInputValue(e.currentTarget.value);
@@ -33,7 +35,7 @@ export default function ImageWord({
 
   return (
     <>
-      <span>Image for the {type}: </span>
+      <span>{titleForLanguage}</span>
       <div className="w-fit flex flex-row gap-2 items-center">
         {imgName ? (
           <p>{imgName}</p>
@@ -56,7 +58,7 @@ export default function ImageWord({
               if (onClickRemove) onClickRemove(inputName);
             }}
           >
-            Remove
+            {language === "en" ? "Remove" : "取消"}
           </button>
         )}
       </div>

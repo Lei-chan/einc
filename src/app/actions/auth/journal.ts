@@ -1,11 +1,15 @@
 "use server";
-import { TYPE_JOURNAL_DATA_DATABASE } from "@/app/lib/config/type";
-import { verifySession } from "@/app/lib/dal";
+// database
 import dbConnect from "@/app/lib/database";
-import { FormStateWordJournal, JournalSchema } from "@/app/lib/definitions";
+import Journal from "@/app/lib/models/Journal";
+// dal
+import { verifySession } from "@/app/lib/dal";
+// methods
 import { getError } from "@/app/lib/errorHandler";
 import { isArrayEmpty } from "@/app/lib/helper";
-import Journal from "@/app/lib/models/Journal";
+// types
+import { TYPE_JOURNAL_DATA_DATABASE } from "@/app/lib/config/type";
+import { FormStateWordJournal, JournalSchema } from "@/app/lib/definitions";
 
 export async function addUpdateJournal(
   formState: FormStateWordJournal,
@@ -21,17 +25,22 @@ export async function addUpdateJournal(
     const journalDataForDatabase = { userId: String(userId), ...others };
 
     // validate journal data
-    const validateFields = JournalSchema.safeParse(journalDataForDatabase);
-    if (!validateFields.success)
-      return getError("prettyZodError", "", undefined, validateFields);
+    const result = JournalSchema.safeParse(journalDataForDatabase);
+    if (!result.success)
+      return getError("zodError", undefined, undefined, undefined, result);
 
     await dbConnect();
     // if _id isn't set (means the journal hasn't been created yet) => create the data, otherwise => update
     if (!_id) await Journal.create(journalDataForDatabase);
     if (_id) await Journal.findByIdAndUpdate(_id, journalDataForDatabase);
 
-    return { message: `Journal ${!_id ? "created" : "updated"} successfully` };
+    return {
+      message: {
+        en: `Journal ${!_id ? "created" : "updated"} successfully`,
+        ja: `ジャーナルが${!_id ? "作成" : "更新"}されました`,
+      },
+    };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
 }

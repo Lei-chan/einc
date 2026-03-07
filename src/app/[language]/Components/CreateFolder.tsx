@@ -1,10 +1,16 @@
 "use client";
 // react
 import { useActionState, useEffect, useState } from "react";
-import { FormStateCollection } from "../../lib/definitions";
-import { createCollection } from "../../actions/auth/collections";
-import { joinWithLineBreaks, wait } from "../../lib/helper";
+// next.js
+import { usePathname } from "next/navigation";
+// components
 import PMessage from "./PMessage";
+// action
+import { createCollection } from "../../actions/auth/collections";
+// method
+import { getLanguageFromPathname, wait } from "../../lib/helper";
+// type
+import { FormStateCollection } from "../../lib/definitions";
 
 export default function CreateFolder({
   widthClassName,
@@ -19,6 +25,9 @@ export default function CreateFolder({
   onClickClose: () => void;
   handleSetIsUpdated: () => void;
 }) {
+  const pathname = usePathname();
+  const language = getLanguageFromPathname(pathname);
+
   const transitionClassName = "transition-all duration-300";
 
   const [state, action, isPending] = useActionState<
@@ -39,13 +48,13 @@ export default function CreateFolder({
     const message = curState?.message;
     if (message)
       (async () => {
-        setSuccessMsg(message);
+        setSuccessMsg(message[language]);
         await wait(2);
         setSuccessMsg("");
         handleSetIsUpdated();
         if (isVisible) onClickClose();
       })();
-  }, [curState, isVisible, handleSetIsUpdated, onClickClose]);
+  }, [curState, language, isVisible, handleSetIsUpdated, onClickClose]);
 
   // // Reset error message when user closes the form
   useEffect(() => {
@@ -58,10 +67,20 @@ export default function CreateFolder({
       className={`${widthClassName} ${heightClassName} ${transitionClassName} absolute bottom-0 text-white text-center flex flex-col items-center z-10 ${isVisible ? "translate-y-0" : "translate-y-[100%]"}`}
     >
       {isPending && (
-        <PMessage type="pending" message="Creating collection..." />
+        <PMessage
+          type="pending"
+          message={
+            language === "en"
+              ? "Creating collection..."
+              : "コレクション作成中..."
+          }
+        />
       )}
-      {curState?.error && (
-        <PMessage type="error" message={curState.error.message || ""} />
+      {curState?.error?.message && (
+        <PMessage
+          type="error"
+          message={curState.error.message[language] || ""}
+        />
       )}
       {successMsg && <PMessage type="success" message={successMsg} />}
       <div className="relative w-full h-full bg-black/60 backdrop-blur-sm flex flex-col items-center gap-3 p-3 mt-2">
@@ -72,9 +91,11 @@ export default function CreateFolder({
         >
           ×
         </button>
-        <h2 className="text-lg">Create Folder</h2>
+        <h2 className="text-lg">
+          {language === "en" ? "Create Collection" : "コレクションを作成する"}
+        </h2>
         <label>
-          Name of the folder
+          {language === "en" ? "Name of the collection" : "コレクションの名前"}
           <input
             name="name"
             placeholder="name"
@@ -82,7 +103,7 @@ export default function CreateFolder({
           ></input>
           {state?.errors?.name && (
             <p className="text-sm text-red-500">
-              {joinWithLineBreaks(state.errors.name)}
+              {state.errors.name[language]}
             </p>
           )}
         </label>
