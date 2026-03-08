@@ -11,7 +11,8 @@ import {
   MIN_NUMBER_EACH_PASSWORD,
 } from "../../lib/config/settings";
 // type
-import { Language } from "@/app/lib/config/type";
+import { Language } from "@/app/lib/config/types/others";
+import { nanoid } from "nanoid";
 
 export default function PasswordInput({
   language,

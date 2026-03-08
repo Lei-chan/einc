@@ -1,4 +1,4 @@
-import { TYPE_ACTION_PAGINATION } from "../../lib/config/type";
+import { ActionPaginationType } from "@/app/lib/config/types/others";
 
 export default function ButtonPagination({
   numberOfPages,
@@ -9,7 +9,7 @@ export default function ButtonPagination({
   numberOfPages: number;
   curPage: number;
   showNumber: boolean;
-  onClickPagination: (type: TYPE_ACTION_PAGINATION) => void;
+  onClickPagination: (type: ActionPaginationType) => void;
 }) {
   const btnClassName =
     "w-9 absolute bg-gradient-to-l from-orange-700 to-orange-700/80 p-1 rounded-[50%] text-sm";

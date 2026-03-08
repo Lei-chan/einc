@@ -19,6 +19,8 @@ import PMessage from "@/app/[language]/Components/PMessage";
 import { paginationReducer } from "@/app/lib/reducers";
 // action
 import { deleteWords } from "@/app/actions/auth/words";
+// dal
+import { getMatchedWordsCurPage } from "@/app/lib/dal";
 // methods
 import {
   getGenericErrorMessage,
@@ -26,17 +28,18 @@ import {
   getNumberOfPages,
   wait,
 } from "@/app/lib/helper";
-import { getMatchedWordsCurPage } from "@/app/lib/dal";
 // settings
 import { LISTS_ONE_PAGE } from "@/app/lib/config/settings";
 // type
+
+import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 import {
+  ActionPaginationType,
+  CheckedDataList,
+  DisplayMessage,
   Language,
-  TYPE_ACTION_PAGINATION,
-  TYPE_DISPLAY_MESSAGE,
-  TYPE_WORD,
-} from "@/app/lib/config/type";
-import { CheckedDataList, FormStateWordJournal } from "@/app/lib/definitions";
+  WordData,
+} from "@/app/lib/config/types/others";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -45,13 +48,13 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
 
   // states
   const [searchValue, setSearchValue] = useState("");
-  const [words, setWords] = useState<TYPE_WORD[]>([]);
+  const [words, setWords] = useState<WordData[]>([]);
   const [numberOfPages, setNumberOfPages] = useState(1);
   const [curPage, dispatch] = useReducer(paginationReducer, 1);
   // use resetKey to fetch data again
   const [resetKey, setResetKey] = useState(0);
 
-  const [messageData, setMessageData] = useState<TYPE_DISPLAY_MESSAGE>();
+  const [messageData, setMessageData] = useState<DisplayMessage>();
 
   function handleUpdateUI() {
     setResetKey((prev) => prev + 1);
@@ -150,11 +153,11 @@ function Bottom({
 }: {
   language: Language;
   collectionId: string;
-  data: TYPE_WORD[];
+  data: WordData[];
   numberOfPages: number;
   curPage: number;
   handleUpdateUI: () => void;
-  dispatch: (action: TYPE_ACTION_PAGINATION) => void;
+  dispatch: (action: ActionPaginationType) => void;
 }) {
   const [isSelected, setIsSelected] = useState(false);
   const [isAllChecked, setIsAllChecked] = useState(false);
@@ -195,7 +198,7 @@ function Bottom({
     setIsAllChecked(isChecked);
   }
 
-  function handleClickPagination(type: TYPE_ACTION_PAGINATION) {
+  function handleClickPagination(type: ActionPaginationType) {
     dispatch(type);
   }
 
@@ -384,7 +387,7 @@ function WordLists({
   onChangeInput,
   handleUpdateUI,
 }: {
-  data: TYPE_WORD[];
+  data: WordData[];
   isSelected: boolean;
   areWordsChecked: { _id: string; checked: boolean }[];
   onChangeInput: (index: number) => void;

@@ -1,5 +1,7 @@
 "use client";
+// react
 import { useState } from "react";
+// component
 import ErrorMessageInput from "./ErrorMessageInput";
 
 export default function EmailInput({

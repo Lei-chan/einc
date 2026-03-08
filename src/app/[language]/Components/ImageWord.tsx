@@ -1,5 +1,5 @@
 "use client";
-import { Language } from "@/app/lib/config/type";
+import { Language } from "@/app/lib/config/types/others";
 import { useState } from "react";
 
 export default function ImageWord({
@@ -19,7 +19,7 @@ export default function ImageWord({
   const titleForLanguage =
     language === "en"
       ? `Image for the ${type}:`
-      : `${type === "name" ? "単語名" : "意味"}の画像`;
+      : `${type === "name" ? "単語名" : "意味"}の画像:`;
 
   const [inputValue, setInputValue] = useState("");
   const [imgName, setImgName] = useState(imageTitle);

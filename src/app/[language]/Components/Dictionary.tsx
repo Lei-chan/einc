@@ -7,8 +7,8 @@ import { usePathname } from "next/navigation";
 import ButtonAudio from "./ButtonAudio";
 // method
 import { getLanguageFromPathname } from "@/app/lib/helper";
+import { DictionaryData, Language } from "@/app/lib/config/types/others";
 // types
-import { Language, TYPE_DICTIONARY } from "../../lib/config/type";
 
 export default function Dictionary({
   widthClassName,
@@ -40,7 +40,7 @@ function Top({ language }: { language: Language }) {
       <input
         name="word"
         type="search"
-        placeholder="search for..."
+        placeholder={language === "en" ? "search for..." : "単語を検索"}
         className="w-1/2 h-[40%] rounded-full"
       ></input>
       <button
@@ -102,7 +102,7 @@ function Word({
   const btnPlusRef = useRef<HTMLButtonElement>(null);
   const btnAudioRef = useRef<HTMLButtonElement>(null);
 
-  const [data, setData] = useState<TYPE_DICTIONARY | undefined>(undefined);
+  const [data, setData] = useState<DictionaryData | undefined>(undefined);
   const [isPlusHovered, setIsPlusHovered] = useState(false);
 
   async function handleClickWord(e: React.MouseEvent<HTMLLIElement>) {

@@ -1,6 +1,6 @@
 "use client";
 // react
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 // next.js
 import { usePathname } from "next/navigation";
 // components
@@ -8,9 +8,13 @@ import PMessage from "./PMessage";
 // action
 import { createCollection } from "../../actions/auth/collections";
 // method
-import { getLanguageFromPathname, wait } from "../../lib/helper";
+import {
+  getLanguageFromPathname,
+  getMessagesFromFieldError,
+  wait,
+} from "../../lib/helper";
 // type
-import { FormStateCollection } from "../../lib/definitions";
+import { FormStateCollection } from "../../lib/config/types/formState";
 
 export default function CreateFolder({
   widthClassName,
@@ -34,31 +38,47 @@ export default function CreateFolder({
     FormStateCollection,
     FormData
   >(createCollection, undefined);
+  const lastHandledStateRef = useRef<FormStateCollection>(null);
 
   // use it to modify state
-  const [curState, setCurState] = useState(state);
+  // const [curState, setCurState] = useState(state);
+
   const [successMsg, setSuccessMsg] = useState("");
 
   // set curState as state to modify
-  useEffect(() => {
-    (() => setCurState(state))();
-  }, [state]);
+  // useEffect(() => {
+  //   (() => setCurState(state))();
+  // }, [state]);
 
   useEffect(() => {
-    const message = curState?.message;
-    if (message)
-      (async () => {
-        setSuccessMsg(message[language]);
-        await wait(2);
-        setSuccessMsg("");
-        handleSetIsUpdated();
-        if (isVisible) onClickClose();
-      })();
-  }, [curState, language, isVisible, handleSetIsUpdated, onClickClose]);
+    const message = state?.message;
+    if (!message || lastHandledStateRef.current === state) return;
+
+    lastHandledStateRef.current = state;
+    // const message = curState?.message;
+
+    // if (!message) return;
+
+    const displaySuccessMsg = async () => {
+      setSuccessMsg(message[language]);
+      await wait(2);
+      setSuccessMsg("");
+      handleSetIsUpdated();
+      if (isVisible) onClickClose();
+    };
+    displaySuccessMsg();
+  }, [
+    state,
+    // curState,
+    language,
+    isVisible,
+    handleSetIsUpdated,
+    onClickClose,
+  ]);
 
   // // Reset error message when user closes the form
   useEffect(() => {
-    if (!isVisible) (() => setCurState(undefined))();
+    if (!isVisible) lastHandledStateRef.current = null;
   }, [isVisible]);
 
   return (
@@ -76,11 +96,14 @@ export default function CreateFolder({
           }
         />
       )}
-      {curState?.error?.message && (
+      {state?.errors && (
         <PMessage
           type="error"
-          message={curState.error.message[language] || ""}
+          message={getMessagesFromFieldError(language, state.errors)}
         />
+      )}
+      {state?.error?.message && (
+        <PMessage type="error" message={state.error.message[language]} />
       )}
       {successMsg && <PMessage type="success" message={successMsg} />}
       <div className="relative w-full h-full bg-black/60 backdrop-blur-sm flex flex-col items-center gap-3 p-3 mt-2">
@@ -98,7 +121,7 @@ export default function CreateFolder({
           {language === "en" ? "Name of the collection" : "コレクションの名前"}
           <input
             name="name"
-            placeholder="name"
+            placeholder={language === "en" ? "name" : "名前"}
             className={`mt-1  ${state?.errors?.name && "border-2 border-red-500"}`}
           ></input>
           {state?.errors?.name && (

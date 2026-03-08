@@ -26,12 +26,12 @@ import {
 // type
 import {
   Language,
-  TYPE_ACTION_PAGINATION,
-  TYPE_COLLECTION,
-  TYPE_COLLECTIONS,
-  TYPE_DISPLAY_MESSAGE,
-} from "../../lib/config/type";
-import { FormStateCollection } from "../../lib/definitions";
+  ActionPaginationType,
+  Collection,
+  Collections,
+  DisplayMessage,
+} from "../../lib/config/types/others";
+import { FormStateCollection } from "../../lib/config/types/formState";
 // library
 import { nanoid } from "nanoid";
 import { usePathname } from "next/navigation";
@@ -48,7 +48,7 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
 
   const [numberOfColumns, setNumberOfColumns] = useState(2);
   const [collectionData, setCollectionData] = useState<{
-    collections: TYPE_COLLECTIONS;
+    collections: Collections;
     numberOfCollections: number;
   }>({ collections: [], numberOfCollections: 0 });
 
@@ -62,11 +62,10 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
   const [curPage, dispatch] = useReducer(paginationReducer, 1);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
-  const [messageData, setMessageData] =
-    useState<TYPE_DISPLAY_MESSAGE>(undefined);
+  const [messageData, setMessageData] = useState<DisplayMessage>(undefined);
 
   // display message for 3 seconds
-  async function displayMessage(msgData: TYPE_DISPLAY_MESSAGE) {
+  async function displayMessage(msgData: DisplayMessage) {
     setMessageData(msgData);
     await wait();
     setMessageData(undefined);
@@ -76,7 +75,7 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
     setRefreshKey((prev) => prev + 1);
   }
 
-  function handleClickPagination(type: TYPE_ACTION_PAGINATION) {
+  function handleClickPagination(type: ActionPaginationType) {
     dispatch(type);
   }
 
@@ -173,11 +172,11 @@ function FolderContainer({
   language: Language;
   type: "main" | "addTo";
   numberOfColumns: number;
-  collections: TYPE_COLLECTIONS;
+  collections: Collections;
   refreshKey: number;
   handleUpdate: () => void;
   onClickCreate: () => void;
-  displayMessage: (msgData: TYPE_DISPLAY_MESSAGE) => void;
+  displayMessage: (msgData: DisplayMessage) => void;
 }) {
   const [isSelected, setIsSelected] = useState(false);
   const [isAllSelected, setIsAllSelected] = useState(false);
@@ -289,7 +288,7 @@ function Selector({
   onChangeSelectAll: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClickDelete: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onClickEdit: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  displayMessage: (msgData: TYPE_DISPLAY_MESSAGE) => void;
+  displayMessage: (msgData: DisplayMessage) => void;
 }) {
   const btnNewSelectClassName =
     "text-white rounded transition-all duration-300 px-1";
@@ -454,8 +453,8 @@ function Selector({
             className={`${btnNewSelectClassName} bg-orange-500 hover:bg-yellow-500 py-[2px]`}
             onClick={onClickSelect}
           >
-            {isSelected && language === "en" ? "Finish" : "終了"}
-            {!isSelected && language === "en" ? "Select" : "選択"}
+            {isSelected && (language === "en" ? "Finish" : "終了")}
+            {!isSelected && (language === "en" ? "Select" : "選択")}
           </button>
         </>
       }
@@ -473,7 +472,7 @@ function Folder({
   isEdited,
 }: {
   language: Language;
-  data: TYPE_COLLECTION;
+  data: Collection;
   type: "main" | "addTo";
   isSelected: boolean;
   isAllSelected: boolean;

@@ -1,4 +1,6 @@
+// next.js
 import { NextRequest, NextResponse } from "next/server";
+// methods
 import proxyAuth from "./app/lib/proxies/auth";
 import proxyLanguage from "./app/lib/proxies/language";
 

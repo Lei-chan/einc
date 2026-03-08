@@ -10,6 +10,7 @@ import {
 } from "react";
 // next.js
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 // components
 import AudioWord from "./AudioWord";
 import ImageWord from "./ImageWord";
@@ -22,14 +23,14 @@ import {
   convertBufferToFile,
   getGenericErrorMessage,
   getLanguageFromPathname,
+  getMessagesFromFieldError,
   getWordDataToDisplay,
   resizeImages,
   wait,
 } from "../../lib/helper";
 // types
-import { TYPE_WORD, TYPE_WORD_BEFORE_SENT } from "../../lib/config/type";
-import { FormStateWordJournal } from "../../lib/definitions";
-import { usePathname } from "next/navigation";
+import { WordData, WordBeforeSent } from "../../lib/config/types/others";
+import { FormStateWordJournal } from "../../lib/config/types/formState";
 
 export default function WordCard({
   type,
@@ -37,7 +38,7 @@ export default function WordCard({
   handleUpdateUI,
 }: {
   type: "list" | "flashcard";
-  word: TYPE_WORD;
+  word: WordData;
   handleUpdateUI?: () => void;
 }) {
   const pathname = usePathname();
@@ -49,13 +50,13 @@ export default function WordCard({
 
   const [currentPage, setCurrentPage] = useState(1);
   const [isEdited, setIsEdited] = useState(false);
-  const [wordData, setWordData] = useState<TYPE_WORD | TYPE_WORD_BEFORE_SENT>(
+  const [wordData, setWordData] = useState<WordData | WordBeforeSent>(
     originalWordData,
   );
 
   const [state, action, isPending] = useActionState<
     FormStateWordJournal,
-    TYPE_WORD_BEFORE_SENT
+    WordBeforeSent
   >(updateWord, undefined);
   const lastHandledUpdateRef = useRef<FormStateWordJournal>(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -321,6 +322,12 @@ export default function WordCard({
           <PMessage
             type="pending"
             message={language === "en" ? "Updating word..." : "単語を更新中..."}
+          />
+        )}
+        {state?.errors && (
+          <PMessage
+            type="error"
+            message={getMessagesFromFieldError(language, state?.errors)}
           />
         )}
         {(state?.error?.message || errorMessage) && (

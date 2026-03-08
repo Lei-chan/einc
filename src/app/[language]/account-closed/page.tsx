@@ -21,7 +21,7 @@ export default function AccountClosed() {
     <div
       className={`w-screen h-screen flex flex-col items-center justify-center bg-white/90 transition-all duration-[3000ms] ${opacity}`}
     >
-      <p className="text-lg text-black/70">
+      <p className="w-[80%] text-lg text-center text-black/70">
         {language === "en"
           ? "Thank you for using einc!"
           : "eincをご利用いただきありがとうございました！"}

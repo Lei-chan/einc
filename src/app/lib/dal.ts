@@ -1,18 +1,23 @@
 "use server";
 import "server-only";
-import { cookies } from "next/headers";
-import { decrypt, deleteSession } from "./session";
+// react
 import { cache } from "react";
+// next.js
 import { redirect } from "next/navigation";
-import User from "./models/User";
-import { getError } from "./errorHandler";
+import { cookies } from "next/headers";
+// database
 import dbConnect from "./database";
+import User from "./models/User";
 import Word from "./models/Word";
-import { isArray } from "chart.js/helpers";
-import { TYPE_COLLECTION, TYPE_COLLECTIONS, TYPE_WORD } from "./config/type";
-import { FLASHCARD_QUIZ_ONE_TURN, LISTS_ONE_PAGE } from "./config/settings";
-import { areDatesSame, getRandomNumber, isArrayEmpty } from "./helper";
 import Journal from "@/app/lib/models/Journal";
+// session
+import { decrypt, deleteSession } from "./session";
+// methods
+import { areDatesSame, getRandomNumber, isArrayEmpty } from "./helper";
+// settings
+import { FLASHCARD_QUIZ_ONE_TURN, LISTS_ONE_PAGE } from "./config/settings";
+// types
+import { Collection, Collections, WordData } from "./config/types/others";
 
 export const verifySession = cache(async () => {
   const cookie = (await cookies()).get("session")?.value;
@@ -48,7 +53,7 @@ export const getCollections = cache(async () => {
 
     const userObject = JSON.parse(JSON.stringify(user));
 
-    return userObject.collections as TYPE_COLLECTIONS;
+    return userObject.collections as Collections;
   } catch (err: unknown) {
     console.error("Fetch failed", err);
     return null;
@@ -65,11 +70,11 @@ export const getCollectionDataCurPage = cache(
       const collectionsCurPage = collections.slice(
         indexFrom,
         indexTo,
-      ) as TYPE_COLLECTIONS;
+      ) as Collections;
 
       // get numberOfWords for collections on current page
       const numberOfWordsCollections = await Promise.all(
-        collectionsCurPage.map((col: TYPE_COLLECTION) =>
+        collectionsCurPage.map((col: Collection) =>
           // if it's collection 'All' => counts all user words, otherwise => counts words in the collection
           col.allWords
             ? Word.countDocuments({ userId })
@@ -112,20 +117,20 @@ export const getUserWords = cache(async () => {
 export const getUserWordsCollection = cache(async (collectionId: string) => {
   const allWords = await getUserWords();
   // if user doens't have any words, return []
-  if (isArray(allWords) && !allWords.length) return [];
+  if (isArrayEmpty(allWords)) return [];
   if (!allWords) return null;
 
   // check if the collectionId is of the collection 'All', if so, return allWords
   const collections = await getCollections();
   if (!collections) return null;
   const isCollectionAll = collections.find(
-    (col: TYPE_COLLECTION) => col.allWords && String(col._id) === collectionId,
+    (col: Collection) => col.allWords && String(col._id) === collectionId,
   );
   if (isCollectionAll) return allWords;
 
   // otherwise return words in the collection
   const wordsForCollection = allWords.filter(
-    (word: TYPE_WORD) => word.collectionId === collectionId,
+    (word: WordData) => word.collectionId === collectionId,
   );
   return wordsForCollection;
 });
@@ -133,11 +138,11 @@ export const getUserWordsCollection = cache(async (collectionId: string) => {
 export const getUserWordsStatuses = cache(async (collectionId: string) => {
   const wordsForCollection = await getUserWordsCollection(collectionId);
   // if no words, return []
-  if (isArray(wordsForCollection) && !wordsForCollection.length) return [];
+  if (isArrayEmpty(wordsForCollection)) return [];
   if (!wordsForCollection) return null;
 
   const statuses = new Array(6).fill(0);
-  wordsForCollection.forEach((word: TYPE_WORD) => (statuses[word.status] += 1));
+  wordsForCollection.forEach((word: WordData) => (statuses[word.status] += 1));
 
   return statuses;
 });
@@ -151,9 +156,7 @@ export const getMatchedWordsCurPage = cache(
     if (!wordsForCollection) return null;
 
     const matchedWords = value
-      ? wordsForCollection.filter((word: TYPE_WORD) =>
-          word.name.includes(value),
-        )
+      ? wordsForCollection.filter((word: WordData) => word.name.includes(value))
       : wordsForCollection;
 
     // get only words that are needed to curPage
@@ -201,7 +204,7 @@ export const getRandomWordsOneTurnQuiz = cache(async (collectionId: string) => {
   if (isArrayEmpty(wordsForCollection)) return [];
 
   //   get words nextReviewAt time is now or before now
-  const wordsToReview = (wordsForCollection as TYPE_WORD[]).filter(
+  const wordsToReview = (wordsForCollection as WordData[]).filter(
     (word) => Date.now() - new Date(word.nextReviewAt).getTime() >= 0,
   );
 

@@ -2,7 +2,7 @@
 // react
 import { startTransition, useActionState, useEffect, useState } from "react";
 // next.js
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 // components
 import Logo from "./Logo";
 import ErrorMessageInput from "./ErrorMessageInput";
@@ -18,14 +18,19 @@ import { getLanguageFromPathname } from "@/app/lib/helper";
 // types
 import {
   Language,
-  TYPE_DECODED_GOOGLE_CREDENTIAL,
-} from "../../lib/config/type";
-import { ErrorFormState, FormStateAccount } from "../../lib/definitions";
+  DecodedGoogleCredential,
+} from "../../lib/config/types/others";
+import {
+  ErrorFormState,
+  FormStateAccount,
+} from "../../lib/config/types/formState";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 // libraries
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 
 export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
+  const router = useRouter();
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
 
@@ -59,9 +64,9 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   }
 
   return (
-    <div className="relative w-screen h-screen pt-1">
+    <div className="relative w-screen min-h-screen pt-1">
       <Logo />
-      <div className="w-full h-full flex flex-col justify-center items-center text-center my-6">
+      <div className="w-full h-full flex flex-col justify-center items-center text-center my-10">
         {(isPending || error) && (
           <PMessage
             type={isPending ? "pending" : "error"}
@@ -71,6 +76,7 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
         <div className="w-[90%] h-fit bg-white/70 shadow-lg shadow-black/20 rounded-md mt-3 text-base py-3">
           <ViaUserInfo
             language={language}
+            router={router}
             typeToDisplay={typeToDisplay}
             typeToDisplayForLanguage={typeToDisplayForLanguage}
             handlePending={handlePending}
@@ -78,6 +84,7 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
           />
           <ViaGoogle
             language={language}
+            router={router}
             typeToDisplay={typeToDisplay}
             typeToDisplayForLanguage={typeToDisplayForLanguage}
             handlePending={handlePending}
@@ -91,12 +98,14 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
 
 function ViaUserInfo({
   language,
+  router,
   typeToDisplay,
   typeToDisplayForLanguage,
   handlePending,
   handleError,
 }: {
   language: Language;
+  router: AppRouterInstance;
   typeToDisplay: "Log in" | "Sign up";
   typeToDisplayForLanguage: string;
   handlePending: (isPending: boolean) => void;
@@ -104,20 +113,38 @@ function ViaUserInfo({
 }) {
   const pClassName = "w-[12rem] text-left";
 
-  const [state, action, isPending] = useActionState<FormStateAccount, FormData>(
+  const [state, action, isPending] = useActionState<
+    FormStateAccount,
+    { formData: FormData; language: Language }
+  >(
     typeToDisplay === "Sign up" ? signupViaUserInfo : loginViaUserInfo,
     undefined,
   );
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(() => action({ formData, language }));
+  }
 
   useEffect(() => {
     handlePending(isPending);
   }, [handlePending, isPending]);
 
   useEffect(() => {
-    if (!state?.error) return;
+    if (!state) return;
 
-    handleError(state);
-  }, [handleError, state]);
+    if (state.error) {
+      handleError(state);
+      return;
+    }
+
+    if (state.message) {
+      router.push(`/${language}/main`);
+    }
+  }, [handleError, state, language, router]);
 
   return (
     <div className="w-full p-3 pb-1 border-b-2 flex flex-col items-center gap-3">
@@ -130,7 +157,10 @@ function ViaUserInfo({
           {typeToDisplayForLanguage}する
         </p>
       )}
-      <form className="w-fit flex flex-col gap-1 items-center" action={action}>
+      <form
+        className="w-fit flex flex-col gap-1 items-center"
+        onSubmit={handleSubmit}
+      >
         <p className={pClassName}>
           {language === "en" ? "Email" : "メールアドレス"}
         </p>
@@ -165,12 +195,14 @@ function ViaUserInfo({
 
 function ViaGoogle({
   language,
+  router,
   typeToDisplay,
   typeToDisplayForLanguage,
   handlePending,
   handleError,
 }: {
   language: Language;
+  router: AppRouterInstance;
   typeToDisplay: "Log in" | "Sign up";
   typeToDisplayForLanguage: string;
   handlePending: (isPending: boolean) => void;
@@ -179,20 +211,25 @@ function ViaGoogle({
   const errorMessage = `${typeToDisplay} Failed. Please try this later or try another mathod.`;
 
   const [email, setEmail] = useState("");
-  const [state, action, isPending] = useActionState<FormStateAccount, string>(
-    typeToDisplay === "Sign up" ? signupViaGoogle : loginViaGoogle,
-    undefined,
-  );
+  const [state, action, isPending] = useActionState<
+    FormStateAccount,
+    { email: string; language: Language }
+  >(typeToDisplay === "Sign up" ? signupViaGoogle : loginViaGoogle, undefined);
 
   useEffect(() => {
     handlePending(isPending);
   }, [handlePending, isPending]);
 
   useEffect(() => {
-    if (!state?.error) return;
+    if (!state) return;
 
-    handleError(state);
-  }, [handleError, state]);
+    if (state?.error) {
+      handleError(state);
+      return;
+    }
+
+    if (state.message) router.push(`/${language}/main`);
+  }, [handleError, state, language]);
   return (
     <form className="w-full p-3 flex flex-col items-center">
       <p className="mb-3">
@@ -223,7 +260,7 @@ function ViaGoogle({
               });
             }
 
-            const userCredential: TYPE_DECODED_GOOGLE_CREDENTIAL =
+            const userCredential: DecodedGoogleCredential =
               jwtDecode(credential);
 
             const email = userCredential.email;
@@ -236,7 +273,7 @@ function ViaGoogle({
 
             // only if it's login => submit when user select an account
             if (typeToDisplay === "Log in")
-              startTransition(() => action(email));
+              startTransition(() => action({ email, language }));
           } catch (err: unknown) {
             console.error("Error occured", err);
             return getError("other", undefined, err);
@@ -258,7 +295,7 @@ function ViaGoogle({
         <button
           type="submit"
           className="transition-all duration-150 rounded bg-purple-500 hover:bg-pink-400 text-white px-1 py-[1px] text-sm mt-4"
-          formAction={() => startTransition(() => action(email))}
+          formAction={() => startTransition(() => action({ email, language }))}
         >
           {typeToDisplayForLanguage}
         </button>

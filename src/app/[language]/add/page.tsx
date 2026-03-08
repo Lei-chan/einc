@@ -1,31 +1,36 @@
 "use client";
+// react
 import { startTransition, useActionState, useEffect, useState } from "react";
+// next.js
+import { usePathname, useRouter } from "next/navigation";
 // components
 import ButtonPlus from "@/app/[language]/Components/ButtonPlus";
 import ImageWord from "../Components/ImageWord";
 import AudioWord from "../Components/AudioWord";
 import PMessage from "../Components/PMessage";
-// methods
-import { getCollections } from "../../lib/dal";
+// action
 import { addWords } from "../../actions/auth/words";
+// dal
+import { getCollections } from "../../lib/dal";
+// methods
 import {
   getGenericErrorMessage,
   getLanguageFromPathname,
+  getMessagesFromFieldError,
   getNextReviewDate,
   resizeImages,
   wait,
 } from "../../lib/helper";
 // types
+import { FormStateWordJournal } from "../../lib/config/types/formState";
 import {
+  Collections,
+  DisplayMessage,
   Language,
-  TYPE_COLLECTIONS,
-  TYPE_DISPLAY_MESSAGE,
-  TYPE_WORD_BEFORE_SENT,
-} from "../../lib/config/type";
-import { FormStateWordJournal } from "../../lib/definitions";
+  WordBeforeSent,
+} from "@/app/lib/config/types/others";
 // libraries
 import { nanoid } from "nanoid";
-import { usePathname, useRouter } from "next/navigation";
 
 export default function Add() {
   const router = useRouter();
@@ -33,14 +38,12 @@ export default function Add() {
   const language = getLanguageFromPathname(pathname);
 
   const [vocabKeys, setVocabKeys] = useState([{ id: nanoid() }]);
-  const [collections, setCollections] = useState<
-    TYPE_COLLECTIONS | undefined
-  >();
-  const [messageData, setMessageData] = useState<TYPE_DISPLAY_MESSAGE>();
+  const [collections, setCollections] = useState<Collections | undefined>();
+  const [messageData, setMessageData] = useState<DisplayMessage>();
 
   const [state, action, isPending] = useActionState<
     FormStateWordJournal,
-    TYPE_WORD_BEFORE_SENT[]
+    WordBeforeSent[]
   >(addWords, undefined);
 
   const [isDictionaryOpen, setIsDectionaryOpen] = useState(false);
@@ -160,6 +163,12 @@ export default function Add() {
           message={language === "en" ? "Creating word..." : "単語を作成中..."}
         />
       )}
+      {state?.errors && (
+        <PMessage
+          type="error"
+          message={getMessagesFromFieldError(language, state.errors)}
+        />
+      )}
       {state?.error?.message && (
         <PMessage type="error" message={state.error.message[language]} />
       )}
@@ -197,7 +206,7 @@ function Word({
 }: {
   language: Language;
   i: number;
-  collections: TYPE_COLLECTIONS | undefined;
+  collections: Collections | undefined;
   onClickDelete: () => void;
   onClickOpenDictionary: () => void;
 }) {
@@ -237,7 +246,7 @@ function Word({
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
           <input
             name={`name ${i}`}
-            placeholder={language === "en" ? "word name" : "単語の名前"}
+            placeholder={language === "en" ? "word name" : "単語名"}
             className="w-[55%]"
           ></input>
         </label>
@@ -254,7 +263,7 @@ function Word({
           {language === "en" ? "Examples" : "例文"}:{" "}
           <textarea
             name={`examples ${i}`}
-            placeholder="example sentences"
+            placeholder={language === "en" ? "example sentences" : "例文"}
             className={`${textareaClassName} resize-none`}
           ></textarea>
         </label>

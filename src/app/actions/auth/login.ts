@@ -1,6 +1,4 @@
 "use server";
-// next.js
-import { redirect } from "next/navigation";
 // database
 import dbConnect from "@/app/lib/database";
 import User from "@/app/lib/models/User";
@@ -8,21 +6,28 @@ import User from "@/app/lib/models/User";
 import { createSession } from "@/app/lib/session";
 import { getError } from "@/app/lib/errorHandler";
 // types
-import { FormStateAccount } from "@/app/lib/definitions";
+import { FormStateAccount } from "@/app/lib/config/types/formState";
+import { Language } from "@/app/lib/config/types/others";
 // library
 import bcrypt from "bcrypt";
 
 export async function loginViaUserInfo(
   formState: FormStateAccount,
-  formData: FormData,
+  data: { formData: FormData; language: Language },
 ) {
   try {
-    const email = String(formData.get("email")).trim();
-    const password = String(formData.get("password")).trim();
+    const email = String(data.formData.get("email")).trim();
+    const password = String(data.formData.get("password")).trim();
 
-    if (!email && !password) return getError("bothBlank");
-    if (!email) return getError("emailBlank");
-    if (!password) return getError("passwordBlank");
+    // if email or password is falsy, return errors
+    const emailName = { en: "email", ja: "メールアドレス" };
+    const passwordName = { en: "password", ja: "パスワード" };
+
+    if (!email && !password)
+      return getError("blank", undefined, undefined, [emailName, passwordName]);
+    if (!email) return getError("blank", undefined, undefined, [emailName]);
+    if (!password)
+      return getError("blank", undefined, undefined, [passwordName]);
 
     await dbConnect();
     const user = await User.findOne({ email }).select("password");
@@ -33,25 +38,36 @@ export async function loginViaUserInfo(
     if (!isRightPassword) return getError("wrongPassword");
 
     await createSession(user._id);
-  } catch (err: unknown) {
-    return getError("other", "", err);
-  }
 
-  redirect("/main");
+    return {
+      message: {
+        en: "User logged in successfully",
+        ja: "ユーザーのログインに成功しました",
+      },
+    };
+  } catch (err: unknown) {
+    return getError("other", undefined, err);
+  }
 }
 
 export async function loginViaGoogle(
   formState: FormStateAccount,
-  email: string,
+  data: { email: string; language: Language },
 ) {
   try {
     await dbConnect();
-    const user = await User.findOne({ email: email.trim() });
+    const user = await User.findOne({ email: data.email.trim() });
     if (!user) return getError("notFound");
 
     await createSession(user._id);
+
+    return {
+      message: {
+        en: "User logged in successfully",
+        ja: "ユーザーのログインに成功しました",
+      },
+    };
   } catch (err: unknown) {
-    return getError("other", "", err);
+    return getError("other", undefined, err);
   }
-  redirect("/main");
 }

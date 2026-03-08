@@ -16,8 +16,7 @@ import {
   getLanguageFromPathname,
 } from "@/app/lib/helper";
 // types
-import { Language, TYPE_DISPLAY_MESSAGE } from "@/app/lib/config/type";
-import { Message } from "@/app/lib/definitions";
+
 //libraries
 import {
   Chart as ChartJS,
@@ -31,6 +30,11 @@ import {
   Legend,
 } from "chart.js";
 import { Line, Pie } from "react-chartjs-2";
+import {
+  DisplayMessage,
+  Language,
+  Message,
+} from "@/app/lib/config/types/others";
 
 export default function Collection({
   params,
@@ -129,7 +133,7 @@ function Graphs({
   collectionId: string;
 }) {
   const [statuses, setStatuses] = useState<number[]>();
-  const [messageData, setMessageData] = useState<TYPE_DISPLAY_MESSAGE>();
+  const [messageData, setMessageData] = useState<DisplayMessage>();
 
   ChartJS.register(
     CategoryScale,
@@ -155,7 +159,7 @@ function Graphs({
       setStatuses(statuses);
     };
     fetchStatuses();
-  }, [collectionId]);
+  }, [collectionId, language]);
 
   return (
     <div className="w-full h-fit bg-gradient-to-tl from-red-600/50 to-red-400/50 px-3 py-5">
@@ -191,15 +195,6 @@ function PieGraph({
 }) {
   return (
     <Pie
-      // options={{
-      //   plugins: {
-      //     title: {
-      //       display: false,
-      //       text: "Your Progress",
-      //       color: "brown",
-      //     },
-      //   },
-      // }}
       data={{
         labels:
           language === "en"

@@ -4,22 +4,22 @@ import {
   MIN_NUMBER_EACH_PASSWORD,
 } from "./config/settings";
 // types
-import { TYPE_ERROR, TYPE_ERROR_WITH_ZOD_DATA } from "./config/type";
-import { Message } from "./definitions";
+import { Message, MyError, MyZodError } from "./config/types/others";
 // library
 import z, { ZodSafeParseResult } from "zod";
 
-export const isError = (err: unknown): err is TYPE_ERROR => {
+export const isError = (err: unknown): err is MyError => {
   return err !== undefined;
 };
 
-export const isZodError = (err: unknown): err is TYPE_ERROR_WITH_ZOD_DATA => {
+export const isZodError = (err: unknown): err is MyZodError => {
   return err !== undefined;
 };
 
 export const getError = (
   type:
     | "notFound"
+    | "emailDuplicate"
     | "blank"
     | "zodError"
     | "wrongPassword"
@@ -48,6 +48,17 @@ export const getError = (
       },
     };
   }
+
+  if (type === "emailDuplicate")
+    return {
+      error: {
+        status: 400,
+        message: customMessage || {
+          en: "Email already exists",
+          ja: "このメールアドレスは既に使用されています",
+        },
+      },
+    };
 
   if (type === "blank" && fieldNames) return getBlankError(fieldNames);
 
@@ -121,7 +132,7 @@ const getZodError = (
   const japaneseErrors: { [key: string]: string } = {
     email: "正しいメールアドレスを入力してください",
     password: `${MIN_LENGTH_PASSWORD}文字以上を使用し、大文字、小文字、数字をそれぞれ${MIN_NUMBER_EACH_PASSWORD}つ以上入れてください`,
-    name: "単語は必須項目です",
+    name: "単語名は必須項目です",
     definitions: "最低一つ以上の意味を入力してください",
   };
 

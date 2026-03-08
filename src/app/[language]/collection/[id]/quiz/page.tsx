@@ -37,16 +37,14 @@ import {
 } from "@/app/lib/helper";
 // Types
 import {
-  Language,
-  TYPE_QUIZ_ANSWER,
-  TYPE_QUIZ_DATA,
-  TYPE_QUIZ_QUESTION,
-} from "@/app/lib/config/type";
-import {
   DefinitionsDataQuiz,
-  FormStateWordJournal,
+  Language,
+  QuizAnswer,
+  QuizData,
+  QuizQuestion,
   UpdateStatusReviewDateDataQuiz,
-} from "@/app/lib/definitions";
+} from "@/app/lib/config/types/others";
+import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 // libraries
 // import distance from "jaro-winkler";
 
@@ -55,7 +53,7 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
 
-  const [quiz, setQuiz] = useState<TYPE_QUIZ_DATA[]>();
+  const [quiz, setQuiz] = useState<QuizData[]>();
   const [numberOfQuiz, setNumberOfQuiz] = useState(0);
 
   const [curQuizIndex, setCurQuizIndex] = useState<number>();
@@ -170,7 +168,7 @@ function QuizContent({
   onClickNext,
 }: {
   language: Language;
-  curQuiz: TYPE_QUIZ_DATA | undefined;
+  curQuiz: QuizData | undefined;
   isQuizFinished: boolean;
   isAnswering: boolean;
   isCorrect: boolean;
@@ -275,7 +273,7 @@ function QuizContent({
       )}
       {successMessage && <PMessage type="success" message={successMessage} />}
       {isAnswering ? (
-        <QuizAnswer
+        <QuizAnswerForm
           language={language}
           question={curQuiz?.question}
           onSubmitForm={handleSubmit}
@@ -297,13 +295,13 @@ function QuizContent({
   );
 }
 
-function QuizAnswer({
+function QuizAnswerForm({
   language,
   question,
   onSubmitForm,
 }: {
   language: Language;
-  question: TYPE_QUIZ_QUESTION | undefined;
+  question: QuizQuestion | undefined;
   onSubmitForm: (e: React.FormEvent<HTMLFormElement>) => void;
 }) {
   const textareaInputClassName = "mt-3";
@@ -365,7 +363,7 @@ function QuizResult({
   onClickAddDefinitions,
 }: {
   language: Language;
-  answer: TYPE_QUIZ_ANSWER | undefined;
+  answer: QuizAnswer | undefined;
   afterSentence: string | undefined;
   isCorrect: boolean;
   userAnswer: string[];

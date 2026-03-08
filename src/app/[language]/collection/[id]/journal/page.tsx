@@ -7,6 +7,8 @@ import {
   useEffect,
   useState,
 } from "react";
+// next.js
+import { usePathname } from "next/navigation";
 // components
 import Dictionary from "@/app/[language]/Components/Dictionary";
 import PMessage from "@/app/[language]/Components/PMessage";
@@ -24,9 +26,9 @@ import {
 // settings
 import { MILLISECONDS_A_DAY } from "@/app/lib/config/settings";
 // types
-import { Language, TYPE_JOURNAL_DATA_DATABASE } from "@/app/lib/config/type";
-import { FormStateWordJournal } from "@/app/lib/definitions";
-import { usePathname } from "next/navigation";
+
+import { FormStateWordJournal } from "@/app/lib/config/types/formState";
+import { JournalDatabase, Language } from "@/app/lib/config/types/others";
 
 export default function Journal({
   params,
@@ -64,15 +66,14 @@ function Middle({
     "w-5 aspect-square bg-[url('/icons/arrow.svg')] bg-no-repeat bg-center bg-contain";
 
   const [date, setDate] = useState<Date | string>(new Date().toISOString());
-  const [journalDataDate, setJournalDataDate] =
-    useState<TYPE_JOURNAL_DATA_DATABASE>({
-      _id: "",
-      collectionId,
-      journal: {
-        date: "",
-        content: [],
-      },
-    });
+  const [journalDataDate, setJournalDataDate] = useState<JournalDatabase>({
+    _id: "",
+    collectionId,
+    journal: {
+      date: "",
+      content: [],
+    },
+  });
   const journalContent = journalDataDate.journal.content;
 
   const [isDictionaryOpen, setIsDectionaryOpen] = useState(false);
@@ -81,10 +82,10 @@ function Middle({
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [state, action] = useActionState<
-    FormStateWordJournal,
-    TYPE_JOURNAL_DATA_DATABASE
-  >(addUpdateJournal, undefined);
+  const [state, action] = useActionState<FormStateWordJournal, JournalDatabase>(
+    addUpdateJournal,
+    undefined,
+  );
 
   function handleToggleDictionary() {
     setIsDectionaryOpen(!isDictionaryOpen);

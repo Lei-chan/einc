@@ -1,9 +1,6 @@
-import { TYPE_ACTION_PAGINATION } from "./config/type";
+import { ActionPaginationType } from "./config/types/others";
 
-export function paginationReducer(
-  state: number,
-  action: TYPE_ACTION_PAGINATION,
-) {
+export function paginationReducer(state: number, action: ActionPaginationType) {
   if (action === "add") return state + 1;
 
   if (action === "reduce") return state - 1;

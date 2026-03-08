@@ -12,7 +12,7 @@ import {
   doesPathnameContainLanguage,
   getLanguageFromPathname,
 } from "../lib/helper";
-import { Language } from "../lib/config/type";
+import { Language } from "../lib/config/types/others";
 
 export default function Home() {
   const pathname = usePathname();

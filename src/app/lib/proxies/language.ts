@@ -12,7 +12,6 @@ export default function proxyLanguage(
   const acceptLanguage = req.headers.get("accept-language") || "";
   const language = acceptLanguage.includes("ja") ? "ja" : "en";
 
-  console.log(isLanguageIncluded, language);
   // redirect to user's language page
   return NextResponse.redirect(new URL(`/${language}${pathname}`, req.url));
 }

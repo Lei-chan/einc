@@ -1,6 +1,4 @@
-import { Message } from "../definitions";
-
-export type TYPE_DECODED_GOOGLE_CREDENTIAL = {
+export type DecodedGoogleCredential = {
   iss: string;
   nbf: number;
   aud: string;
@@ -17,38 +15,50 @@ export type TYPE_DECODED_GOOGLE_CREDENTIAL = {
   jti: string;
 };
 
-export interface TYPE_ERROR extends Error {
+export interface MyError extends Error {
   status?: number;
+  code?: number;
 }
 
-export interface TYPE_ERROR_WITH_ZOD_DATA extends Error {
+export interface MyZodError extends Error {
   status?: number;
   zodErrorData:
     | { errors: { [key: string]: Message } }
     | { error: { status: number; message: Message } };
 }
 
-export type TYPE_MESSAGE = "pending" | "error" | "success";
+export type SessionPayload = {
+  userId: string;
+  expiresAt: Date;
+};
 
-export type TYPE_USER = {
+export type Language = "en" | "ja";
+
+export type Message = Record<Language, string>;
+
+export type MessageType = "pending" | "error" | "success";
+
+export type DisplayMessage = { type: MessageType; message: string } | undefined;
+
+export type UserData = {
   _id?: string;
   email: string;
   isGoogleConnected: boolean;
-  collections: TYPE_COLLECTION[];
+  collections: Collection[];
   createdAt?: string;
   updatedAt?: string;
 };
 
-export type TYPE_COLLECTION = {
+export type Collection = {
   _id?: string;
   name: string;
   numberOfWords: number;
   allWords?: boolean;
 };
 
-export type TYPE_COLLECTIONS = TYPE_COLLECTION[];
+export type Collections = Collection[];
 
-export type TYPE_DICTIONARY = {
+export type DictionaryData = {
   name: string;
   pronunciationString: string;
   pronunciationAudio: string;
@@ -66,7 +76,7 @@ export type MediaDatabase = {
 
 export type MediaToDisplay = { name: string; data: string } | null;
 
-export type TYPE_WORD_BEFORE_SENT = {
+export type WordBeforeSent = {
   _id?: string;
   userId?: string;
   collectionId: string;
@@ -80,7 +90,7 @@ export type TYPE_WORD_BEFORE_SENT = {
   nextReviewAt: string;
 };
 
-export type TYPE_WORD = {
+export type WordData = {
   _id?: string;
   userId?: string;
   collectionId: string;
@@ -94,7 +104,7 @@ export type TYPE_WORD = {
   nextReviewAt: string;
 };
 
-export type TYPE_WORD_TO_DISPLAY = {
+export type WordToDisplay = {
   _id: string;
   userId: string;
   name: string;
@@ -108,9 +118,9 @@ export type TYPE_WORD_TO_DISPLAY = {
   nextReviewAt: string;
 };
 
-export type TYPE_ACTION_PAGINATION = "add" | "reduce" | "reset";
+export type ActionPaginationType = "add" | "reduce" | "reset";
 
-export type TYPE_QUIZ_QUESTION = {
+export type QuizQuestion = {
   sentence: Message;
   name?: string;
   definitions?: string[];
@@ -118,36 +128,39 @@ export type TYPE_QUIZ_QUESTION = {
   image: MediaToDisplay;
 };
 
-export type TYPE_QUIZ_ANSWER = {
+export type QuizAnswer = {
   name?: string;
   definitions?: string[];
   audio?: MediaToDisplay;
   image: MediaToDisplay;
 };
 
-export type TYPE_QUIZ_DATA = {
-  question: TYPE_QUIZ_QUESTION;
-  answer: TYPE_QUIZ_ANSWER;
+export type QuizData = {
+  question: QuizQuestion;
+  answer: QuizAnswer;
   afterSentence: string;
   id: string;
   status: number;
 };
 
-export type TYPE_JOURNAL_DATA_DATABASE = {
+export type JournalDatabase = {
   //  MongoDB _id
   _id: string;
   userId?: string;
   collectionId: string;
-  journal: TYPE_JOURNAL_DATA;
+  journal: JournalData;
 };
 
-export type TYPE_JOURNAL_DATA = {
+export type JournalData = {
   date: Date | string;
   content: string[];
 };
 
-export type TYPE_DISPLAY_MESSAGE =
-  | { type: TYPE_MESSAGE; message: string }
-  | undefined;
+export type CheckedDataList = { _id: string; checked: boolean }[];
 
-export type Language = "en" | "ja";
+export type DefinitionsDataQuiz = { wordId: string; newDefinitions: string[] };
+
+export type UpdateStatusReviewDateDataQuiz = {
+  wordId: string;
+  isCorrect: boolean;
+};

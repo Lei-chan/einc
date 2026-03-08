@@ -1,11 +1,11 @@
 // type
-import { TYPE_MESSAGE } from "../../lib/config/type";
+import { MessageType } from "../../lib/config/types/others";
 
 export default function PMessage({
   type,
   message,
 }: {
-  type: TYPE_MESSAGE;
+  type: MessageType;
   message: string;
 }) {
   return (

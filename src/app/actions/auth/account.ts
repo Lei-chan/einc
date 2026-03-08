@@ -10,12 +10,10 @@ import Journal from "@/app/lib/models/Journal";
 import { verifySession } from "@/app/lib/dal";
 import { deleteSession } from "@/app/lib/session";
 import { getError } from "@/app/lib/errorHandler";
+// zod schema
+import { updateEmailSchema, updatePasswordSchema } from "@/app/lib/zodSchemas";
 // types
-import {
-  FormStateAccount,
-  updateEmailSchema,
-  updatePasswordSchema,
-} from "@/app/lib/definitions";
+import { FormStateAccount } from "@/app/lib/config/types/formState";
 // library
 import bcrypt from "bcrypt";
 
@@ -43,7 +41,13 @@ export async function updateEmail(
 
     const userEmail = JSON.parse(JSON.stringify(user)).email;
 
-    return { data: { email: userEmail } };
+    return {
+      data: { email: userEmail },
+      message: {
+        en: "Email updated successfully",
+        ja: "メールアドレスが更新されました",
+      },
+    };
   } catch (err: unknown) {
     return getError("other", undefined, err);
   }
@@ -55,12 +59,12 @@ export async function updatePassword(
 ) {
   const { isAuth, userId } = await verifySession();
   try {
-    const curPassword = String(formData.get("currentPassword")).trim() || "";
-    const newPassword = String(formData.get("newPassword")).trim() || "";
+    const curPassword = String(formData.get("currentPassword")).trim();
+    const newPassword = String(formData.get("newPassword")).trim();
 
     // if curPassword or newPassword is falsy, return errors
-    const curPasswordName = { en: "currentPassword", ja: "現在のパスワード" };
-    const newPasswordName = { en: "newPassword", ja: "新しいパスワード" };
+    const curPasswordName = { en: "current password", ja: "現在のパスワード" };
+    const newPasswordName = { en: "new password", ja: "新しいパスワード" };
 
     if (!curPassword && !newPassword)
       return getError("blank", undefined, undefined, [
@@ -117,7 +121,4 @@ export async function deleteAccount(formState: FormStateAccount, _: FormData) {
   } catch (err: unknown) {
     return getError("other", undefined, err);
   }
-
-  // redirect to thank you page
-  redirect("/account-closed");
 }

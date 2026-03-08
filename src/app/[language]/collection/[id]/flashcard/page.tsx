@@ -3,19 +3,21 @@
 import { use, useEffect, useReducer, useState } from "react";
 // next.js
 import Link from "next/link";
-// reducers
-import { paginationReducer } from "@/app/lib/reducers";
+import { usePathname } from "next/navigation";
 // components
 import ButtonPagination from "@/app/[language]/Components/ButtonPagination";
 import WordCard from "@/app/[language]/Components/WordCard";
-// types
-import { TYPE_WORD } from "@/app/lib/config/type";
+// reducers
+import { paginationReducer } from "@/app/lib/reducers";
+// dal
 import { getRandomWordsFlashcard } from "@/app/lib/dal";
-import { usePathname } from "next/navigation";
+// methods
 import {
   getGenericErrorMessage,
   getLanguageFromPathname,
 } from "@/app/lib/helper";
+// types
+import { WordData } from "@/app/lib/config/types/others";
 
 export default function Flashcard({
   params,
@@ -26,7 +28,7 @@ export default function Flashcard({
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
 
-  const [words, setWords] = useState<TYPE_WORD[]>();
+  const [words, setWords] = useState<WordData[]>();
   const [curCard, dispatch] = useReducer(paginationReducer, 1);
   const [errorMessage, setErrorMessage] = useState("");
 

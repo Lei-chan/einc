@@ -1,7 +1,7 @@
 // react
 import { useState } from "react";
 // types
-import { Language } from "@/app/lib/config/type";
+import { Language } from "@/app/lib/config/types/others";
 
 export default function AudioWord({
   language,
@@ -30,7 +30,7 @@ export default function AudioWord({
     <>
       <div className="w-fit flex flex-row gap-2 items-center">
         <span>
-          {language === "en" ? "Audio" : "オーディオ"}
+          {language === "en" ? "Audio" : "音声"}
           :&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         </span>
         {title ? (

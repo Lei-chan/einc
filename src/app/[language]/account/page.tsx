@@ -1,6 +1,12 @@
 "use client";
 // react
-import { useActionState, useEffect, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 // components
 import PasswordInput from "../Components/PasswordInput";
 import EmailInput from "../Components/EmailInput";
@@ -17,12 +23,17 @@ import {
   formatDate,
   getGenericErrorMessage,
   getLanguageFromPathname,
+  getMessagesFromFieldError,
   wait,
 } from "../../lib/helper";
 // types
-import { Language, TYPE_USER } from "../../lib/config/type";
-import { ErrorFormState, FormStateAccount } from "../../lib/definitions";
-import { usePathname } from "next/navigation";
+import { FormStateAccount } from "../../lib/config/types/formState";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  DisplayMessage,
+  Language,
+  UserData,
+} from "@/app/lib/config/types/others";
 
 type TYPE_CLASSNAMES = {
   h3ClassName: string;
@@ -57,44 +68,67 @@ function UserInfo({ language }: { language: Language }) {
     buttonSubmitClassName: `${buttonClassName} mt-2 bg-green-500 hover:bg-yellow-500`,
   };
 
-  const [user, setUser] = useState<TYPE_USER>();
+  const [user, setUser] = useState<UserData>();
   const [pendingMsg, setPendingMsg] = useState("");
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [state, setState] = useState<FormStateAccount>();
+  const [messageData, setMessageData] = useState<DisplayMessage>();
+
+  const lastHandledStateRef = useRef<FormStateAccount>(null);
 
   // fetch user
   useEffect(() => {
     const fetchUser = async () => {
       const user = await getUser();
-      if (!user) setError(getGenericErrorMessage(language));
+      if (!user)
+        setMessageData({
+          type: "error",
+          message: getGenericErrorMessage(language),
+        });
 
       setUser(user);
     };
     fetchUser();
   }, [language]);
 
-  function displayError(err: ErrorFormState) {
-    if (!err) return;
-
-    if (err.error?.message) setError(err.error.message[language]);
-  }
-
   function displayPending(pendingMessage: string) {
     setPendingMsg(pendingMessage);
   }
 
-  async function displaySuccess(successMessage: string) {
-    setSuccessMsg(successMessage);
-    await wait();
-    setSuccessMsg("");
+  function handleStateChange(state: FormStateAccount) {
+    if (!state || lastHandledStateRef.current === state) return;
+
+    setState(state);
   }
+
+  useEffect(() => {
+    if (!state?.message) return;
+
+    const displayMessage = async () => {
+      if (!state.message) return;
+
+      setMessageData({ type: "success", message: state.message[language] });
+      await wait();
+      setMessageData(undefined);
+    };
+    displayMessage();
+  }, [state?.message, language]);
 
   return (
     <>
       <div className="w-full h-fit my-2 flex flex-col items-center">
+        {messageData && (
+          <PMessage type={messageData.type} message={messageData.message} />
+        )}
         {pendingMsg && <PMessage type="pending" message={pendingMsg} />}
-        {error && <PMessage type="error" message={error} />}
-        {successMsg && <PMessage type="success" message={successMsg} />}
+        {state?.error?.message && (
+          <PMessage type="error" message={state.error.message[language]} />
+        )}
+        {state?.errors && (
+          <PMessage
+            type="error"
+            message={getMessagesFromFieldError(language, state.errors)}
+          />
+        )}
       </div>
       <div
         className={`w-[90%] h-fit bg-slate-50 rounded mb-6 shadow-md shadow-black/20 overflow-hidden ${!user ? "animate-pulse" : "animation-none"}`}
@@ -105,16 +139,14 @@ function UserInfo({ language }: { language: Language }) {
           isGoogleConnected={user?.isGoogleConnected}
           classNames={classNames}
           displayPending={displayPending}
-          displayError={displayError}
-          displaySuccess={displaySuccess}
+          handleStateChange={handleStateChange}
         />
         {!user?.isGoogleConnected && (
           <Password
             language={language}
             classNames={classNames}
             displayPending={displayPending}
-            displayError={displayError}
-            displaySuccess={displaySuccess}
+            handleStateChange={handleStateChange}
           />
         )}
         <GoogleConnected
@@ -131,7 +163,7 @@ function UserInfo({ language }: { language: Language }) {
           language={language}
           classNames={classNames}
           displayPending={displayPending}
-          displayError={displayError}
+          handleStateChange={handleStateChange}
         />
       </div>
     </>
@@ -144,16 +176,14 @@ function Email({
   isGoogleConnected,
   classNames,
   displayPending,
-  displayError,
-  displaySuccess,
+  handleStateChange,
 }: {
   language: Language;
   email: string | undefined;
   isGoogleConnected: boolean | undefined;
   classNames: TYPE_CLASSNAMES;
   displayPending: (pendingMsg: string) => void;
-  displayError: (error: ErrorFormState) => void;
-  displaySuccess: (successMessage: string) => void;
+  handleStateChange: (state: FormStateAccount) => void;
 }) {
   const [curEmail, setCurEmail] = useState(email);
   const [isClicked, setIsClicked] = useState(false);
@@ -161,8 +191,6 @@ function Email({
     updateEmail,
     undefined,
   );
-  // use this to modify state
-  const [curState, setCurState] = useState(state);
 
   function handleClickChange() {
     setIsClicked(true);
@@ -180,34 +208,24 @@ function Email({
         language === "en" ? "Updating email..." : "メールアドレスを更新中...",
       );
     if (!isPending) displayPending("");
-  }, [isPending, displayPending]);
+  }, [isPending, language, displayPending]);
 
-  // set curState as state to modify
   useEffect(() => {
-    const setCurrentState = () => setCurState(state);
-    setCurrentState();
-  }, [state]);
+    handleStateChange(state);
+  }, [state, handleStateChange]);
 
   // display error at the top of the page
   useEffect(() => {
-    displayError(curState);
-
     // when update finished
-    const updateFinished = () => {
-      const newEmail = curState?.data?.email;
+    const handleUpdateFinished = () => {
+      const newEmail = state?.data?.email;
       if (!newEmail) return;
 
       setCurEmail(newEmail);
       setIsClicked(false);
-      displaySuccess(
-        language === "en"
-          ? "Email updated successfully"
-          : "メールアドレスが更新されました",
-      );
-      setCurState(undefined);
     };
-    updateFinished();
-  }, [curState, language, displayError, displaySuccess]);
+    handleUpdateFinished();
+  }, [state?.data?.email, language]);
 
   return (
     <form action={action}>
@@ -262,26 +280,26 @@ function Password({
   language,
   classNames,
   displayPending,
-  displayError,
-  displaySuccess,
+  handleStateChange,
 }: {
   language: Language;
   classNames: TYPE_CLASSNAMES;
   displayPending: (pendingMsg: string) => void;
-  displayError: (error: ErrorFormState) => void;
-  displaySuccess: (successMessage: string) => void;
+  handleStateChange: (state: FormStateAccount) => void;
 }) {
   const [isClicked, setIsClicked] = useState(false);
   const [state, action, isPending] = useActionState<FormStateAccount, FormData>(
     updatePassword,
     undefined,
   );
-  // use this to modify state
-  const [curState, setCurState] = useState(state);
 
   function handleClickChange() {
     setIsClicked(true);
   }
+
+  useEffect(() => {
+    handleStateChange(state);
+  }, [state, handleStateChange]);
 
   // display pending state at the top of the page
   useEffect(() => {
@@ -292,27 +310,17 @@ function Password({
     if (!isPending) displayPending("");
   }, [isPending, language, displayPending]);
 
-  // I'm gonna change it
-  // set curState as state to modify
-  useEffect(() => {
-    (() => setCurState(state))();
-  }, [state]);
-
   // display error at the top of the page
   useEffect(() => {
-    displayError(curState);
-
     // when update finished
     const handleUpdateFinished = () => {
-      const successMessage = curState?.message;
+      const successMessage = state?.message;
       if (!successMessage) return;
 
       setIsClicked(false);
-      displaySuccess(successMessage[language]);
-      setCurState(undefined);
     };
     handleUpdateFinished();
-  }, [curState, language, displayError, displaySuccess]);
+  }, [state?.message, language]);
 
   return (
     <form action={action}>
@@ -432,13 +440,15 @@ function CloseAccount({
   language,
   classNames,
   displayPending,
-  displayError,
+  handleStateChange,
 }: {
   language: Language;
   classNames: TYPE_CLASSNAMES;
   displayPending: (pendingMsg: string) => void;
-  displayError: (error: ErrorFormState) => void;
+  handleStateChange: (state: FormStateAccount) => void;
 }) {
+  const router = useRouter();
+
   const [isClicked, setIsClicked] = useState(false);
   const [state, action, isPending] = useActionState<FormStateAccount, FormData>(
     deleteAccount,
@@ -449,20 +459,27 @@ function CloseAccount({
     setIsClicked(true);
   }
 
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    startTransition(() => action(new FormData(e.currentTarget)));
+
+    router.push(`/${language}/account-closed`);
+  }
+
   // display pending state at the top of the page
   useEffect(() => {
     if (isPending)
       displayPending(language === "en" ? "Closing account..." : "退会中...");
     if (!isPending) displayPending("");
-  }, [isPending, displayPending]);
+  }, [isPending, language, displayPending]);
 
-  // display error at the top of the page
   useEffect(() => {
-    displayError(state);
-  }, [state, displayError]);
+    handleStateChange(state);
+  }, [state, handleStateChange]);
 
   return (
-    <form action={action}>
+    <form onSubmit={handleSubmit}>
       <h3 className={classNames.h3ClassName}>
         {language === "en" ? "Close Account" : "退会する"}
       </h3>

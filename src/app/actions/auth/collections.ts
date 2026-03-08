@@ -6,8 +6,8 @@ import dbConnect from "../../lib/database";
 import { verifySession } from "../../lib/dal";
 import { getError } from "../../lib/errorHandler";
 // types
-import { FormStateCollection } from "../../lib/definitions";
-import { TYPE_COLLECTION } from "@/app/lib/config/type";
+import { FormStateCollection } from "../../lib/config/types/formState";
+import { Collection } from "@/app/lib/config/types/others";
 
 export async function createCollection(
   formState: FormStateCollection,
@@ -23,8 +23,9 @@ export async function createCollection(
     const { isAuth, userId } = await verifySession();
 
     await dbConnect();
-
     const user = await User.findById(userId).select("collections");
+    if (!user) return getError("notFound");
+
     user.collections.push({ name, numberOfWords: 0 });
     await user.save();
 
@@ -71,9 +72,7 @@ export async function updateCollection(
     if (!user) return getError("notFound");
 
     const collectionsToModify = collectionIds.map((id) =>
-      user.collections.find(
-        (col: TYPE_COLLECTION) => col._id?.toString() === id,
-      ),
+      user.collections.find((col: Collection) => col._id?.toString() === id),
     );
 
     collectionsToModify.forEach(

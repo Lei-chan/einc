@@ -9,21 +9,20 @@ import {
   getNextReviewDate,
 } from "@/app/lib/helper";
 import { getError, isZodError } from "@/app/lib/errorHandler";
+// zod schema
+import { WordSchema } from "@/app/lib/zodSchemas";
 // types
 import {
-  TYPE_ERROR_WITH_ZOD_DATA,
-  TYPE_WORD_BEFORE_SENT,
-} from "@/app/lib/config/type";
-import {
   DefinitionsDataQuiz,
-  FormStateWordJournal,
+  MyZodError,
   UpdateStatusReviewDateDataQuiz,
-  WordSchema,
-} from "@/app/lib/definitions";
+  WordBeforeSent,
+} from "@/app/lib/config/types/others";
+import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 
 export async function addWords(
   formState: FormStateWordJournal,
-  wordData: TYPE_WORD_BEFORE_SENT[],
+  wordData: WordBeforeSent[],
 ) {
   const { isAuth, userId } = await verifySession();
   try {
@@ -44,7 +43,7 @@ export async function addWords(
           undefined,
           result,
         );
-        const err = new Error("") as TYPE_ERROR_WITH_ZOD_DATA;
+        const err = new Error("") as MyZodError;
         err.name = "zodError";
         err.zodErrorData = fieldErrors;
         throw err;
@@ -68,17 +67,18 @@ export async function addWords(
 
 export async function updateWord(
   formState: FormStateWordJournal,
-  wordData: TYPE_WORD_BEFORE_SENT,
+  wordData: WordBeforeSent,
 ) {
   const { isAuth, userId } = await verifySession();
   try {
     const wordDataWithUserId = { userId: String(userId), ...wordData };
+
     // separate _id and other properties to update (because _id cannot be modified)
     const { _id, ...others } =
       await convertWordDataToSendServer(wordDataWithUserId);
 
     // validate with zod validation
-    const result = WordSchema.safeParse(wordData);
+    const result = WordSchema.safeParse(others);
     if (!result.success)
       return getError("zodError", undefined, undefined, undefined, result);
 

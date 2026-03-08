@@ -1,18 +1,23 @@
-import Resizer from "react-image-file-resizer";
-import {
-  Language,
-  MediaDatabase,
-  MongoBuffer,
-  TYPE_WORD,
-  TYPE_WORD_BEFORE_SENT,
-  TYPE_WORD_TO_DISPLAY,
-} from "./config/type";
+// method
+import { isArray } from "chart.js/helpers";
+// settings
 import {
   MIN_LENGTH_PASSWORD,
   MIN_NUMBER_EACH_PASSWORD,
   PASSWORD_REGEX,
 } from "./config/settings";
-import { isArray } from "chart.js/helpers";
+// types
+import {
+  Language,
+  MediaDatabase,
+  MongoBuffer,
+  WordData,
+  WordBeforeSent,
+  WordToDisplay,
+  Message,
+} from "./config/types/others";
+// library
+import Resizer from "react-image-file-resizer";
 
 export const getGenericErrorMessage = (language: Language) =>
   language === "en"
@@ -114,8 +119,8 @@ const convertFilesToBuffersWithNames = async (files: (File | null)[]) => {
 };
 
 export const convertWordDataToSendServer = async (
-  wordData: TYPE_WORD_BEFORE_SENT,
-): Promise<TYPE_WORD> => {
+  wordData: WordBeforeSent,
+): Promise<WordData> => {
   try {
     // convert files into buffer
     const [audioBuffer, imageNameBuffer, imageDefinitionsBuffer] =
@@ -143,9 +148,7 @@ export const convertWordDataToSendServer = async (
   }
 };
 
-export const getWordDataToDisplay = (
-  wordData: TYPE_WORD,
-): TYPE_WORD_TO_DISPLAY => {
+export const getWordDataToDisplay = (wordData: WordData): WordToDisplay => {
   const mediaBuffers = [
     wordData.audio,
     wordData.imageName,
@@ -170,7 +173,7 @@ export const getWordDataToDisplay = (
     );
 
   // replace mediaBuffers with links
-  const newWordData = { ...wordData } as TYPE_WORD_TO_DISPLAY;
+  const newWordData = { ...wordData } as WordToDisplay;
   newWordData.audio = audio || null;
   newWordData.imageName = imageName || null;
   newWordData.imageDefinitions = imageDefinitions || null;
@@ -225,9 +228,7 @@ export const getNextReviewDate = (status: number) => {
   return new Date(Date.now() + datePlusMilliseconds[status]).toISOString();
 };
 
-export const convertWordsToQuizData = (
-  wordDataToDisplay: TYPE_WORD_TO_DISPLAY[],
-) => {
+export const convertWordsToQuizData = (wordDataToDisplay: WordToDisplay[]) => {
   const quizData = wordDataToDisplay.flatMap((word) => {
     const nameData = {
       name: word.name,
@@ -283,4 +284,15 @@ export const areDatesSame = (date1: Date | string, date2: Date | string) => {
   const isSameDate = dateOne.getDate() === dateTwo.getDate();
 
   return isSameYear && isSameMonth && isSameDate ? true : false;
+};
+
+export const getMessagesFromFieldError = (
+  language: Language,
+  fieldErrors: { [key: string]: Message },
+) => {
+  const messages = Object.values(fieldErrors);
+  const messagesForLanguage = messages.map((msg) => msg[language]);
+  console.log(messagesForLanguage);
+
+  return messagesForLanguage.join("\n");
 };

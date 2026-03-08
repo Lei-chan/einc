@@ -7,13 +7,15 @@ import { verifySession } from "@/app/lib/dal";
 // methods
 import { getError } from "@/app/lib/errorHandler";
 import { isArrayEmpty } from "@/app/lib/helper";
+// zod schema
+import { JournalSchema } from "@/app/lib/zodSchemas";
 // types
-import { TYPE_JOURNAL_DATA_DATABASE } from "@/app/lib/config/type";
-import { FormStateWordJournal, JournalSchema } from "@/app/lib/definitions";
+import { JournalDatabase } from "@/app/lib/config/types/others";
+import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 
 export async function addUpdateJournal(
   formState: FormStateWordJournal,
-  journalData: TYPE_JOURNAL_DATA_DATABASE,
+  journalData: JournalDatabase,
 ) {
   const { isAuth, userId } = await verifySession();
   try {
