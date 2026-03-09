@@ -1,18 +1,23 @@
 "use client";
+// react
+import { useEffect, useState } from "react";
 //next.js
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 //components
 import Logo from "./Components/LogoOnlineMark";
-//libraries
-import { useInView } from "react-intersection-observer";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+// methods
 import {
   doesPathnameContainLanguage,
   getLanguageFromPathname,
 } from "../lib/helper";
+// settings
+import { GITHUB_LINK, INSTAGRAM_LINK } from "../lib/config/settings";
+// type
 import { Language } from "../lib/config/types/others";
+//libraries
+import { useInView } from "react-intersection-observer";
 
 export default function Home() {
   const pathname = usePathname();
@@ -197,11 +202,11 @@ function Footer() {
     <footer className="w-full h-fit bg-orange-500 text-xs text-center py-3 lg:py-5 xl:py-6">
       <div className="w-full h-fit flex flex-row justify-center gap-4 lg:gap-5 mb-1 lg:mb-2 xl:mb-3">
         <Link
-          href=""
+          href={GITHUB_LINK}
           className="bg-[url('/icons/github.svg')] w-9 aspect-square bg-center bg-contain"
         ></Link>
         <Link
-          href=""
+          href={INSTAGRAM_LINK}
           className="bg-[url('/icons/instagram.svg')] w-9 aspect-square bg-center bg-contain"
         ></Link>
       </div>

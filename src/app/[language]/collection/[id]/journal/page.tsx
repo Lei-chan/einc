@@ -21,6 +21,7 @@ import {
   formatDate,
   getGenericErrorMessage,
   getLanguageFromPathname,
+  getMessagesFromFieldError,
   isObjectEmpty,
 } from "@/app/lib/helper";
 // settings
@@ -161,6 +162,12 @@ function Middle({
       className={`w-full h-[90%] pt-3 lg:pt-4 xl:pt-5 2xl:pt-6 gap-3 items-center flex flex-col`}
     >
       {errorMessage && <PMessage type="error" message={errorMessage} />}
+      {state?.errors && (
+        <PMessage
+          type="error"
+          message={getMessagesFromFieldError(language, state.errors)}
+        />
+      )}
       {state?.error?.message && (
         <PMessage type="error" message={state.error.message[language]} />
       )}
