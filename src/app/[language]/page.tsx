@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 //components
-import Logo from "./Components/Logo";
+import Logo from "./Components/LogoOnlineMark";
 //libraries
 import { useInView } from "react-intersection-observer";
 import { usePathname, useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ export default function Home() {
   const language = getLanguageFromPathname(pathname);
 
   return (
-    <div className="w-screen h-fit flex flex-col items-center">
+    <div className="w-full h-fit flex flex-col items-center">
       <Top pathname={pathname} />
       <Middle language={language} />
       <Footer />
@@ -45,8 +45,8 @@ function Top({ pathname }: { pathname: string }) {
   }, [language, pathname, router]);
   return (
     <div className="fixed w-full h-[14vh] left-0 top-0 bg-gradient-to-r from-yellow-200 to-orange-300 flex flex-row items-center shadow-md shadow-black/10 z-10">
-      <Logo />
-      <div className="absolute w-[60%] h-fit flex flex-row text-[15px] gap-3 right-4 text-red-600 text-center items-center leading-tight justify-end ">
+      <Logo showOnlineMark={false} />
+      <div className="absolute w-[60%] sm:w-[40%] md:w-[35%] lg:w-[29%] xl:w-[20%] 2xl:w-[16%] h-fit flex flex-row text-[15px] gap-3 xl:gap-5 right-4 xl:right-7 text-red-600 text-center items-center leading-tight justify-end ">
         <select
           value={language}
           className="w-[30%] bg-[url('/icons/language.svg')] bg-[2px] bg-contain bg-no-repeat text-sm pl-6 pr-2 appearance-none"
@@ -77,23 +77,23 @@ function Middle({ language }: { language: Language }) {
   const [lastRef, lastInView, lastEntry] = useInView(inViewOptions);
 
   return (
-    <div className="w-[90%] h-fit mt-[14vh] py-10 flex flex-col items-center">
+    <div className="w-[18rem] sm:w-[20rem] md:w-[22rem] lg:w-[26rem] xl:w-[30rem] 2xl:w-[34rem] h-fit mt-[14vh] py-10 lg:py-14 flex flex-col items-center gap-3 md:gap-4 lg:gap-5">
       <div
         ref={firstRef}
-        className={`w-full ease-in ${transitionClassName} ${
+        className={`ease-in ${transitionClassName} ${
           firstInView ? "opacity-100" : "opacity-0"
         }`}
       >
         {/* I will change it to Image later */}
         <div className="w-full h-auto aspect-[1/0.6] bg-slate-400"></div>
-        <p className="text-lg bg-gradient-to-r from-white to-white/80 py-2 px-4 shadow-black/10 shadow-lg rounded-md mt-3 text-red-700 italic">
+        <p className="w-full text-lg bg-gradient-to-r from-white to-white/80 py-2 px-4 shadow-black/10 shadow-lg rounded-md mt-3 text-red-700 italic">
           &quot;einc&quot;
           {language === "en"
             ? " will help you memorize vocabulary or expressions more efficiently!"
             : "はより効率的に単語や表現を覚えるのを助けます！"}
         </p>
       </div>
-      <div className="w-[90%] py-3">
+      <div className="w-[90%]">
         <Description
           inViewOptions={inViewOptions}
           transitionClassName={transitionClassName}
@@ -141,7 +141,7 @@ function Middle({ language }: { language: Language }) {
       </div>
       <p
         ref={lastRef}
-        className={`${transitionClassName} text-lg text-center mt-7 text-red-700 bg-gradient-to-r from-orange-300 to-yellow-300 transform -skew-x-12 p-2 rounded-md shadow-md shadow-black/10 tracking-wider ease-in-out ${
+        className={`${transitionClassName} text-lg xl:text-xl 2xl:text-2xl text-center mt-5 sm:mt-8 md:mt-9 text-red-700 bg-gradient-to-r from-orange-300 to-yellow-300 transform -skew-x-12 p-2 lg:p-3 xl:p-4 rounded-md shadow-md shadow-black/10 tracking-wider ease-in-out ${
           lastInView ? "opacity-100 scale-100" : "opacity-0 scale-50"
         }`}
       >
@@ -171,7 +171,7 @@ function Description({
   return (
     <div
       ref={ref}
-      className={`${transitionClassName} ease-in-out w-full h-fit mt-11 flex flex-col items-center gap-4 ${
+      className={`${transitionClassName} ease-in-out w-full h-fit mt-11 md:mt-12 lg:mt-14 flex flex-col items-center gap-4 ${
         inView ? "opacity-100" : "opacity-0"
       }`}
     >
@@ -194,8 +194,8 @@ function Description({
 
 function Footer() {
   return (
-    <footer className="w-full h-fit bg-orange-500 text-xs text-center py-3">
-      <div className="w-full h-fit flex flex-row justify-center gap-4 mb-1">
+    <footer className="w-full h-fit bg-orange-500 text-xs text-center py-3 lg:py-5 xl:py-6">
+      <div className="w-full h-fit flex flex-row justify-center gap-4 lg:gap-5 mb-1 lg:mb-2 xl:mb-3">
         <Link
           href=""
           className="bg-[url('/icons/github.svg')] w-9 aspect-square bg-center bg-contain"
@@ -206,7 +206,7 @@ function Footer() {
         ></Link>
       </div>
       <p>Designed by Freepik</p>
-      <p>© 2026 Lei-chan</p>
+      <p className="2xl:mt-1">© 2026 Lei-chan</p>
     </footer>
   );
 }

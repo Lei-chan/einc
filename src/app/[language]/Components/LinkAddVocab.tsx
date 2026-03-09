@@ -10,7 +10,6 @@ export default function LinkAddVocab({
   language: Language;
   collectionId: string;
 }) {
-  console.log(collectionId);
   return (
     <Link
       href={{ pathname: `/${language}/add`, hash: collectionId }}

@@ -9,11 +9,11 @@ import { Message, MyError, MyZodError } from "./config/types/others";
 import z, { ZodSafeParseResult } from "zod";
 
 export const isError = (err: unknown): err is MyError => {
-  return err !== undefined;
+  return err instanceof Error;
 };
 
 export const isZodError = (err: unknown): err is MyZodError => {
-  return err !== undefined;
+  return err instanceof Error;
 };
 
 export const getError = (

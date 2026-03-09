@@ -123,18 +123,18 @@ function SearchBar({
 }) {
   return (
     <form
-      className="w-full h-20 bg-gradient-to-l from-orange-300 to-yellow-300/60 shadow-md shadow-black/10 flex flex-row items-center justify-center gap-2"
+      className="w-full h-20 bg-gradient-to-l from-orange-300 to-yellow-300/60 shadow-md shadow-black/10 flex flex-row items-center justify-center gap-2 lg:gap-3 xl:gap-5"
       onSubmit={onSubmitSearch}
     >
       <input
         name="word"
         type="search"
         placeholder={language === "en" ? "search by word" : "単語名で探す"}
-        className="w-[70%] h-[40%] rounded-full"
+        className="w-[14rem] sm:w-[18rem] lg:w-[20rem] xl:w-[21rem] 2xl:w-[22rem] h-[40%] rounded-full px-3"
       ></input>
       <button
         type="submit"
-        className="text-sm text-white bg-green-400/80 px-1 py-[2px] rounded shadow shadow-black/10"
+        className="text-sm xl:text-base text-white bg-green-400/80 px-1 py-[2px] rounded shadow shadow-black/10"
       >
         {language === "en" ? "Search" : "検索"}
       </button>
@@ -265,7 +265,7 @@ function Bottom({
   }, [state, language, handleUpdateUI]);
 
   return (
-    <div className="w-[90%] min-h-[80vh] max-h-fit flex flex-col items-center justify-center">
+    <div className="w-[90%] sm:w-[85%] md:w-[70%] xl:w-[60%] 2xl:w-[50%] min-h-[80vh] max-h-fit flex flex-col items-center justify-center">
       {data.length !== 0 ? (
         <>
           {isPending && (
@@ -394,9 +394,12 @@ function WordLists({
   handleUpdateUI: () => void;
 }) {
   return (
-    <ul className="w-[90%] flex flex-col gap-5 py-5">
+    <ul className="w-[17rem] sm:w-[19rem] md:w-[22rem] lg:w-[27rem] xl:w-[30rem] flex flex-col gap-5 sm:gap-7 lg:gap-8 py-5">
       {data.map((word, i) => (
-        <div key={i} className="flex flex-row gap-3">
+        <div
+          key={i}
+          className="flex flex-row gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-7 2xl:gap-8"
+        >
           {isSelected && (
             <input
               type="checkbox"

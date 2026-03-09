@@ -49,7 +49,7 @@ export default function Journal({
 
 function Top({ language }: { language: Language }) {
   return (
-    <h1 className="w-full h-[10%] text-2xl text-white bg-gradient-to-t from-amber-800 to-amber-700 tracking-wide py-2 shadow-sm shadow-black/40 text-center">
+    <h1 className="w-full h-fit text-2xl text-white bg-gradient-to-t from-amber-800 to-amber-700 tracking-wide shadow-sm shadow-black/40 text-center py-2">
       {language === "en" ? "Journal" : "ジャーナル"}
     </h1>
   );
@@ -157,13 +157,15 @@ function Middle({
   }, [collectionId, date, language]);
 
   return (
-    <div className={`w-full h-[90%] pt-3 gap-3 items-center flex flex-col`}>
+    <div
+      className={`w-full h-[90%] pt-3 lg:pt-4 xl:pt-5 2xl:pt-6 gap-3 items-center flex flex-col`}
+    >
       {errorMessage && <PMessage type="error" message={errorMessage} />}
       {state?.error?.message && (
         <PMessage type="error" message={state.error.message[language]} />
       )}
       <div
-        className={`w-[90%] overflow-y-auto my-3 ${!isDictionaryOpen ? "flex-[1.7]" : "flex-1"}`}
+        className={`w-[90%] sm:w-[80%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%] overflow-y-auto my-3 ${!isDictionaryOpen ? "flex-[1.7]" : "flex-1"}`}
       >
         <div className="flex flex-row justify-center gap-10">
           <button
@@ -172,7 +174,7 @@ function Middle({
             onClick={handleChangeDate}
           ></button>
           <p className="text-center">
-            {formatDate(new Date(date), "en-US", true)}
+            {formatDate(new Date(date), language, true)}
           </p>
           <button
             name="next"
@@ -208,7 +210,7 @@ function Middle({
           >
             &#10005;
           </button>
-          <Dictionary widthClassName="w-screen" heightClassName="h-full" />
+          <Dictionary widthClassName="w-screen " heightClassName="h-full" />
         </div>
       )}
     </div>

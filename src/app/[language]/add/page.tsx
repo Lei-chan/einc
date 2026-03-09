@@ -75,7 +75,12 @@ export default function Add() {
 
       const formData = new FormData(e.currentTarget);
       const formDataArr = [...formData];
-      if (!formDataArr.length) throw new Error("At least one word is required");
+      if (!formDataArr.length)
+        throw new Error(
+          language === "en"
+            ? "At least one word is required"
+            : "最低でも一つ以上の単語を送信してください",
+        );
 
       // get a property key of  the last element
       const lastElementProperty = String(formDataArr.at(-1)?.at(0));
@@ -151,7 +156,7 @@ export default function Add() {
 
   return (
     <form
-      className="w-full min-h-screen max-h-fit flex flex-col items-center py-6 gap-5"
+      className="w-full min-h-screen max-h-fit flex flex-col items-center py-6 md:py-8 lg:py-9 2xl:py-10 gap-7 md:gap-8 lg:gap-10"
       onSubmit={handleSubmit}
     >
       {messageData && (
@@ -210,7 +215,8 @@ function Word({
   onClickDelete: () => void;
   onClickOpenDictionary: () => void;
 }) {
-  const textareaClassName = "w-[65%] aspect-[1/0.4] leading-tight text-[15px]";
+  const textareaClassName =
+    "w-[65%] aspect-[1/0.4] leading-tight text-[15px] py-1 px-[5px]";
 
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
 
@@ -232,7 +238,7 @@ function Word({
   }
 
   return (
-    <div className="relative w-[90%] h-fit bg-gradient-to-l from-red-500 to-yellow-500 rounded-md shadow-md shadow-black/20 p-3">
+    <div className="relative w-[18rem] sm:w-[19rem] md:w-[20rem] lg:w-[22rem] xl:w-[23rem] 2xl:w-[24rem] h-fit bg-gradient-to-l from-red-500 to-yellow-500 rounded-md shadow-md shadow-black/20 p-3 md:p-4 lg:p-5">
       <button
         type="button"
         className="absolute text-2xl top-0 right-2 text-white"

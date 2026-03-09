@@ -4,7 +4,7 @@ import { startTransition, useActionState, useEffect, useState } from "react";
 // next.js
 import { usePathname, useRouter } from "next/navigation";
 // components
-import Logo from "./Logo";
+import Logo from "./LogoOnlineMark";
 import ErrorMessageInput from "./ErrorMessageInput";
 import PMessage from "./PMessage";
 import EmailInput from "./EmailInput";
@@ -64,16 +64,16 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   }
 
   return (
-    <div className="relative w-screen min-h-screen pt-1">
-      <Logo />
-      <div className="w-full h-full flex flex-col justify-center items-center text-center my-10">
+    <div className="relative w-full min-h-screen pt-1 flex flex-col items-center">
+      <Logo showOnlineMark={false} />
+      <div className="w-[18rem] sm:w-[22rem] xl:w-[23rem] 2xl:w-[24rem] h-screen flex flex-col items-center justify-center mt-4 xl:mt-0 mb-2 xl:mb-0">
         {(isPending || error) && (
           <PMessage
             type={isPending ? "pending" : "error"}
             message={isPending ? getPendingSentence() : error}
           />
         )}
-        <div className="w-[90%] h-fit bg-white/70 shadow-lg shadow-black/20 rounded-md mt-3 text-base py-3">
+        <div className="w-full h-fit bg-white/70 shadow-lg shadow-black/20 rounded mt-3 text-base py-3 xl:py-4">
           <ViaUserInfo
             language={language}
             router={router}

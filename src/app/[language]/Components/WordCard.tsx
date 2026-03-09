@@ -158,9 +158,10 @@ export default function WordCard({
 
   const getContent = () => {
     const textareaClassName = "w-[65%]";
-    const h3ClassName = "text-black/80 text-lg";
-    const pClassName = "w-[90%]";
-    const imageClassName = "my-2 px-2";
+    const h3ClassName = "text-black/80 text-lg xl:text-[23px]";
+    const pClassName = "w-[90%] xl:text-xl xl:mt-1";
+    const imageClassName =
+      "w-full sm:w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%] 2xl:w-[50%] my-2 px-2 mt-3 xl:mt-4";
 
     function handleClickRemove(type: string) {
       setWordData((prev) => ({
@@ -172,7 +173,10 @@ export default function WordCard({
     if (isEdited)
       return (
         <>
-          <form className="flex flex-col gap-2 p-3" onSubmit={handleSubmit}>
+          <form
+            className="flex flex-col gap-2 md:gap-3 p-3 md:p-4"
+            onSubmit={handleSubmit}
+          >
             <label>
               {language === "en" ? "Word" : "単語"}:
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -232,7 +236,7 @@ export default function WordCard({
             />
             <button
               type="submit"
-              className="w-fit bg-green-500 self-center text-white px-1 rounded hover:bg-green-300"
+              className="w-fit bg-green-500 self-center text-white px-1 rounded hover:bg-green-300 lg:mt-1"
             >
               OK
             </button>
@@ -314,7 +318,7 @@ export default function WordCard({
 
   return (
     <div
-      className="relative w-full min-h-44 max-h-fit bg-yellow-100 shadow-md shadow-black/20 rounded flex flex-col items-center justify-center cursor-pointer py-3"
+      className="relative w-full min-h-44 sm:min-h-[12rem] md:min-h-[13rem] lg:min-h-[14rem] xl:min-h-[15rem] 2xl:min-h-[16rem] max-h-fit bg-yellow-100 shadow-md shadow-black/20 rounded flex flex-col items-center justify-center cursor-pointer py-3"
       onClick={handleClickList}
     >
       <div className="absolute w-full top-1 flex flex-col items-center z-10">

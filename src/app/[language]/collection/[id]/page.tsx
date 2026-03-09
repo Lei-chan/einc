@@ -5,7 +5,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 // components
-import Logo from "@/app/[language]/Components/Logo";
+import LogoOnlineMark from "@/app/[language]/Components/LogoOnlineMark";
 import LinkAddVocab from "@/app/[language]/Components/LinkAddVocab";
 import PMessage from "@/app/[language]/Components/PMessage";
 // dal
@@ -63,8 +63,8 @@ function Top({
 }) {
   return (
     <div className="relative w-full h-14 flex flex-row items-center mt-1">
-      <Logo />
-      <div className="absolute w-[55%] h-[70%] flex flex-row items-center justify-end right-4 text-center">
+      <LogoOnlineMark showOnlineMark={true} />
+      <div className="absolute w-[10rem] sm:w-[11rem] md:w-[12rem] xl:w-[13rem] 2xl:w-[14rem] h-[70%] flex flex-row items-center justify-end right-4 md:right-5 lg:right-6 text-center">
         <LinkAddVocab language={language} collectionId={collectionId} />
       </div>
     </div>
@@ -79,7 +79,7 @@ function ContentContainer({
   pathname: string;
 }) {
   return (
-    <div className="w-[90%] h-[65vh] grid grid-cols-2 row-span-2 justify-items-center place-content-evenly">
+    <div className="w-[19rem] lg:w-[39rem] xl:w-[40rem] 2xl:w-[41rem] h-[65vh] grid grid-cols-2 row-span-2 lg:grid-cols-4 justify-items-center place-content-evenly">
       <LinkContent
         language={language}
         pathname={pathname}
@@ -118,7 +118,7 @@ function LinkContent({
   return (
     <Link
       href={href}
-      className="w-[120px] aspect-square text-center flex flex-col justify-center bg-gradient-to-l from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 rounded-md text-white text-xl font-semibold tracking-widest shadow-md shadow-black/20"
+      className="w-[85%] aspect-square text-center flex flex-col justify-center bg-gradient-to-l from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 rounded-md text-white text-xl font-semibold tracking-widest shadow-md shadow-black/20"
     >
       {name[language]}
     </Link>
@@ -162,7 +162,7 @@ function Graphs({
   }, [collectionId, language]);
 
   return (
-    <div className="w-full h-fit bg-gradient-to-tl from-red-600/50 to-red-400/50 px-3 py-5">
+    <div className="w-full h-fit bg-gradient-to-tl from-red-600/50 to-red-400/50 px-3 py-5 md:py-6 lg:py-7 xl:py-8 2xl:py-9 flex flex-col items-center">
       <h2 className="text-xl">
         {language === "en" ? "Your Progress" : "あなたの進捗"}
       </h2>
@@ -177,7 +177,7 @@ function Graphs({
         </p>
       )}
       {statuses && statuses.length > 0 && (
-        <div className="relative w-full h-fit bg-white rounded flex flex-col gap-8 mt-5 py-3 items-center">
+        <div className="relative w-[19rem] lg:w-[21rem] xl:w-[23rem] 2xl:w-[25rem] h-fit bg-white rounded flex flex-col gap-8 mt-5 py-3 items-center">
           <PieGraph language={language} statuses={statuses} />
           {/* <LineGraph wordStatusData={wordStatusData} /> */}
         </div>

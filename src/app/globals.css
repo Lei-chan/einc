@@ -24,7 +24,8 @@ body {
 }
 
 button,
-li {
+li,
+select {
   cursor: pointer;
 }
 

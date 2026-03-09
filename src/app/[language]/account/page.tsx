@@ -48,7 +48,7 @@ export default function Account() {
   const language = getLanguageFromPathname(pathname);
 
   return (
-    <div className="w-screen h-fit py-6 text-center flex flex-col items-center">
+    <div className="w-full min-h-screen py-6 text-center flex flex-col items-center justify-center">
       <h1 className="text-xl ">
         {language === "en" ? "Accound Information" : "アカウント情報"}
       </h1>
@@ -131,7 +131,7 @@ function UserInfo({ language }: { language: Language }) {
         )}
       </div>
       <div
-        className={`w-[90%] h-fit bg-slate-50 rounded mb-6 shadow-md shadow-black/20 overflow-hidden ${!user ? "animate-pulse" : "animation-none"}`}
+        className={`w-[18rem] sm:w-[19rem] md:w-[20rem] lg:w-[22rem] xl:w-[25rem] 2xl:w-[27rem] h-fit bg-slate-50 rounded mb-6 shadow-md shadow-black/20 overflow-hidden ${!user ? "animate-pulse" : "animation-none"}`}
       >
         <Email
           language={language}

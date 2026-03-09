@@ -10,7 +10,7 @@ export default function PMessage({
 }) {
   return (
     <p
-      className={`w-[90%] text-center shadow-md shadow-black/10  leading-tight text-sm text-white py-1 px-2 rounded z-10 ${type === "pending" ? "bg-purple-400" : type === "error" ? "bg-red-500" : "bg-green-400"}`}
+      className={`w-[18rem] text-center shadow-md shadow-black/10  leading-tight text-sm lg:text-base 2xl:text-lg text-white py-1 px-2 rounded z-10 ${type === "pending" ? "bg-purple-400" : type === "error" ? "bg-red-500" : "bg-green-400"}`}
     >
       {message}
     </p>

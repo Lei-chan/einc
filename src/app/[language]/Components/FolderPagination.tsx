@@ -225,7 +225,7 @@ function FolderContainer({
   }, [isSelected]);
 
   return (
-    <form className="w-full flex-[4.5] p-[5%] flex flex-col items-center">
+    <form className="w-full md:w-[95%] lg:w-[85%] xl:w-[80%] 2xl:w-[70%] flex-[4.5] p-4 flex flex-col items-center">
       {type === "main" && (
         <Selector
           language={language}
@@ -242,7 +242,7 @@ function FolderContainer({
         />
       )}
       <ul
-        className="w-full h-full grid grid-rows-5 items-center justify-items-center mt-1"
+        className="w-full h-full grid grid-rows-5 items-center justify-items-center mt-2 md:mt-3"
         style={{
           gridTemplateColumns: `repeat(${numberOfColumns}, minmax(0, 1fr))`,
         }}
@@ -388,7 +388,7 @@ function Selector({
   }, [deleteState, deleteIsPending, language, displayMessage, handleUpdate]);
 
   return (
-    <div className="w-[92%] flex flex-row justify-end gap-2 text-sm items-center">
+    <div className="w-[95%] flex flex-row justify-end gap-2 md:gap-3 lg:gap-4 text-sm items-center">
       {
         <>
           {!isSelected ? (

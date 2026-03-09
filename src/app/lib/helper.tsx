@@ -292,7 +292,6 @@ export const getMessagesFromFieldError = (
 ) => {
   const messages = Object.values(fieldErrors);
   const messagesForLanguage = messages.map((msg) => msg[language]);
-  console.log(messagesForLanguage);
 
   return messagesForLanguage.join("\n");
 };

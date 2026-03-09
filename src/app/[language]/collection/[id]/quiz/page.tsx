@@ -123,7 +123,7 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="w-screen min-h-screen max-h-fit flex flex-col items-center justify-center py-10">
       {quiz && numberOfQuiz > 0 && (
-        <p className="absolute top-2 right-3">
+        <p className="absolute top-2 right-3 lg:top-3 lg:right-4 xl:text-lg xl:top-4 xl:right-6 2xl:text-xl 2xl:top-5 2xl:right-7">
           {curQuizPage} / {numberOfQuiz}
         </p>
       )}
@@ -304,12 +304,16 @@ function QuizAnswerForm({
   question: QuizQuestion | undefined;
   onSubmitForm: (e: React.FormEvent<HTMLFormElement>) => void;
 }) {
-  const textareaInputClassName = "mt-3";
+  const textareaInputClassName =
+    "w-[15rem] md:w-[16rem] lg:w-[17rem] xl:w-[18rem] mt-3";
 
   if (!question) return;
 
   return (
-    <form className="flex flex-col items-center gap-3" onSubmit={onSubmitForm}>
+    <form
+      className="flex flex-col items-center gap-4 lg:gap-5 xl:gap-6 2xl:gap-7"
+      onSubmit={onSubmitForm}
+    >
       <h2 className="text-xl">{question.sentence[language]}</h2>
       <div className="flex flex-row">
         <p
@@ -380,14 +384,14 @@ function QuizResult({
   if (!answer) return;
 
   return (
-    <div className="w-full h-fit">
+    <div className="w-[15rem] xl:w-[18rem] h-fit">
       <p
         className={`text-2xl text-center ${isCorrect ? "text-red-500" : "text-blue-500"}`}
       >
         {isCorrect && (language === "en" ? "Correct" : "正解")}
         {!isCorrect && (language === "en" ? "Wrong" : "不正解")}
       </p>
-      <div className="relative w-full min-h-56 mt-3 flex flex-col items-center justify-center">
+      <div className="relative w-full min-h-56 max-h-fit mt-3 flex flex-col items-center justify-center gap-1 lg:gap-2 xl:gap-3 2xl:gap-4">
         <Image
           src={`/icons/${isCorrect ? "circle" : "cross"}.svg`}
           alt={
@@ -401,19 +405,21 @@ function QuizResult({
           }
           width={500}
           height={500}
-          className="absolute w-56 aspect-square object-contain -z-10 opacity-55"
+          className="absolute w-[85%] aspect-square object-contain -z-10 opacity-55"
         ></Image>
-        <div className="w-full flex flex-row items-center">
+        <div>
+          <div className="flex flex-row items-center">
+            <p className={pAnswerClassName}>
+              {language === "en" ? "Correct answer" : "正しい回答"}:{" "}
+              {answer.name || joinWithCommas(answer.definitions || [])}
+              {answer?.audio && <ButtonAudio src={answer.audio.data} />}
+            </p>
+          </div>
           <p className={pAnswerClassName}>
-            {language === "en" ? "Correct answer" : "正しい回答"}:{" "}
-            {answer.name || joinWithCommas(answer.definitions || [])}
+            {language === "en" ? "Your answer" : "あなたの回答"}:{" "}
+            {joinWithCommas(userAnswer)}
           </p>
-          {answer?.audio && <ButtonAudio src={answer.audio.data} />}
         </div>
-        <p className={pAnswerClassName}>
-          {language === "en" ? "Your answer" : "あなたの回答"}:{" "}
-          {joinWithCommas(userAnswer)}
-        </p>
         {answer?.image && (
           <Image
             src={answer.image.data}
@@ -426,7 +432,7 @@ function QuizResult({
         <p className="mt-2">
           {language === "en" ? "Examples" : "例文"}: {afterSentence}
         </p>
-        <div className="h-fit flex flex-row items-center gap-3 mt-5 text-white">
+        <div className="h-fit flex flex-row items-center gap-3 lg:gap-4 xl:gap-5 2xl:gap-6 mt-5 text-white">
           {isCorrect ? (
             <button
               className={`${buttonClassName} bg-blue-500 hover:bg-blue-300 py-1 px-2`}

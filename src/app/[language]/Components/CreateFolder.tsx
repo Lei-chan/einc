@@ -40,24 +40,13 @@ export default function CreateFolder({
   >(createCollection, undefined);
   const lastHandledStateRef = useRef<FormStateCollection>(null);
 
-  // use it to modify state
-  // const [curState, setCurState] = useState(state);
-
   const [successMsg, setSuccessMsg] = useState("");
-
-  // set curState as state to modify
-  // useEffect(() => {
-  //   (() => setCurState(state))();
-  // }, [state]);
 
   useEffect(() => {
     const message = state?.message;
     if (!message || lastHandledStateRef.current === state) return;
 
     lastHandledStateRef.current = state;
-    // const message = curState?.message;
-
-    // if (!message) return;
 
     const displaySuccessMsg = async () => {
       setSuccessMsg(message[language]);
@@ -67,14 +56,7 @@ export default function CreateFolder({
       if (isVisible) onClickClose();
     };
     displaySuccessMsg();
-  }, [
-    state,
-    // curState,
-    language,
-    isVisible,
-    handleSetIsUpdated,
-    onClickClose,
-  ]);
+  }, [state, language, isVisible, handleSetIsUpdated, onClickClose]);
 
   // // Reset error message when user closes the form
   useEffect(() => {
@@ -106,7 +88,7 @@ export default function CreateFolder({
         <PMessage type="error" message={state.error.message[language]} />
       )}
       {successMsg && <PMessage type="success" message={successMsg} />}
-      <div className="relative w-full h-full bg-black/60 backdrop-blur-sm flex flex-col items-center gap-3 p-3 mt-2">
+      <div className="relative w-full h-full bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-5 px-3 mt-2">
         <button
           type="button"
           className={`${transitionClassName} absolute right-2 top-0 text-2xl hover:text-white/80`}
@@ -117,19 +99,23 @@ export default function CreateFolder({
         <h2 className="text-lg">
           {language === "en" ? "Create Collection" : "コレクションを作成する"}
         </h2>
-        <label>
-          {language === "en" ? "Name of the collection" : "コレクションの名前"}
+        <div>
+          <p>
+            {language === "en"
+              ? "Name of the collection"
+              : "コレクションの名前"}
+          </p>
           <input
             name="name"
             placeholder={language === "en" ? "name" : "名前"}
-            className={`mt-1  ${state?.errors?.name && "border-2 border-red-500"}`}
+            className={`mt-1 w-[12rem] sm:w-[13rem] md:w-[14rem] lg:w-[15rem] xl:w-[16rem] 2xl:w-[17rem] ${state?.errors?.name && "border-2 border-red-500"}`}
           ></input>
           {state?.errors?.name && (
             <p className="text-sm text-red-500">
               {state.errors.name[language]}
             </p>
           )}
-        </label>
+        </div>
         <button
           className={`${transitionClassName} bg-orange-500 py-[1px] px-1 mt-1 rounded hover:bg-yellow-500`}
         >

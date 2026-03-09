@@ -51,8 +51,8 @@ export default function Flashcard({
   }
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center">
-      <div className=" w-[90%] flex flex-col gap-10 items-center">
+    <div className="relative w-screen min-h-screen max-h-fit flex flex-col items-center justify-center">
+      <div className="w-[90%] sm:w-[80%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col gap-10 items-center">
         <p>
           {errorMessage && errorMessage}
           {!words && (language === "en" ? "Loading..." : "ロード中...")}
@@ -86,7 +86,7 @@ export default function Flashcard({
               )}
               <Link
                 href={`/collection/${id}`}
-                className=" text-purple-600 hover:text-purple-400"
+                className="text-purple-600 hover:text-purple-400"
               >
                 {language === "en" ? "Exit" : "終了"}
               </Link>
@@ -106,7 +106,7 @@ function RemainingWords({
   numberOfWords: number;
 }) {
   return (
-    <p className="absolute top-2 right-3">
+    <p className="absolute top-2 right-3 lg:top-3 lg:right-4 xl:top-4 xl:right-6 xl:text-lg 2xl:text-xl">
       {curCard} / {numberOfWords}
     </p>
   );
