@@ -149,9 +149,11 @@ function ViaUserInfo({
   return (
     <div className="w-full p-3 pb-1 border-b-2 flex flex-col items-center gap-3">
       {language === "en" ? (
-        <p>{typeToDisplayForLanguage} via email and password</p>
+        <p className="text-center">
+          {typeToDisplayForLanguage} via email and password
+        </p>
       ) : (
-        <p>
+        <p className="text-center">
           メールアドレスとパスワードで
           <br />
           {typeToDisplayForLanguage}する

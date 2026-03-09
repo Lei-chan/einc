@@ -139,6 +139,11 @@ export default function WordCard({
   }
 
   useEffect(() => {
+    const resetCurrentPage = () => setCurrentPage(1);
+    resetCurrentPage();
+  }, [word]);
+
+  useEffect(() => {
     const message = state?.message;
     // if it's already been called or no message => return
     if (lastHandledUpdateRef.current === state || !message) return;
@@ -247,10 +252,8 @@ export default function WordCard({
     if (currentPage === 1)
       return (
         <>
-          <div className="flex flex-row items-center gap-2">
-            <p className="w-fit text-3xl overflow-hidden whitespace-nowrap text-ellipsis">
-              {word.name}
-            </p>
+          <div className="max-w-full flex flex-row items-center justify-center gap-2 px-2">
+            <p className="w-fit text-3xl text-center">{word.name}</p>
             {wordDataToDisplay.audio && (
               <ButtonAudio src={wordDataToDisplay.audio.data} />
             )}
