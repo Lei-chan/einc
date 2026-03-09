@@ -1,5 +1,3 @@
-import { TYPE_DISPLAY_MESSAGE } from "./type";
-
 export const MIN_NUMBER_EACH_PASSWORD = 1;
 export const MIN_LENGTH_PASSWORD = 8;
 // use more than one lowercase letter, one uppercase letter, and one digit
