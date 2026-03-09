@@ -531,7 +531,7 @@ function Folder({
         ></input>
       )}
       <Link
-        href={`/collection/${data._id}`}
+        href={`/${language}/collection/${data._id}`}
         className={`relative w-full h-full bg-gradient-to-l from-red-500 to-orange-400 hover:from-orange-500 hover:to-yellow-400 rounded flex flex-row items-center text-center shadow-sm shadow-black/30 px-2 gap-1 overflow-hidden`}
       >
         {type === "addTo" && (
