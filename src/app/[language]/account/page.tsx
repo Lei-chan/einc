@@ -48,7 +48,7 @@ export default function Account() {
   const language = getLanguageFromPathname(pathname);
 
   return (
-    <div className="w-full min-h-screen py-6 text-center flex flex-col items-center justify-center">
+    <div className="w-full min-h-[100dvh] py-6 text-center flex flex-col items-center justify-center">
       <h1 className="text-xl ">
         {language === "en" ? "Accound Information" : "アカウント情報"}
       </h1>

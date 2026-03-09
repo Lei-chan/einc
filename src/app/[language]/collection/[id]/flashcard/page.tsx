@@ -51,7 +51,7 @@ export default function Flashcard({
   }
 
   return (
-    <div className="relative w-screen min-h-screen max-h-fit flex flex-col items-center justify-center">
+    <div className="relative w-screen min-h-[100dvh] max-h-fit flex flex-col items-center justify-center">
       <div className="w-[90%] sm:w-[80%] md:w-[60%] lg:w-[50%] xl:w-[40%] 2xl:w-[30%] flex flex-col gap-10 items-center">
         <p>
           {errorMessage && errorMessage}

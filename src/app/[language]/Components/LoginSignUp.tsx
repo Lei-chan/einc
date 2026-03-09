@@ -64,7 +64,7 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   }
 
   return (
-    <div className="relative w-full min-h-screen pt-1 flex flex-col items-center">
+    <div className="relative w-full min-h-[100dvh] pt-1 flex flex-col items-center">
       <Logo showOnlineMark={false} />
       <div className="w-[18rem] sm:w-[22rem] xl:w-[23rem] 2xl:w-[24rem] h-screen flex flex-col items-center justify-center mt-4 xl:mt-0 mb-2 xl:mb-0">
         {(isPending || error) && (

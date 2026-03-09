@@ -24,7 +24,7 @@ export default function AddTo() {
   // }
 
   return (
-    <div className="w-full h-screen overflow-hidden">
+    <div className="w-full h-[100dvh] overflow-hidden">
       <div className="relative w-full h-full flex flex-col items-center">
         {/* {error && <PMessage type="error" message={error} />}
         {message && <PMessage type="success" message={message} />} */}

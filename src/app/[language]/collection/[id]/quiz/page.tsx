@@ -121,7 +121,7 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   }
 
   return (
-    <div className="w-screen min-h-screen max-h-fit flex flex-col items-center justify-center py-10">
+    <div className="w-screen min-h-[100dvh] max-h-fit flex flex-col items-center justify-center py-10">
       {quiz && numberOfQuiz > 0 && (
         <p className="absolute top-2 right-3 lg:top-3 lg:right-4 xl:text-lg xl:top-4 xl:right-6 2xl:text-xl 2xl:top-5 2xl:right-7">
           {curQuizPage} / {numberOfQuiz}

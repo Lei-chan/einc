@@ -156,7 +156,7 @@ export default function Add() {
 
   return (
     <form
-      className="w-full min-h-screen max-h-fit flex flex-col items-center py-6 md:py-8 lg:py-9 2xl:py-10 gap-7 md:gap-8 lg:gap-10"
+      className="w-full min-h-[100dvh] max-h-fit flex flex-col items-center py-6 md:py-8 lg:py-9 2xl:py-10 gap-7 md:gap-8 lg:gap-10"
       onSubmit={handleSubmit}
     >
       {messageData && (

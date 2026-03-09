@@ -18,7 +18,7 @@ export default function Main() {
   const language = getLanguageFromPathname(pathname);
 
   return (
-    <div className="relative w-screen h-screen flex flex-col items-center">
+    <div className="relative w-screen h-[100dvh] flex flex-col items-center">
       <Top language={language} />
       <FolderPagination type="main" />
       <ButtonLogout language={language} />

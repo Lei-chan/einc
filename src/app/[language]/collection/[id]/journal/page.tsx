@@ -40,7 +40,7 @@ export default function Journal({
   const language = getLanguageFromPathname(pathname);
 
   return (
-    <div className="w-screen h-screen">
+    <div className="w-screen h-[100dvh]">
       <Top language={language} />
       <Middle language={language} collectionId={id} />
     </div>
