@@ -26,6 +26,7 @@ import {
   getGenericErrorMessage,
   getLanguageFromPathname,
   getNumberOfPages,
+  isArrayEmpty,
   wait,
 } from "@/app/lib/helper";
 // settings
@@ -48,7 +49,7 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
 
   // states
   const [searchValue, setSearchValue] = useState("");
-  const [words, setWords] = useState<WordData[]>([]);
+  const [words, setWords] = useState<WordData[] | undefined>();
   const [numberOfPages, setNumberOfPages] = useState(1);
   const [curPage, dispatch] = useReducer(paginationReducer, 1);
   // use resetKey to fetch data again
@@ -153,7 +154,7 @@ function Bottom({
 }: {
   language: Language;
   collectionId: string;
-  data: WordData[];
+  data: WordData[] | undefined;
   numberOfPages: number;
   curPage: number;
   handleUpdateUI: () => void;
@@ -161,11 +162,9 @@ function Bottom({
 }) {
   const [isSelected, setIsSelected] = useState(false);
   const [isAllChecked, setIsAllChecked] = useState(false);
-  const [areWordsChecked, setAreWordsChecked] = useState(
-    data.map((data) => {
-      return { _id: data._id || "", checked: false };
-    }),
-  );
+  const [areWordsChecked, setAreWordsChecked] = useState<
+    { _id: string; checked: boolean }[] | undefined
+  >();
 
   const [successMessage, setSuccessMessage] = useState("");
   const lastHandledDeleteRef = useRef<FormStateWordJournal>(null);
@@ -177,11 +176,13 @@ function Bottom({
 
   function handleToggleChecked(index: number) {
     // toggle checked only for clicked input, otherwise just return the same data
-    setAreWordsChecked((prev) =>
-      prev.map((data, i) =>
+    setAreWordsChecked((prev) => {
+      if (!prev) return;
+
+      return prev.map((data, i) =>
         index === i ? { _id: data._id, checked: !data.checked } : data,
-      ),
-    );
+      );
+    });
   }
 
   function handleToggleSelected() {
@@ -203,6 +204,8 @@ function Bottom({
   }
 
   function handleClickDelete() {
+    if (!areWordsChecked) return;
+
     startTransition(() =>
       action({ collectionId, checkedData: areWordsChecked }),
     );
@@ -210,7 +213,7 @@ function Bottom({
 
   // set initial areWordsChecked data from data
   useEffect(() => {
-    if (!data.length) return;
+    if (!data?.length) return;
 
     const setInitialCheckedData = () =>
       setAreWordsChecked(
@@ -226,18 +229,22 @@ function Bottom({
   // When user change the input of isAllSelected, change isChecked accordingly
   useEffect(() => {
     const changeAllCheckToFalse = () =>
-      setAreWordsChecked((prev) =>
-        prev.map((data) => {
+      setAreWordsChecked((prev) => {
+        if (!prev) return;
+
+        return prev.map((data) => {
           return { _id: data._id, checked: false };
-        }),
-      );
+        });
+      });
 
     const changeAllCheckToTrue = () =>
-      setAreWordsChecked((prev) =>
-        prev.map((data) => {
+      setAreWordsChecked((prev) => {
+        if (!prev) return;
+
+        return prev.map((data) => {
           return { _id: data._id, checked: true };
-        }),
-      );
+        });
+      });
 
     if (!isSelected || !isAllChecked) changeAllCheckToFalse();
 
@@ -266,7 +273,8 @@ function Bottom({
 
   return (
     <div className="w-[90%] sm:w-[85%] md:w-[70%] xl:w-[60%] 2xl:w-[50%] min-h-[80vh] max-h-fit flex flex-col items-center justify-center">
-      {data.length !== 0 ? (
+      {!data && <p>{language === "en" ? "Loading..." : "ロード中..."}</p>}
+      {Array.isArray(data) && data?.length !== 0 && (
         <>
           {isPending && (
             <PMessage
@@ -308,7 +316,8 @@ function Bottom({
             onClickPagination={handleClickPagination}
           />
         </>
-      ) : (
+      )}
+      {Array.isArray(data) && isArrayEmpty(data) && (
         <p className="w-full text-center text-lg text-amber-800/90">
           {language === "en" ? "No words found" : "単語が見つかりませんでした"}
         </p>
@@ -389,7 +398,7 @@ function WordLists({
 }: {
   data: WordData[];
   isSelected: boolean;
-  areWordsChecked: { _id: string; checked: boolean }[];
+  areWordsChecked: { _id: string; checked: boolean }[] | undefined;
   onChangeInput: (index: number) => void;
   handleUpdateUI: () => void;
 }) {
@@ -400,7 +409,7 @@ function WordLists({
           key={i}
           className="flex flex-row gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-7 2xl:gap-8"
         >
-          {isSelected && (
+          {isSelected && areWordsChecked && (
             <input
               type="checkbox"
               checked={areWordsChecked[i].checked}

@@ -169,19 +169,20 @@ function Graphs({
       {messageData && (
         <PMessage type={messageData.type} message={messageData.message} />
       )}
-      {statuses && statuses.length === 0 && (
-        <p className="w-full text-center mt-2">
-          {language === "en"
-            ? "No words added yet"
-            : "単語が登録されていません"}
-        </p>
-      )}
-      {statuses && statuses.length > 0 && (
-        <div className="relative w-[19rem] lg:w-[21rem] xl:w-[23rem] 2xl:w-[25rem] h-fit bg-white rounded flex flex-col gap-8 mt-5 py-3 items-center">
+      <div className="relative w-[19rem] lg:w-[21rem] xl:w-[23rem] 2xl:w-[25rem] h-fit bg-white rounded flex flex-col gap-8 mt-5 py-3 items-center">
+        {statuses && statuses.length > 0 && (
           <PieGraph language={language} statuses={statuses} />
-          {/* <LineGraph wordStatusData={wordStatusData} /> */}
-        </div>
-      )}
+        )}
+        {statuses && statuses.length === 0 && (
+          <p className="w-full text-center mt-2">
+            {language === "en"
+              ? "No words added yet"
+              : "単語が登録されていません"}
+          </p>
+        )}
+        {!statuses && <p>{language === "en" ? "Loading..." : "ロード中..."}</p>}
+        {/* <LineGraph wordStatusData={wordStatusData} /> */}
+      </div>
     </div>
   );
 }

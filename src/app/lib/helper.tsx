@@ -1,5 +1,3 @@
-// method
-import { isArray } from "chart.js/helpers";
 // settings
 import {
   MIN_LENGTH_PASSWORD,
@@ -215,7 +213,7 @@ export const getInputErrorMessage = (
 };
 
 export const isArrayEmpty = (array: unknown[]) =>
-  isArray(array) && !array.length;
+  Array.isArray(array) && !array.length;
 
 export const isObjectEmpty = (object: object) =>
   typeof object === "object" && !Object.keys(object).length;

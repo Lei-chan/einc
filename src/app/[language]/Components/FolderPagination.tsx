@@ -47,15 +47,18 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
   const numberOfRows = 5;
 
   const [numberOfColumns, setNumberOfColumns] = useState(2);
-  const [collectionData, setCollectionData] = useState<{
-    collections: Collections;
-    numberOfCollections: number;
-  }>({ collections: [], numberOfCollections: 0 });
+  const [collectionData, setCollectionData] = useState<
+    | {
+        collections: Collections;
+        numberOfCollections: number;
+      }
+    | undefined
+  >();
 
   const numberOfCollectionsPage = numberOfRows * numberOfColumns;
   const numberOfPages = getNumberOfPages(
     numberOfCollectionsPage,
-    collectionData.numberOfCollections,
+    collectionData?.numberOfCollections || 0,
   );
 
   // others
@@ -136,7 +139,7 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
         language={language}
         type={type}
         numberOfColumns={numberOfColumns}
-        collections={collectionData.collections}
+        collections={collectionData?.collections}
         refreshKey={refreshKey}
         handleUpdate={handleSetIsUpdated}
         onClickCreate={handleToggleCreateFolder}
@@ -172,7 +175,7 @@ function FolderContainer({
   language: Language;
   type: "main" | "addTo";
   numberOfColumns: number;
-  collections: Collections;
+  collections: Collections | undefined;
   refreshKey: number;
   handleUpdate: () => void;
   onClickCreate: () => void;
@@ -225,42 +228,48 @@ function FolderContainer({
   }, [isSelected]);
 
   return (
-    <form className="w-full md:w-[95%] lg:w-[85%] xl:w-[80%] 2xl:w-[70%] flex-[4.5] p-4 flex flex-col items-center">
-      {type === "main" && (
-        <Selector
-          language={language}
-          isSelected={isSelected}
-          isEdited={isEdited}
-          isDeleted={isDeleted}
-          onClickSelect={handleToggleSelected}
-          handleUpdate={handleUpdate}
-          onClickButton={onClickCreate}
-          onChangeSelectAll={handleChangeSelectAll}
-          onClickDelete={handleToggleDelete}
-          onClickEdit={handleToggleEdit}
-          displayMessage={displayMessage}
-        />
-      )}
-      <ul
-        className="w-full h-full grid grid-rows-5 items-center justify-items-center mt-2 md:mt-3"
-        style={{
-          gridTemplateColumns: `repeat(${numberOfColumns}, minmax(0, 1fr))`,
-        }}
-      >
-        {collections &&
-          collections.map((collection, i) => (
-            <Folder
-              key={nanoid()}
+    <form className="w-full md:w-[95%] lg:w-[85%] xl:w-[80%] 2xl:w-[70%] flex-[4.5] p-4 flex flex-col items-center justify-center">
+      {collections ? (
+        <>
+          {type === "main" && (
+            <Selector
               language={language}
-              type={type}
-              data={collection}
               isSelected={isSelected}
-              isAllSelected={isAllSelected}
-              isDeleted={isDeleted}
               isEdited={isEdited}
+              isDeleted={isDeleted}
+              onClickSelect={handleToggleSelected}
+              handleUpdate={handleUpdate}
+              onClickButton={onClickCreate}
+              onChangeSelectAll={handleChangeSelectAll}
+              onClickDelete={handleToggleDelete}
+              onClickEdit={handleToggleEdit}
+              displayMessage={displayMessage}
             />
-          ))}
-      </ul>
+          )}
+          <ul
+            className="w-full h-full grid grid-rows-5 items-center justify-items-center mt-2 md:mt-3"
+            style={{
+              gridTemplateColumns: `repeat(${numberOfColumns}, minmax(0, 1fr))`,
+            }}
+          >
+            {collections &&
+              collections.map((collection, i) => (
+                <Folder
+                  key={nanoid()}
+                  language={language}
+                  type={type}
+                  data={collection}
+                  isSelected={isSelected}
+                  isAllSelected={isAllSelected}
+                  isDeleted={isDeleted}
+                  isEdited={isEdited}
+                />
+              ))}
+          </ul>
+        </>
+      ) : (
+        <p>{language === "en" ? "Loading..." : "ロード中..."}</p>
+      )}
     </form>
   );
 }
