@@ -480,6 +480,7 @@ function QuizResult({
             <Link
               href={pathnameToFolder}
               className={`${buttonClassName} bg-purple-500 hover:bg-pink-400 p-2`}
+              onClick={onClickNext}
             >
               {language === "en" ? "Finish" : "終了"}
             </Link>
