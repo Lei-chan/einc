@@ -31,6 +31,7 @@ import {
   getLanguageFromPathname,
   getRandomNumber,
   getWordDataToDisplay,
+  isArrayEmpty,
   joinWithCommas,
   joinWithLineBreaks,
   wait,
@@ -45,6 +46,7 @@ import {
   UpdateStatusReviewDateDataQuiz,
 } from "@/app/lib/config/types/others";
 import { FormStateWordJournal } from "@/app/lib/config/types/formState";
+import { useRouter } from "next/router";
 // libraries
 // import distance from "jaro-winkler";
 
@@ -111,6 +113,8 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
     // get rid of current quiz from quiz
     const newQuiz = quiz.toSpliced(curQuizIndex, 1);
     setQuiz(newQuiz);
+
+    if (isArrayEmpty(newQuiz)) return;
 
     // new random index for next quiz
     const newQuizIndex = getRandomNumber(0, newQuiz.length - 1);
