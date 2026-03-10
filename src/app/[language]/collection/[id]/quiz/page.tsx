@@ -185,11 +185,16 @@ function QuizContent({
     DefinitionsDataQuiz
   >(addDefinitions, undefined);
 
+  // think later about replace all
   const convertStringToCompare = (str: string) =>
     str
       .trim()
       .toLowerCase()
-      .replaceAll(/[^a-zA-Z0-9\s]/g, "");
+      .replaceAll(".", "")
+      .replaceAll(",", "")
+      .replaceAll("、", "")
+      .replaceAll("。", "");
+  // .replaceAll(/[^a-zA-Z0-9\s]/g, "");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
