@@ -114,6 +114,7 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
     const newQuiz = quiz.toSpliced(curQuizIndex, 1);
     setQuiz(newQuiz);
 
+    // if no newQUiz => return
     if (isArrayEmpty(newQuiz)) return;
 
     // new random index for next quiz

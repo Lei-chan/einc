@@ -1,6 +1,12 @@
 "use client";
 // react
-import { startTransition, useActionState, useEffect, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 // next.js
 import { usePathname, useRouter } from "next/navigation";
 // components
@@ -36,6 +42,8 @@ export default function Add() {
   const router = useRouter();
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
+
+  const topRef = useRef<HTMLFormElement>(null);
 
   const [vocabKeys, setVocabKeys] = useState([{ id: nanoid() }]);
   const [collections, setCollections] = useState<Collections | undefined>();
@@ -115,6 +123,9 @@ export default function Add() {
         };
       });
 
+      // go to the top of the page to show users messages
+      topRef.current?.scrollIntoView({ behavior: "smooth" });
+
       startTransition(() => action(addedWords));
     } catch (err: unknown) {
       console.error("Error occured.", err);
@@ -145,8 +156,24 @@ export default function Add() {
 
     const displayMessageAndNavigate = async () => {
       if (state.message) {
-        setMessageData({ type: "success", message: state.message[language] });
+        // success message
+        setMessageData({
+          type: "success",
+          message: state.message[language],
+        });
         await wait(2);
+
+        // redirect message
+        setMessageData({
+          type: "pending",
+          message:
+            language === "en"
+              ? "Redirecting to the main page..."
+              : "メインページに移動中...",
+        });
+        await wait(2);
+
+        // redirect to main
         router.push("/main");
       }
     };
@@ -156,6 +183,7 @@ export default function Add() {
 
   return (
     <form
+      ref={topRef}
       className="w-full min-h-[100dvh] max-h-fit flex flex-col items-center py-6 md:py-8 lg:py-9 2xl:py-10 gap-7 md:gap-8 lg:gap-10"
       onSubmit={handleSubmit}
     >

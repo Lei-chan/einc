@@ -231,7 +231,7 @@ function ViaGoogle({
     }
 
     if (state.message) router.push(`/${language}/main`);
-  }, [handleError, state, language]);
+  }, [handleError, state, language, router]);
   return (
     <form className="w-full p-3 flex flex-col items-center">
       <p className="mb-3">
@@ -294,13 +294,26 @@ function ViaGoogle({
       )}
       {/* only when it's sign up, submit when user select an account and click the sign up button */}
       {typeToDisplay === "Sign up" && email && (
-        <button
-          type="submit"
-          className="transition-all duration-150 rounded bg-purple-500 hover:bg-pink-400 text-white px-1 py-[1px] text-sm mt-4"
-          formAction={() => startTransition(() => action({ email, language }))}
-        >
-          {typeToDisplayForLanguage}
-        </button>
+        <>
+          <p className="text-center mt-4 leading-tight">
+            {language === "en"
+              ? "Please complete signing up"
+              : "下のボタンをクリックして"}
+            <br />
+            {language === "en"
+              ? "by clicking the button below"
+              : "登録を完了してください"}
+          </p>
+          <button
+            type="submit"
+            className="transition-all duration-150 rounded bg-purple-500 hover:bg-pink-400 text-white px-1.5 py-[2px] text-sm mt-3"
+            formAction={() =>
+              startTransition(() => action({ email, language }))
+            }
+          >
+            {language === "en" ? "Complete" : "完了"}
+          </button>
+        </>
       )}
     </form>
   );

@@ -1,6 +1,13 @@
 "use client";
 // react
-import { useActionState, useEffect, useReducer, useRef, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 // next.js
 import Link from "next/link";
 // components
@@ -64,6 +71,7 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
   // others
   const [curPage, dispatch] = useReducer(paginationReducer, 1);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isSelected, setIsSelected] = useState(false);
   const [isCreateCollectionOpen, setIsCreateCollectionOpen] = useState(false);
   const [messageData, setMessageData] = useState<DisplayMessage>(undefined);
 
@@ -76,6 +84,10 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
 
   function handleSetIsUpdated() {
     setRefreshKey((prev) => prev + 1);
+  }
+
+  function handleToggleSelected() {
+    setIsSelected(!isSelected);
   }
 
   function handleClickPagination(type: ActionPaginationType) {
@@ -130,6 +142,12 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
     return () => window.removeEventListener("resize", handleResize);
   }, [collectionData]);
 
+  useEffect(() => {
+    const setSelectedToFalse = () => setIsSelected(false);
+
+    setSelectedToFalse();
+  }, [refreshKey]);
+
   return (
     <div className="relative flex-[5] w-full h-full flex flex-col items-center overflow-hidden">
       {messageData && (
@@ -139,18 +157,22 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
         language={language}
         type={type}
         numberOfColumns={numberOfColumns}
+        isSelected={isSelected}
         collections={collectionData?.collections}
-        refreshKey={refreshKey}
+        onClickSelected={handleToggleSelected}
         handleUpdate={handleSetIsUpdated}
         onClickCreate={handleToggleCreateFolder}
         displayMessage={displayMessage}
+        dispatch={dispatch}
       />
-      <ButtonPagination
-        numberOfPages={numberOfPages}
-        curPage={curPage}
-        showNumber={true}
-        onClickPagination={handleClickPagination}
-      />
+      {!isSelected && (
+        <ButtonPagination
+          numberOfPages={numberOfPages}
+          curPage={curPage}
+          showNumber={true}
+          onClickPagination={handleClickPagination}
+        />
+      )}
       <CreateFolder
         widthClassName="w-full"
         heightClassName="h-1/2"
@@ -166,29 +188,28 @@ function FolderContainer({
   language,
   type,
   numberOfColumns,
+  isSelected,
   collections,
-  refreshKey,
+  onClickSelected,
   handleUpdate,
   onClickCreate,
   displayMessage,
+  dispatch,
 }: {
   language: Language;
   type: "main" | "addTo";
   numberOfColumns: number;
+  isSelected: boolean;
   collections: Collections | undefined;
-  refreshKey: number;
+  onClickSelected: () => void;
   handleUpdate: () => void;
   onClickCreate: () => void;
   displayMessage: (msgData: DisplayMessage) => void;
+  dispatch: (type: ActionPaginationType) => void;
 }) {
-  const [isSelected, setIsSelected] = useState(false);
   const [isAllSelected, setIsAllSelected] = useState(false);
   const [isDeleted, setIsDelete] = useState(false);
   const [isEdited, setIsEdited] = useState(false);
-
-  function handleToggleSelected() {
-    setIsSelected(!isSelected);
-  }
 
   function handleChangeSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
     const isChecked = e.currentTarget.checked;
@@ -208,12 +229,6 @@ function FolderContainer({
     // If user hasn't clicked the edit button but has clicked the delete button => do nothing, otherwise toggle
     setIsEdited((prev) => (!prev && isDeleted ? prev : !prev));
   }
-
-  useEffect(() => {
-    const setSelectedToFalse = () => setIsSelected(false);
-
-    setSelectedToFalse();
-  }, [refreshKey]);
 
   useEffect(() => {
     if (isSelected) return;
@@ -237,13 +252,14 @@ function FolderContainer({
               isSelected={isSelected}
               isEdited={isEdited}
               isDeleted={isDeleted}
-              onClickSelect={handleToggleSelected}
+              onClickSelect={onClickSelected}
               handleUpdate={handleUpdate}
               onClickButton={onClickCreate}
               onChangeSelectAll={handleChangeSelectAll}
               onClickDelete={handleToggleDelete}
               onClickEdit={handleToggleEdit}
               displayMessage={displayMessage}
+              dispatch={dispatch}
             />
           )}
           <ul
@@ -286,6 +302,7 @@ function Selector({
   onClickDelete,
   onClickEdit,
   displayMessage,
+  dispatch,
 }: {
   language: Language;
   isSelected: boolean;
@@ -298,6 +315,7 @@ function Selector({
   onClickDelete: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onClickEdit: (e: React.MouseEvent<HTMLButtonElement>) => void;
   displayMessage: (msgData: DisplayMessage) => void;
+  dispatch: (type: ActionPaginationType) => void;
 }) {
   const btnNewSelectClassName =
     "text-white rounded transition-all duration-300 px-1";
@@ -359,7 +377,10 @@ function Selector({
   }, [updateState, language, handleUpdate, displayMessage]);
 
   useEffect(() => {
-    if (!prevDeletePendingRef.current && deleteIsPending)
+    if (!prevDeletePendingRef.current && deleteIsPending) {
+      // reset current page to 1
+      dispatch("reset");
+
       displayMessage({
         type: "pending",
         message:
@@ -367,9 +388,10 @@ function Selector({
             ? "Deleting collection..."
             : "コレクションを削除中...",
       });
+    }
 
     prevDeletePendingRef.current = deleteIsPending;
-  }, [deleteIsPending, language, displayMessage]);
+  }, [deleteIsPending, language, displayMessage, dispatch]);
 
   useEffect(() => {
     // if delete state was the same as delete state that was handled last time

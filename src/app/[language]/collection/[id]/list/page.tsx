@@ -49,12 +49,11 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
 
   // states
   const [searchValue, setSearchValue] = useState("");
+  const [numberOfMatchedWords, setNumberOfMatchedWords] = useState(0);
   const [words, setWords] = useState<WordData[] | undefined>();
-  const [numberOfPages, setNumberOfPages] = useState(1);
   const [curPage, dispatch] = useReducer(paginationReducer, 1);
   // use resetKey to fetch data again
   const [resetKey, setResetKey] = useState(0);
-
   const [messageData, setMessageData] = useState<DisplayMessage>();
 
   function handleUpdateUI() {
@@ -85,9 +84,8 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
         return;
       }
 
-      setNumberOfPages(
-        getNumberOfPages(LISTS_ONE_PAGE, wordData.numberOfMatchedWords),
-      );
+      setNumberOfMatchedWords(wordData.numberOfMatchedWords);
+
       setWords(wordData.matchedWordsCurPage);
     };
 
@@ -106,7 +104,7 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
         language={language}
         collectionId={id}
         data={words}
-        numberOfPages={numberOfPages}
+        numberOfWords={numberOfMatchedWords}
         curPage={curPage}
         handleUpdateUI={handleUpdateUI}
         dispatch={dispatch}
@@ -147,7 +145,7 @@ function Bottom({
   language,
   collectionId,
   data,
-  numberOfPages,
+  numberOfWords,
   curPage,
   handleUpdateUI,
   dispatch,
@@ -155,7 +153,7 @@ function Bottom({
   language: Language;
   collectionId: string;
   data: WordData[] | undefined;
-  numberOfPages: number;
+  numberOfWords: number;
   curPage: number;
   handleUpdateUI: () => void;
   dispatch: (action: ActionPaginationType) => void;
@@ -205,6 +203,9 @@ function Bottom({
 
   function handleClickDelete() {
     if (!areWordsChecked) return;
+
+    // reset pagination
+    dispatch("reset");
 
     startTransition(() =>
       action({ collectionId, checkedData: areWordsChecked }),
@@ -293,7 +294,7 @@ function Bottom({
           <NumberOfLists
             language={language}
             passedWords={curPage * data.length}
-            numberOfMatchedWords={numberOfPages * LISTS_ONE_PAGE}
+            numberOfWords={numberOfWords}
           />
           <Selector
             language={language}
@@ -309,12 +310,14 @@ function Bottom({
             onChangeInput={handleToggleChecked}
             handleUpdateUI={handleUpdateUI}
           />
-          <ButtonPagination
-            numberOfPages={numberOfPages}
-            curPage={curPage}
-            showNumber={true}
-            onClickPagination={handleClickPagination}
-          />
+          {!isSelected && (
+            <ButtonPagination
+              numberOfPages={getNumberOfPages(LISTS_ONE_PAGE, numberOfWords)}
+              curPage={curPage}
+              showNumber={true}
+              onClickPagination={handleClickPagination}
+            />
+          )}
         </>
       )}
       {Array.isArray(data) && isArrayEmpty(data) && (
@@ -329,16 +332,15 @@ function Bottom({
 function NumberOfLists({
   language,
   passedWords,
-  numberOfMatchedWords,
+  numberOfWords,
 }: {
   language: Language;
   passedWords: number;
-  numberOfMatchedWords: number;
+  numberOfWords: number;
 }) {
   return (
     <p className=" text-right self-end mt-3 text-lg">
-      {passedWords} / {numberOfMatchedWords}{" "}
-      {language === "en" ? "words" : "単語"}
+      {passedWords} / {numberOfWords} {language === "en" ? "words" : "単語"}
     </p>
   );
 }
@@ -409,7 +411,7 @@ function WordLists({
           key={i}
           className="flex flex-row gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-7 2xl:gap-8"
         >
-          {isSelected && areWordsChecked && (
+          {isSelected && areWordsChecked?.at(i) && (
             <input
               type="checkbox"
               checked={areWordsChecked[i].checked}
