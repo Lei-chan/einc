@@ -3,6 +3,7 @@ import { Sawarabi_Gothic } from "next/font/google";
 import "./globals.css";
 // Google OAuth library
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { BASE_URL } from "./lib/config/settings";
 
 const sawarabiGothic = Sawarabi_Gothic({
   weight: "400",
@@ -17,6 +18,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "einc -Memorize Vocab App-",
   description: "einc is here for you to remember words and exppressions!",
+  metadataBase: new URL(BASE_URL),
 };
 
 export default function RootLayout({
