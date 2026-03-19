@@ -9,3 +9,6 @@ export const BASE_URL = "https://einc.lei-chan.website/";
 export const GITHUB_LINK = "https://github.com/Lei-chan";
 export const INSTAGRAM_LINK =
   "https://www.instagram.com/leichanweb?igsh=NzJmb3Axc3ZvNWN6&utm_source=qr";
+export const APP_NAME = "einc -Vocab Memorizing App-";
+export const APP_DESCRIPTION =
+  "einc is here for you to help you remember words and exppressions more efficiently!";

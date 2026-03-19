@@ -18,6 +18,11 @@ import { GITHUB_LINK, INSTAGRAM_LINK } from "../lib/config/settings";
 import { Language } from "../lib/config/types/others";
 //libraries
 import { useInView } from "react-intersection-observer";
+// import {
+//   subscribeUser,
+//   unsubscribeUser,
+//   sendNotification,
+// } from "../actions/pwa";
 
 export default function Home() {
   const pathname = usePathname();
@@ -28,6 +33,7 @@ export default function Home() {
       <Top pathname={pathname} />
       <Middle language={language} />
       <Footer />
+      {/* <PWA language={language} /> */}
     </div>
   );
 }
@@ -215,3 +221,210 @@ function Footer() {
     </footer>
   );
 }
+
+// // PWA related from here
+// function PWA({ language }: { language: Language }) {
+//   const [isShown, setIsShown] = useState(true);
+
+//   function handleClickClose() {
+//     setIsShown(false);
+//   }
+
+//   return (
+//     <div
+//       className={`fixed w-full h-fit left-0 bottom-0 bg-white/90 shadow-[-10px_-10px_20px_rgba(0,0,0,0.2)] text-center px-3 transition-all duration-500 ${isShown ? "" : "translate-y-full"}`}
+//     >
+//       <button
+//         type="button"
+//         className="absolute text-2xl right-2"
+//         onClick={handleClickClose}
+//       >
+//         ×
+//       </button>
+//       <PushNotificationManager language={language} />
+//       <InstallPrompt language={language} />
+//     </div>
+//   );
+// }
+
+// function urlBase64ToUint8Array(base64String: string) {
+//   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+//   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+
+//   const rawData = window.atob(base64);
+//   const outputArray = new Uint8Array(rawData.length);
+
+//   for (let i = 0; i < rawData.length; ++i) {
+//     outputArray[i] = rawData.charCodeAt(i);
+//   }
+//   return outputArray;
+// }
+
+// function PushNotificationManager({ language }: { language: Language }) {
+//   const [isSupported, setIsSupported] = useState(false);
+//   const [subscription, setSubscription] = useState<PushSubscription | null>(
+//     null,
+//   );
+//   const [message, setMessage] = useState("");
+
+//   async function registerServiceWorker() {
+//     const registration = await navigator.serviceWorker.register("/sw.js", {
+//       scope: "/",
+//       updateViaCache: "none",
+//     });
+//     const sub = await registration.pushManager.getSubscription();
+//     setSubscription(sub);
+//   }
+
+//   async function subscribeToPush() {
+//     const registration = await navigator.serviceWorker.ready;
+//     const sub = await registration.pushManager.subscribe({
+//       userVisibleOnly: true,
+//       applicationServerKey: urlBase64ToUint8Array(
+//         process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+//       ),
+//     });
+//     setSubscription(sub);
+//     const serializedSub = JSON.parse(JSON.stringify(sub));
+//     await subscribeUser(serializedSub);
+//   }
+
+//   async function unsubscribeFromPush() {
+//     if (!subscription) return;
+
+//     await subscription.unsubscribe();
+//     await unsubscribeUser(JSON.parse(JSON.stringify(subscription)));
+//     setSubscription(null);
+//   }
+
+//   async function sendTestNotification() {
+//     if (subscription) {
+//       await sendNotification(message);
+//       setMessage("");
+//     }
+//   }
+
+//   useEffect(() => {
+//     const assignSupportedAndRegisterSW = () => {
+//       if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+//       setIsSupported(true);
+//       registerServiceWorker();
+//     };
+//     assignSupportedAndRegisterSW();
+//   }, []);
+
+//   return (
+//     <div className="flex flex-col py-4 items-center gap-2">
+//       {!isSupported ? (
+//         <p>
+//           {language === "en"
+//             ? "Push notifications are not supported in this browser."
+//             : "プッシュ通知はこのブラウザーではサポートされていません"}
+//         </p>
+//       ) : (
+//         <>
+//           <h3 className="font-semibold">
+//             {language === "en" ? "Push Notifications" : "プッシュ通知"}
+//           </h3>
+//           {subscription ? (
+//             <>
+//               <p>
+//                 {language === "en"
+//                   ? "You are subscribed to push notifications."
+//                   : "プッシュ通知はオンになっています"}
+//               </p>
+//               <button
+//                 className="bg-orange-500 text-white hover:bg-orange-400 transition-all duration-150 rounded px-1 shadow-sm shadow-black/20 text-sm"
+//                 onClick={unsubscribeFromPush}
+//               >
+//                 {language === "en" ? "Unsubscribe" : "オフにする"}
+//               </button>
+//               <input
+//                 type="text"
+//                 placeholder={
+//                   language === "en"
+//                     ? "Enter notification message"
+//                     : "通知文を入力してください"
+//                 }
+//                 value={message}
+//                 onChange={(e) => setMessage(e.target.value)}
+//               />
+//               <button
+//                 className="bg-green-400 rounded px-1 text-white"
+//                 onClick={sendTestNotification}
+//               >
+//                 {language === "en" ? "Send Test" : "テストする"}
+//               </button>
+//             </>
+//           ) : (
+//             <>
+//               <p>
+//                 {language === "en"
+//                   ? "You are not subscribed to push notifications."
+//                   : "プッシュ通知はオフになっています"}
+//               </p>
+//               <button onClick={subscribeToPush}>
+//                 {language === "en" ? "Subscribe" : "オンにする"}
+//               </button>
+//             </>
+//           )}
+//         </>
+//       )}
+//     </div>
+//   );
+// }
+
+// function InstallPrompt({ language }: { language: Language }) {
+//   const [isIOS, setIsIOS] = useState(false);
+//   const [isStandalone, setIsStandalone] = useState(false);
+
+//   useEffect(() => {
+//     const assignIOSAndStandalone = () => {
+//       setIsIOS(
+//         /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+//           !(window as { MSStream?: unknown }).MSStream,
+//       );
+
+//       setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
+//     };
+
+//     assignIOSAndStandalone();
+//   }, []);
+
+//   if (isStandalone) {
+//     return null; // Don't show install button if already installed
+//   }
+
+//   return (
+//     <div className="flex flex-col pt-4 pb-5 gap-2 items-center">
+//       <h3 className="font-semibold">
+//         {language === "en" ? "Install App" : "アプリをインストールする"}
+//       </h3>
+//       <button
+//         type="button"
+//         className="bg-purple-500 hover:bg-purple-400 transition-all duration-150 rounded text-white px-1 shadow-black/20 shadow-md"
+//       >
+//         {language === "en" ? "Add to Home Screen" : "ホームスクリーンに追加"}
+//       </button>
+//       {isIOS && (
+//         <p>
+//           {language === "en"
+//             ? "To install this app on your iOS device, tap the share button"
+//             : "このアプリをiOSデバイスにインストールする場合は、下のシェアボタンを押し、"}
+//           {/* <span role="img" aria-label="share icon">
+//             {" "}
+//             ⎋{" "}
+//           </span> */}
+//           {language === "en"
+//             ? 'and then "Add to Home Screen&quot;'
+//             : "”ホームスクリーンに追加”を押してください"}
+//           {/* <span role="img" aria-label="plus icon">
+//             {" "}
+//             ➕{" "}
+//           </span>
+//           . */}
+//         </p>
+//       )}
+//     </div>
+//   );
+// }
