@@ -20,7 +20,7 @@ export function generateMetadata({
     description,
     metadataBase: new URL(BASE_URL),
     alternates: {
-      canonical: "/",
+      canonical: `/${language}`,
       languages: {
         en: "/en",
         ja: "/ja",
