@@ -41,6 +41,7 @@ import {
   Language,
   WordData,
 } from "@/app/lib/config/types/others";
+import { number } from "zod";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -277,23 +278,30 @@ function Bottom({
       {!data && <p>{language === "en" ? "Loading..." : "ロード中..."}</p>}
       {Array.isArray(data) && data?.length !== 0 && (
         <>
-          {isPending && (
-            <PMessage
-              type="pending"
-              message={
-                language === "en" ? "Deleting word..." : "単語を削除中..."
-              }
-            />
-          )}
-          {state?.error?.message && (
-            <PMessage type="error" message={state.error.message[language]} />
-          )}
-          {successMessage && (
-            <PMessage type="success" message={successMessage} />
+          {(isPending || state?.error?.message || successMessage) && (
+            <div className="mt-2 h-fit">
+              {isPending && (
+                <PMessage
+                  type="pending"
+                  message={
+                    language === "en" ? "Deleting word..." : "単語を削除中..."
+                  }
+                />
+              )}
+              {state?.error?.message && (
+                <PMessage
+                  type="error"
+                  message={state.error.message[language]}
+                />
+              )}
+              {successMessage && (
+                <PMessage type="success" message={successMessage} />
+              )}
+            </div>
           )}
           <NumberOfLists
             language={language}
-            passedWords={curPage * data.length}
+            passedWords={data.length}
             numberOfWords={numberOfWords}
           />
           <Selector

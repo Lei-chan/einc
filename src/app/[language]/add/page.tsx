@@ -174,7 +174,7 @@ export default function Add() {
         await wait(2);
 
         // redirect to main
-        router.push("/main");
+        router.push(`/${language}/main`);
       }
     };
 

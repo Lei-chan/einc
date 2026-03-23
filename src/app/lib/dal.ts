@@ -17,7 +17,12 @@ import { areDatesSame, getRandomNumber, isArrayEmpty } from "./helper";
 // settings
 import { FLASHCARD_QUIZ_ONE_TURN, LISTS_ONE_PAGE } from "./config/settings";
 // types
-import { Collection, Collections, WordData } from "./config/types/others";
+import {
+  Collection,
+  Collections,
+  Language,
+  WordData,
+} from "./config/types/others";
 
 export const verifySession = cache(async () => {
   const cookie = (await cookies()).get("session")?.value;
@@ -95,9 +100,9 @@ export const getCollectionDataCurPage = cache(
   },
 );
 
-export async function logout() {
+export async function logout(language: Language) {
   await deleteSession();
-  redirect("/");
+  redirect(`/${language}`);
 }
 
 export const getUserWords = cache(async () => {

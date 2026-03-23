@@ -55,7 +55,7 @@ function ButtonLogout({ language }: { language: Language }) {
   return (
     <button
       className="fixed w-fit bg-blue-400 text-white  rounded py-[2px] px-1 text-sm self-center bottom-3 lg:bottom-4 transition-all duration-200 shadow-md shadow-black/20 hover:translate-y-[-1px] hover:bg-blue-300"
-      onClick={logout}
+      onClick={() => logout(language)}
     >
       {language === "en" ? "Logout" : "ログアウト"}
     </button>
