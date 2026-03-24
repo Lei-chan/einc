@@ -1,13 +1,12 @@
-import { Metadata } from "next";
 import { Language } from "../lib/config/types/others";
 import { APP_DESCRIPTION, APP_NAME, BASE_URL } from "../lib/config/settings";
 
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
-  params: { language: Language };
-}): Metadata {
-  const { language } = params;
+  params: Promise<{ language: Language }>;
+}) {
+  const { language } = await params;
   const title = language === "en" ? APP_NAME : "einc -単語暗記アプリ-";
   const description =
     language === "en"

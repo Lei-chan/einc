@@ -10,104 +10,104 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
       alternates: {
         languages: {
-          en: `${BASE_URL}en`,
-          ja: `${BASE_URL}ja`,
+          en: `${BASE_URL}/en`,
+          ja: `${BASE_URL}/ja`,
         },
       },
     },
     {
-      url: `${BASE_URL}account`,
+      url: `${BASE_URL}/account`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.4,
       alternates: {
         languages: {
-          en: `${BASE_URL}en/account`,
-          ja: `${BASE_URL}ja/account`,
+          en: `${BASE_URL}/en/account`,
+          ja: `${BASE_URL}/ja/account`,
         },
       },
     },
     {
-      url: `${BASE_URL}account-closed`,
+      url: `${BASE_URL}/account-closed`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.1,
       alternates: {
         languages: {
-          en: `${BASE_URL}en/account-closed`,
-          ja: `${BASE_URL}ja/account-closed`,
+          en: `${BASE_URL}/en/account-closed`,
+          ja: `${BASE_URL}/ja/account-closed`,
         },
       },
     },
     {
-      url: `${BASE_URL}add`,
+      url: `${BASE_URL}/add`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.4,
       alternates: {
         languages: {
-          en: `${BASE_URL}en/add`,
-          ja: `${BASE_URL}ja/add`,
+          en: `${BASE_URL}/en/add`,
+          ja: `${BASE_URL}/ja/add`,
         },
       },
     },
     {
-      url: `${BASE_URL}add-to`,
+      url: `${BASE_URL}/add-to`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.1,
       alternates: {
         languages: {
-          en: `${BASE_URL}en/add-to`,
-          ja: `${BASE_URL}ja/add-to`,
+          en: `${BASE_URL}/en/add-to`,
+          ja: `${BASE_URL}/ja/add-to`,
         },
       },
     },
     {
-      url: `${BASE_URL}collection`,
+      url: `${BASE_URL}/collection`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.4,
       alternates: {
         languages: {
-          en: `${BASE_URL}en/collection`,
-          ja: `${BASE_URL}ja/collection`,
+          en: `${BASE_URL}/en/collection`,
+          ja: `${BASE_URL}/ja/collection`,
         },
       },
     },
     {
-      url: `${BASE_URL}dictionary`,
+      url: `${BASE_URL}/dictionary`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.4,
       alternates: {
         languages: {
-          en: `${BASE_URL}en/dictionary`,
-          ja: `${BASE_URL}ja/dictionary`,
+          en: `${BASE_URL}/en/dictionary`,
+          ja: `${BASE_URL}/ja/dictionary`,
         },
       },
     },
     {
-      url: `${BASE_URL}login`,
+      url: `${BASE_URL}/login`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.8,
       alternates: {
         languages: {
-          en: `${BASE_URL}en/login`,
-          ja: `${BASE_URL}ja/login`,
+          en: `${BASE_URL}/en/login`,
+          ja: `${BASE_URL}/ja/login`,
         },
       },
     },
     {
-      url: `${BASE_URL}sign-up`,
+      url: `${BASE_URL}/sign-up`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.8,
       alternates: {
         languages: {
-          en: `${BASE_URL}en/sign-up`,
-          ja: `${BASE_URL}ja/sign-up`,
+          en: `${BASE_URL}/en/sign-up`,
+          ja: `${BASE_URL}/ja/sign-up`,
         },
       },
     },
