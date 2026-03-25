@@ -29,7 +29,7 @@ export default function Home() {
   const language = getLanguageFromPathname(pathname);
 
   return (
-    <div className="w-full h-fit flex flex-col items-center">
+    <div className="w-full h-fit flex flex-col items-center overflow-hidden ">
       <Top pathname={pathname} />
       <Middle language={language} />
       <Footer />
@@ -79,6 +79,8 @@ function Top({ pathname }: { pathname: string }) {
 
 function Middle({ language }: { language: Language }) {
   const transitionClassName = "transition-all duration-1000";
+  const imageBasePathForLanguage = `/descriptions/${language}/`;
+
   const inViewOptions = {
     threshold: 0.5,
     triggerOnce: true,
@@ -88,28 +90,46 @@ function Middle({ language }: { language: Language }) {
   const [lastRef, lastInView, lastEntry] = useInView(inViewOptions);
 
   return (
-    <div className="w-[18rem] sm:w-[20rem] md:w-[22rem] lg:w-[26rem] xl:w-[30rem] 2xl:w-[34rem] h-fit mt-[14vh] py-10 lg:py-14 flex flex-col items-center gap-3 md:gap-4 lg:gap-5">
+    <div className="w-[16rem] sm:w-[25rem] md:w-[27rem] lg:w-[28rem] xl:w-[30rem] h-fit mt-[16vh] py-10 lg:py-14 flex flex-col items-center gap-3 md:gap-4 lg:gap-5">
       <div
         ref={firstRef}
-        className={`ease-in ${transitionClassName} ${
+        className={`w-full sm:w-[500px] h-auto aspect-[3/2] flex flex-col items-center ease-in ${transitionClassName} ${
           firstInView ? "opacity-100" : "opacity-0"
         }`}
       >
-        {/* I will change it to Image later */}
-        <div className="w-full h-auto aspect-[1/0.6] bg-slate-400"></div>
-        <p className="w-full text-lg bg-gradient-to-r from-white to-white/80 py-2 px-4 shadow-black/10 shadow-lg rounded-md mt-3 text-red-700 italic">
+        <video
+          src={`/explanation-${language}.mp4`}
+          autoPlay={true}
+          controls
+          muted
+          loop
+          className="w-full shadow-lg shadow-black/30 rounded"
+        ></video>
+        <p className="w-[95%] text-lg bg-gradient-to-r from-white to-white/80 py-2 px-4 shadow-black/20 shadow-lg rounded-md mt-3 sm:mt-5 md:mt-6 lg:mt-7 text-red-700 italic">
           &quot;einc&quot;
           {language === "en"
             ? " will help you memorize vocabulary or expressions more efficiently!"
             : "はより効率的に単語や表現を覚えるのを助けます！"}
         </p>
       </div>
-      <div className="w-[90%]">
+      <div className="w-full mt-11 sm:mt-14 md:mt-16 lg:mt-20 xl:mt-24 flex flex-col gap-11 md:gap-12 lg:gap-14 xl:gap-16 2xl:gap-20">
         <Description
           inViewOptions={inViewOptions}
           transitionClassName={transitionClassName}
-          imageUrl=""
-          alt=""
+          imageData={[
+            {
+              src: `${imageBasePathForLanguage}list.png`,
+              alt: language === "en" ? "List image" : "リストの画像",
+            },
+            {
+              src: `${imageBasePathForLanguage}flashcard.png`,
+              alt: language === "en" ? "Flashcard image" : "暗記帳の画像",
+            },
+            {
+              src: `${imageBasePathForLanguage}quiz.png`,
+              alt: language === "en" ? "Quiz image" : "クイズの画像",
+            },
+          ]}
           description={
             language === "en"
               ? "You can learn vocabulary you registered by lists, frashcards, and quiz"
@@ -119,30 +139,59 @@ function Middle({ language }: { language: Language }) {
         <Description
           inViewOptions={inViewOptions}
           transitionClassName={transitionClassName}
-          imageUrl=""
-          alt=""
+          imageData={[
+            {
+              src: `${imageBasePathForLanguage}add.png`,
+              alt:
+                language === "en"
+                  ? "Registering word image"
+                  : "単語を登録する画像",
+            },
+          ]}
           description={
             language === "en"
-              ? "You can add vocabulary or expressions by yourself or select from the dictionary"
+              ? "You can register vocabulary or expressions by yourself or select from the dictionary"
               : "単語を自分で登録、または辞書から選択して登録することができます"
           }
         />
         <Description
           inViewOptions={inViewOptions}
           transitionClassName={transitionClassName}
-          imageUrl=""
-          alt=""
+          imageData={[
+            {
+              src: `${imageBasePathForLanguage}main.png`,
+              alt:
+                language === "en"
+                  ? "Collections in the main page image"
+                  : "メインページのコレクションの画像",
+            },
+            {
+              src: `${imageBasePathForLanguage}collection.png`,
+              alt:
+                language === "en"
+                  ? "Collection page image"
+                  : "コレクションページの画像",
+            },
+            {
+              src: `${imageBasePathForLanguage}progress.png`,
+              alt:
+                language === "en"
+                  ? "Your progress section image"
+                  : "あなたの進捗セクションの画像",
+            },
+          ]}
           description={
             language === "en"
-              ? "You can store vocablary in collections you make for different types of vocabulary so you can memorize vocabulary in a more organized way"
-              : "単語は自分で作成できるコレクションに単語の種類ごとに保存できるので、より整った環境で覚えることができます"
+              ? "You can store and study vocablary by different types of vocabulary in collections you can make so you can memorize vocabulary in a more organized way"
+              : "単語は自分で作成できるコレクションに単語の種類ごとに保存し勉強できるので、より整った環境で覚えることができます"
           }
         />
         <Description
           inViewOptions={inViewOptions}
           transitionClassName={transitionClassName}
-          imageUrl=""
-          alt=""
+          imageData={[
+            { src: `${imageBasePathForLanguage}journal.png`, alt: "" },
+          ]}
           description={
             language === "en"
               ? "You can write a journal a day for each collection with a dictionary feature so you can use or learn vocabulary more!"
@@ -167,38 +216,49 @@ function Middle({ language }: { language: Language }) {
 function Description({
   inViewOptions,
   transitionClassName,
-  imageUrl,
-  alt,
+  imageData,
   description,
 }: {
   inViewOptions: object;
   transitionClassName: string;
-  imageUrl: string;
-  alt: string;
+  imageData: { src: string; alt: string }[];
   description: string;
 }) {
   const [ref, inView, entry] = useInView(inViewOptions);
 
+  const numberOfImages = imageData.length;
+  const [curImage, setCurImage] = useState(0);
+
+  function handleClickImage(i: number) {
+    setCurImage(i);
+  }
+
   return (
     <div
       ref={ref}
-      className={`${transitionClassName} ease-in-out w-full h-fit mt-11 md:mt-12 lg:mt-14 flex flex-col items-center gap-4 ${
+      className={`${transitionClassName} ease-in-out w-full h-fit flex flex-col items-center gap-4 ${
         inView ? "opacity-100" : "opacity-0"
       }`}
     >
-      {/* I will remove the div later */}
-      {imageUrl && alt ? (
-        <Image
-          src={imageUrl}
-          alt={alt}
-          width={500}
-          height={300}
-          className="w-full h-auto aspect-[1/0.6] object-contain"
-        />
-      ) : (
-        <div className="w-full h-auto aspect-[1/0.6] bg-slate-400"></div>
-      )}
-      <p className="w-[90%] text-base leading-snug">{description}</p>
+      <div className="relative w-full h-auto aspect-[1/0.6] flex flex-row items-center">
+        {imageData.map((data, i) => (
+          <Image
+            key={i}
+            src={data.src}
+            alt={data.alt}
+            width={500}
+            height={300}
+            className={`absolute object-contain w-full h-full shadow-lg rounded transition-all duration-1000 cursor-pointer ${i === curImage ? "shadow-black/30" : "shadow-black/40 grayscale-[0.6]"}`}
+            style={{
+              transform: `translateX(${(i - curImage) * 95}%) scale(${i === curImage ? "1" : "0.8"})`,
+            }}
+            onClick={() => handleClickImage(i)}
+          />
+        ))}
+      </div>
+      <p className="w-[90%] text-base leading-snug sm:mt-2 md:mt-3 xl:mt-4 2xl:mt-5">
+        {description}
+      </p>
     </div>
   );
 }
