@@ -39,10 +39,10 @@ export async function generateMetadata({
       "言語学習",
     ],
     alternates: {
-      canonical: new URL(`/${language}`, metadataBase).toString(),
+      canonical: "/",
       languages: {
-        en: new URL("/en", metadataBase).toString(),
-        ja: new URL("/ja", metadataBase).toString(),
+        en: "/en",
+        ja: "/ja",
       },
     },
     openGraph: {
