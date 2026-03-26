@@ -15,8 +15,6 @@ export async function generateMetadata({
       ? APP_DESCRIPTION
       : "eincはあなたが単語や表現をより効率的に覚えるのを手助けします！";
   const metadataBase = new URL(BASE_URL);
-  // later
-  // const image = new URL("", metadataBase).toString();
 
   return {
     title,
@@ -39,7 +37,7 @@ export async function generateMetadata({
       "言語学習",
     ],
     alternates: {
-      canonical: "/",
+      canonical: `/${language}`,
       languages: {
         en: "/en",
         ja: "/ja",

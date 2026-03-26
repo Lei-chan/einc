@@ -13,5 +13,7 @@ export default function proxyLanguage(
   const language = acceptLanguage.includes("ja") ? "ja" : "en";
 
   // redirect to user's language page
-  return NextResponse.redirect(new URL(`/${language}${pathname}`, req.url));
+  return NextResponse.redirect(
+    new URL(`/${language}${pathname === "/" ? "" : pathname}`, req.url),
+  );
 }

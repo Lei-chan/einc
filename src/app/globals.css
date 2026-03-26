@@ -27,7 +27,7 @@ button,
 li,
 select {
   cursor: pointer;
-  /* color: rgba(255, 102, 0, 0.2); */
+  /* color: #ffffff; */
 }
 
 a {
