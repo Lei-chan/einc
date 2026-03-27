@@ -1,5 +1,9 @@
 import { Language } from "../lib/config/types/others";
-import { APP_DESCRIPTION, APP_NAME, BASE_URL } from "../lib/config/settings";
+import {
+  APP_DESCRIPTION,
+  APP_NAME,
+  METADATA_BASE,
+} from "../lib/config/settings";
 import { Metadata } from "next";
 
 export async function generateMetadata({
@@ -14,12 +18,11 @@ export async function generateMetadata({
     language === "en"
       ? APP_DESCRIPTION
       : "eincはあなたが単語や表現をより効率的に覚えるのを手助けします！";
-  const metadataBase = new URL(BASE_URL);
 
   return {
     title,
     description,
-    metadataBase,
+    metadataBase: METADATA_BASE,
     keywords: [
       "einc",
       "イーインク",
@@ -45,7 +48,7 @@ export async function generateMetadata({
     },
     openGraph: {
       siteName: title,
-      url: metadataBase,
+      url: `/${language}`,
       // later
       // images: [{
       //   url: image,

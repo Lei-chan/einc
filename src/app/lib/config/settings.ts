@@ -12,3 +12,4 @@ export const INSTAGRAM_LINK =
 export const APP_NAME = "einc -Vocab Memorizing App-";
 export const APP_DESCRIPTION =
   "einc is here for you to help you remember words and exppressions more efficiently!";
+export const METADATA_BASE = new URL(BASE_URL);
