@@ -490,7 +490,7 @@ function InstallPrompt({ language }: { language: Language }) {
       window.removeEventListener("beforeinstallprompt", installEventHandler);
   }, []);
 
-  if (isStandalone || !deferredPrompt) {
+  if (isStandalone || (!isIOS && !deferredPrompt)) {
     return null; // Don't show install button if already installed
   }
 
