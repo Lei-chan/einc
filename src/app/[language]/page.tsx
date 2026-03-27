@@ -1,6 +1,6 @@
 "use client";
 // react
-import { useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 //next.js
 import Image from "next/image";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import Logo from "./Components/LogoOnlineMark";
 import {
   doesPathnameContainLanguage,
   getLanguageFromPathname,
+  urlBase64ToUint8Array,
 } from "../lib/helper";
 // settings
 import { GITHUB_LINK, INSTAGRAM_LINK } from "../lib/config/settings";
@@ -18,11 +19,8 @@ import { GITHUB_LINK, INSTAGRAM_LINK } from "../lib/config/settings";
 import { Language } from "../lib/config/types/others";
 //libraries
 import { useInView } from "react-intersection-observer";
-import {
-  subscribeUser,
-  unsubscribeUser,
-  sendNotification,
-} from "../actions/pwa";
+import { subscribeUser, unsubscribeUser } from "../actions/pwa";
+import { FormStateSubscription } from "../lib/config/types/formState";
 
 export default function Home() {
   const pathname = usePathname();
@@ -33,7 +31,7 @@ export default function Home() {
       <Top pathname={pathname} />
       <Middle language={language} />
       <Footer />
-      {/* <PWA language={language} /> */}
+      <PWA language={language} />
     </div>
   );
 }
@@ -306,19 +304,6 @@ function PWA({ language }: { language: Language }) {
   );
 }
 
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
-
 function PushNotificationManager({ language }: { language: Language }) {
   const btnClassName =
     "text-white transition-all duration-150 rounded px-1 shadow-sm shadow-black/20 text-sm";
@@ -328,6 +313,16 @@ function PushNotificationManager({ language }: { language: Language }) {
     null,
   );
   const [message, setMessage] = useState("");
+
+  // I will add error UI later
+  const [subscribeState, subscribeAction] = useActionState<
+    FormStateSubscription,
+    PushSubscription
+  >(subscribeUser, undefined);
+  const [unsubscribeState, unsubscribeAction] = useActionState<
+    FormStateSubscription,
+    PushSubscription
+  >(unsubscribeUser, undefined);
 
   async function registerServiceWorker() {
     const registration = await navigator.serviceWorker.register("/sw.js", {
@@ -348,23 +343,34 @@ function PushNotificationManager({ language }: { language: Language }) {
     });
     setSubscription(sub);
     const serializedSub = JSON.parse(JSON.stringify(sub));
-    await subscribeUser(serializedSub);
+
+    startTransition(() => subscribeAction(serializedSub));
   }
 
   async function unsubscribeFromPush() {
     if (!subscription) return;
 
     await subscription.unsubscribe();
-    await unsubscribeUser(JSON.parse(JSON.stringify(subscription)));
     setSubscription(null);
+
+    startTransition(() =>
+      unsubscribeAction(JSON.parse(JSON.stringify(subscription))),
+    );
   }
 
-  async function sendTestNotification() {
-    if (subscription) {
-      await sendNotification(message);
-      setMessage("");
-    }
-  }
+  // later
+  // async function sendTestNotification() {
+  //   if (subscription) {
+  //     await fetch("https://localhost:3000/api/send-notification", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer `,
+  //       },
+  //       body: JSON.stringify({ title: "Test", body: message, url: "/" }),
+  //     });
+  //   }
+  // }
 
   useEffect(() => {
     const assignSupportedAndRegisterSW = () => {
@@ -411,12 +417,12 @@ function PushNotificationManager({ language }: { language: Language }) {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
               />
-              <button
+              {/* <button
                 className="bg-green-400 rounded px-1 text-white"
                 onClick={sendTestNotification}
               >
                 {language === "en" ? "Send Test" : "テストする"}
-              </button>
+              </button> */}
             </>
           ) : (
             <>
@@ -440,8 +446,27 @@ function PushNotificationManager({ language }: { language: Language }) {
 }
 
 function InstallPrompt({ language }: { language: Language }) {
+  interface BeforeInstallPromptEvent extends Event {
+    prompt: () => Promise<void>;
+    userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+  }
+
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
+
+  async function handleClickInstall() {
+    try {
+      if (!deferredPrompt) return;
+
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") setDeferredPrompt(null);
+    } catch (err) {
+      console.error("Error", err);
+    }
+  }
 
   useEffect(() => {
     const assignIOSAndStandalone = () => {
@@ -453,10 +478,19 @@ function InstallPrompt({ language }: { language: Language }) {
       setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
     };
 
+    const installEventHandler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
     assignIOSAndStandalone();
+
+    window.addEventListener("beforeinstallprompt", installEventHandler);
+    return () =>
+      window.removeEventListener("beforeinstallprompt", installEventHandler);
   }, []);
 
-  if (isStandalone) {
+  if (isStandalone || !deferredPrompt) {
     return null; // Don't show install button if already installed
   }
 
@@ -465,13 +499,15 @@ function InstallPrompt({ language }: { language: Language }) {
       <h3 className="font-semibold">
         {language === "en" ? "Install App" : "アプリをインストールする"}
       </h3>
-      <button
-        type="button"
-        className="bg-purple-500 hover:bg-purple-400 transition-all duration-150 rounded text-white px-1 shadow-black/20 shadow-md"
-      >
-        {language === "en" ? "Add to Home Screen" : "ホームスクリーンに追加"}
-      </button>
-      {isIOS && (
+      {!isIOS ? (
+        <button
+          type="button"
+          className="bg-purple-500 hover:bg-purple-400 transition-all duration-150 rounded text-white px-1 shadow-black/20 shadow-md"
+          onClick={handleClickInstall}
+        >
+          {language === "en" ? "Add to Home Screen" : "ホームスクリーンに追加"}
+        </button>
+      ) : (
         <p>
           {language === "en"
             ? 'To install this app on your iOS device, tap the share button and then "Add to Home Screen"'

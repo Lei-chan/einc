@@ -11,8 +11,9 @@ self.addEventListener("push", function (event) {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: data.icon || "/einc-logo.PNG",
-      badge: "/einc-logo.PNG",
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/icon-192x192.png",
+      url: data.url,
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),
@@ -24,6 +25,18 @@ self.addEventListener("push", function (event) {
 });
 
 self.addEventListener("notificationclick", function (event) {
+  // for now
+  const targetUrl = `https://einc.lei-chan.website`;
+
   event.notification.close();
-  event.waitUntil(clients.openWindow("https://einc.lei-chan.website"));
+  event.waitUntil(
+    clients.matchAll({ type: "window" }).then((clientLists) => {
+      for (const client of clientLists) {
+        if (client.url.includes(targetUrl) && "focus" in client)
+          return client.focus();
+      }
+
+      return clients.openWindow(targetUrl);
+    }),
+  );
 });

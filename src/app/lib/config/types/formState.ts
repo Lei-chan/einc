@@ -42,3 +42,10 @@ export type FormStateWordJournal =
       message?: Message;
     }
   | undefined;
+
+export type FormStateSubscription =
+  | {
+      error?: { status?: number; message?: Message };
+      success?: boolean;
+    }
+  | undefined;

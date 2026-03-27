@@ -164,3 +164,11 @@ export type UpdateStatusReviewDateDataQuiz = {
   wordId: string;
   isCorrect: boolean;
 };
+
+export type SerializedPushSubscription = {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+};
