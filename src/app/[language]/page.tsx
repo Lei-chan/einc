@@ -407,22 +407,6 @@ function PushNotificationManager({ language }: { language: Language }) {
               >
                 {language === "en" ? "Unsubscribe" : "オフにする"}
               </button>
-              <input
-                type="text"
-                placeholder={
-                  language === "en"
-                    ? "Enter notification message"
-                    : "通知文を入力してください"
-                }
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-              {/* <button
-                className="bg-green-400 rounded px-1 text-white"
-                onClick={sendTestNotification}
-              >
-                {language === "en" ? "Send Test" : "テストする"}
-              </button> */}
             </>
           ) : (
             <>

@@ -1,9 +1,24 @@
+import { API_ALLOWED_ORIGIN } from "@/app/lib/config/settings";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  crossOrigin: "use-credentials",
   async headers() {
     return [
+      {
+        source: "/api",
+        headers: [
+          {
+            key: "Access-Control-Allow-Origin",
+            value: API_ALLOWED_ORIGIN,
+          },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "POST",
+          },
+        ],
+      },
       {
         source: "/(.*)",
         headers: [
