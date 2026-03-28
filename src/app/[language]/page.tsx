@@ -188,7 +188,10 @@ function Middle({ language }: { language: Language }) {
           inViewOptions={inViewOptions}
           transitionClassName={transitionClassName}
           imageData={[
-            { src: `${imageBasePathForLanguage}journal.png`, alt: "" },
+            {
+              src: `${imageBasePathForLanguage}journal.png`,
+              alt: language === "en" ? "Journal image" : "ジャーナルの画像",
+            },
           ]}
           description={
             language === "en"
@@ -357,20 +360,6 @@ function PushNotificationManager({ language }: { language: Language }) {
       unsubscribeAction(JSON.parse(JSON.stringify(subscription))),
     );
   }
-
-  // later
-  // async function sendTestNotification() {
-  //   if (subscription) {
-  //     await fetch("https://localhost:3000/api/send-notification", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer `,
-  //       },
-  //       body: JSON.stringify({ title: "Test", body: message, url: "/" }),
-  //     });
-  //   }
-  // }
 
   useEffect(() => {
     const assignSupportedAndRegisterSW = () => {

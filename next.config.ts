@@ -1,24 +1,10 @@
-import { API_ALLOWED_ORIGIN } from "@/app/lib/config/settings";
-import type { NextConfig } from "next";
+import { withSerwist } from "@serwist/turbopack";
 
-const nextConfig: NextConfig = {
+export default withSerwist({
   /* config options here */
   crossOrigin: "use-credentials",
   async headers() {
     return [
-      {
-        source: "/api",
-        headers: [
-          {
-            key: "Access-Control-Allow-Origin",
-            value: API_ALLOWED_ORIGIN,
-          },
-          {
-            key: "Access-Control-Allow-Methods",
-            value: "POST",
-          },
-        ],
-      },
       {
         source: "/(.*)",
         headers: [
@@ -55,6 +41,4 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-};
-
-export default nextConfig;
+});

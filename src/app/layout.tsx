@@ -8,13 +8,20 @@ import {
   APP_NAME,
   METADATA_BASE,
 } from "./lib/config/settings";
+import { SerwistProvider } from "./serwist";
 
 const sawarabiGothic = Sawarabi_Gothic({
   weight: "400",
 });
 
+const title = {
+  default: APP_NAME,
+  template: APP_NAME,
+};
+
 export const metadata: Metadata = {
-  title: APP_NAME,
+  applicationName: APP_NAME,
+  title,
   description: APP_DESCRIPTION,
   metadataBase: METADATA_BASE,
   keywords: [
@@ -40,9 +47,20 @@ export const metadata: Metadata = {
       ja: "/ja",
     },
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
     siteName: APP_NAME,
     url: METADATA_BASE,
+    title,
+    description: APP_DESCRIPTION,
+    type: "website",
     // later
     // images: [{
     //   url: image,
@@ -50,11 +68,10 @@ export const metadata: Metadata = {
     //   width: 324,
     //   height: 139,
     // }],
-    type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: APP_NAME,
+    title,
     description: APP_DESCRIPTION,
     // later
     // images: [image]
@@ -66,6 +83,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  themeColor: "#FFFFFF",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -77,11 +95,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="">
+    <html lang="en" dir="ltr">
       <body className={sawarabiGothic.className}>
-        <GoogleOAuthProvider clientId={process.env.OAUTH_CLIENT_ID || ""}>
-          {children}
-        </GoogleOAuthProvider>
+        <SerwistProvider swUrl="/serwist/sw.js">
+          <GoogleOAuthProvider clientId={process.env.OAUTH_CLIENT_ID || ""}>
+            {children}
+          </GoogleOAuthProvider>
+        </SerwistProvider>
       </body>
     </html>
   );
