@@ -2,12 +2,24 @@
 import webpush from "web-push";
 import Subscription from "@/app/lib/models/Subscription";
 import { NextResponse } from "next/server";
+import { API_ALLOWED_ORIGIN } from "@/app/lib/config/settings";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": API_ALLOWED_ORIGIN,
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
 
 webpush.setVapidDetails(
   "mailto: leichan-official@lei-chan.website",
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!,
 );
+
+// Handle preflight
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
 
 export async function POST(req: Request) {
   try {
@@ -45,12 +57,12 @@ export async function POST(req: Request) {
     );
     console.log(deletedSubscriptions);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { headers: corsHeaders });
   } catch (error) {
     console.error("Error sending push notification:", error);
     return NextResponse.json(
       { error: "Failed to send notification" },
-      { status: 500 },
+      { status: 500, headers: corsHeaders },
     );
   }
 }
