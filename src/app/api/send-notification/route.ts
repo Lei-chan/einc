@@ -3,6 +3,7 @@ import webpush from "web-push";
 import Subscription from "@/app/lib/models/Subscription";
 import { NextResponse } from "next/server";
 import { API_ALLOWED_ORIGIN } from "@/app/lib/config/settings";
+import dbConnect from "@/app/lib/database";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": API_ALLOWED_ORIGIN,
@@ -28,6 +29,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
     const notification = await req.json();
+
+    await dbConnect();
     const subscriptions = await Subscription.find();
 
     const pushResults = await Promise.allSettled(
