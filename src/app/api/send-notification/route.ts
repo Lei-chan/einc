@@ -58,10 +58,12 @@ export async function POST(req: Request) {
     console.log(deletedSubscriptions);
 
     return NextResponse.json({ success: true }, { headers: corsHeaders });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error sending push notification:", error);
     return NextResponse.json(
-      { error: "Failed to send notification" },
+      {
+        error: `Failed to send notification. ${error instanceof Error ? error.message : ""}`,
+      },
       { status: 500, headers: corsHeaders },
     );
   }
