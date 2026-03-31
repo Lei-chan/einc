@@ -8,8 +8,7 @@ export const MILLISECONDS_A_DAY = 24 * 60 * 60 * 1000;
 
 // links
 export const BASE_URL = "https://einc.lei-chan.website";
-export const API_ALLOWED_ORIGIN =
-  "https://management.lei-chan.website/einc/send-notification";
+export const API_ALLOWED_ORIGIN = "https://management.lei-chan.website";
 export const GITHUB_LINK = "https://github.com/Lei-chan";
 export const INSTAGRAM_LINK =
   "https://www.instagram.com/leichanweb?igsh=NzJmb3Axc3ZvNWN6&utm_source=qr";
