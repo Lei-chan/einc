@@ -26,7 +26,10 @@ export async function POST(req: Request) {
   try {
     const authHeader = req.headers.get("authorization");
     if (authHeader !== `Bearer ${process.env.NOTIFICATION_SECRET}`)
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "unauthorized" },
+        { status: 401, headers: corsHeaders },
+      );
 
     const notification = await req.json();
 
