@@ -53,12 +53,12 @@ export async function POST(req: Request) {
         result.status === "rejected" ? subscriptions[i]._id : null,
       )
       .filter((id) => id);
-    console.log(rejectedIds);
+    // console.log(rejectedIds);
 
     const deletedSubscriptions = await Promise.all(
       rejectedIds.map((id) => Subscription.findByIdAndDelete(id)),
     );
-    console.log(deletedSubscriptions);
+    // console.log(deletedSubscriptions);
 
     return NextResponse.json({ success: true }, { headers: corsHeaders });
   } catch (error: unknown) {
