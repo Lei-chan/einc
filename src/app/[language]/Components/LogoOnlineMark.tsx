@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 // method
 import { getLanguageFromPathname } from "@/app/lib/helper";
+import { IsOnline } from "@/app/lib/hooks";
 
 export default function LogoOnlineMark({
   showOnlineMark,
@@ -21,14 +22,16 @@ export default function LogoOnlineMark({
     `/${language}/sign-up`,
   ];
 
-  const isOnline = true;
+  const isOnline = IsOnline();
+
   return (
     <div
       className={`absolute w-[100px] aspect-[1/0.5] left-3 lg:left-4 ${topClassName}`}
     >
-      {/* // I will change this later */}
       {showOnlineMark && (
-        <p className="w-fit text-right text-xs">
+        <p
+          className={`w-fit text-right text-xs ${language === "en" && "tracking-wider"}`}
+        >
           {isOnline && `🟢 ${language === "en" ? "Online" : "オンライン"}`}{" "}
           {!isOnline && `🟡 ${language === "en" ? "Offline" : "オフライン"}`}
         </p>
