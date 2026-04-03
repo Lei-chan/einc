@@ -17,7 +17,7 @@ export default async function proxyAuth(
     "/folder",
     "/main",
   ];
-  const publicRoutes = ["/login", "/sign-up", "/"];
+  const publicRoutes = ["/login", "/sign-up"];
 
   //   remove language from pathname
   const pathnameWithoutLanguage = pathname.replace(languagePath, "");

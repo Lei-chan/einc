@@ -172,3 +172,10 @@ export type SerializedPushSubscription = {
     auth: string;
   };
 };
+
+export interface IndexedDBEventTarget extends EventTarget {
+  result: IDBDatabase;
+  error: { message: string };
+}
+
+export type IndexedDBType = "collections" | "words" | "journals" | "test";
