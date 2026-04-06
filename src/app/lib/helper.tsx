@@ -13,9 +13,14 @@ import {
   WordBeforeSent,
   WordToDisplay,
   Message,
+  IndexedDBData,
+  IndexedDBType,
 } from "./config/types/others";
 // library
 import Resizer from "react-image-file-resizer";
+import { registerData } from "./indexedDB/database";
+import { getDataForIndexedDB } from "./dal";
+import { createIndexedDBDatabase } from "./indexedDB/create";
 
 export const getGenericErrorMessage = (language: Language) =>
   language === "en"
@@ -273,6 +278,12 @@ export const convertWordsToQuizData = (wordDataToDisplay: WordToDisplay[]) => {
   return quizData;
 };
 
+export const getNextStatus = (currentStatus: number, isCorrect: boolean) => {
+  if (isCorrect) return currentStatus === 5 ? 5 : currentStatus + 1;
+
+  return currentStatus === 0 ? 0 : currentStatus - 1;
+};
+
 export const areDatesSame = (date1: Date | string, date2: Date | string) => {
   const dateOne = new Date(date1);
   const dateTwo = new Date(date2);
@@ -305,4 +316,33 @@ export const urlBase64ToUint8Array = (base64String: string) => {
     outputArray[i] = rawData.charCodeAt(i);
   }
   return outputArray;
+};
+
+const registerMongoDBToIndexedDB = async (mongoData: IndexedDBData) => {
+  try {
+    const collections = mongoData.collections;
+    const words = mongoData.words;
+    const journals = mongoData.journals;
+
+    if (collections) await registerData("collections", collections);
+
+    if (words) await registerData("words", words);
+
+    if (journals) await registerData("journals", journals);
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const syncMongoDBWithIndexedDB = async (type: "all" | IndexedDBType) => {
+  try {
+    await createIndexedDBDatabase();
+
+    const mongoData = await getDataForIndexedDB(type);
+    if (!mongoData) return;
+
+    await registerMongoDBToIndexedDB(mongoData);
+  } catch (err) {
+    throw err;
+  }
 };

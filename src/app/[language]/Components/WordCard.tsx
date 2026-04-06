@@ -31,6 +31,7 @@ import {
 // types
 import { WordData, WordBeforeSent } from "../../lib/config/types/others";
 import { FormStateWordJournal } from "../../lib/config/types/formState";
+import { IsOnline } from "@/app/lib/hooks";
 
 export default function WordCard({
   type,
@@ -349,7 +350,7 @@ export default function WordCard({
         )}
         {successMessage && <PMessage type="success" message={successMessage} />}
       </div>
-      {type === "list" && (
+      {type === "list" && IsOnline() && (
         <button
           type="button"
           className="absolute w-4 aspect-square bg-[url('/icons/edit.svg')] bg-center bg-contain bg-no-repeat right-3 top-2 transition-all duration-150 hover:translate-y-[-2px]"

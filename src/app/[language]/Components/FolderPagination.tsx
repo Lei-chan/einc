@@ -22,7 +22,8 @@ import {
   updateCollection,
 } from "../../actions/auth/collections";
 // dal
-import { getCollectionDataCurPage } from "../../lib/dal";
+// import { getCollectionDataCurPage } from "../../lib/dal";
+import { getCollectionDataCurPage } from "@/app/lib/indexedDB/database";
 // methods
 import {
   getGenericErrorMessage,
@@ -42,6 +43,7 @@ import { FormStateCollection } from "../../lib/config/types/formState";
 // library
 import { nanoid } from "nanoid";
 import { usePathname } from "next/navigation";
+import { IsOnline } from "@/app/lib/hooks";
 
 export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
   const pathname = usePathname();
@@ -269,7 +271,7 @@ function FolderContainer({
             }}
           >
             {collections &&
-              collections.map((collection, i) => (
+              collections.map((collection) => (
                 <Folder
                   key={nanoid()}
                   language={language}
@@ -419,77 +421,79 @@ function Selector({
   }, [deleteState, deleteIsPending, language, displayMessage, handleUpdate]);
 
   return (
-    <div className="w-[95%] flex flex-row justify-end gap-2 md:gap-3 lg:gap-4 text-sm items-center">
-      {
-        <>
-          {!isSelected ? (
+    IsOnline() && (
+      <div className="w-[95%] flex flex-row justify-end gap-2 md:gap-3 lg:gap-4 text-sm items-center">
+        {
+          <>
+            {!isSelected ? (
+              <button
+                type="button"
+                className={`${btnNewSelectClassName} w-fit h-[90%] leading-none bg-green-400 flex flex-row items-center text-[13px] py-0 hover:bg-green-300`}
+                onClick={onClickButton}
+              >
+                <span className="text-xl mr-1">+</span>
+                {language === "en" ? "New collection" : "新しいコレクション"}
+              </button>
+            ) : (
+              <>
+                {!isDeleted &&
+                  (!isEdited ? (
+                    <button
+                      type="button"
+                      className={btnEditClassName}
+                      onClick={onClickEdit}
+                    >
+                      {language === "en" ? "Edit name" : "名前を編集"}
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      className={btnEditClassName}
+                      formAction={updateAction}
+                    >
+                      {language === "en" ? "Finish editing" : "編集を完了"}
+                    </button>
+                  ))}
+                {!isEdited &&
+                  (!isDeleted ? (
+                    <button
+                      type="button"
+                      className="bg-orange-500 text-white py-[1px] px-1 mr-1 rounded"
+                      onClick={onClickDelete}
+                    >
+                      {language === "en" ? "Delete" : "削除"}
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
+                      formAction={deleteAction}
+                    ></button>
+                  ))}
+                {(isEdited || isDeleted) && (
+                  <label className="w-fit h-full flex flex-row items-center">
+                    {language === "en" ? "Select all" : "全てを選択"}:&nbsp;
+                    <input
+                      type="checkbox"
+                      className="w-4 aspect-square"
+                      onChange={onChangeSelectAll}
+                    ></input>
+                  </label>
+                )}
+              </>
+            )}
             <button
               type="button"
-              className={`${btnNewSelectClassName} w-fit h-[90%] leading-none bg-green-400 flex flex-row items-center text-[13px] py-0 hover:bg-green-300`}
-              onClick={onClickButton}
+              className={`${btnNewSelectClassName} bg-orange-500 hover:bg-yellow-500 py-[2px]`}
+              onClick={onClickSelect}
             >
-              <span className="text-xl mr-1">+</span>
-              {language === "en" ? "New collection" : "新しいコレクション"}
+              {isSelected && (language === "en" ? "Finish" : "終了")}
+              {!isSelected && (language === "en" ? "Select" : "選択")}
             </button>
-          ) : (
-            <>
-              {!isDeleted &&
-                (!isEdited ? (
-                  <button
-                    type="button"
-                    className={btnEditClassName}
-                    onClick={onClickEdit}
-                  >
-                    {language === "en" ? "Edit name" : "名前を編集"}
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    className={btnEditClassName}
-                    formAction={updateAction}
-                  >
-                    {language === "en" ? "Finish editing" : "編集を完了"}
-                  </button>
-                ))}
-              {!isEdited &&
-                (!isDeleted ? (
-                  <button
-                    type="button"
-                    className="bg-orange-500 text-white py-[1px] px-1 mr-1 rounded"
-                    onClick={onClickDelete}
-                  >
-                    {language === "en" ? "Delete" : "削除"}
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
-                    formAction={deleteAction}
-                  ></button>
-                ))}
-              {(isEdited || isDeleted) && (
-                <label className="w-fit h-full flex flex-row items-center">
-                  {language === "en" ? "Select all" : "全てを選択"}:&nbsp;
-                  <input
-                    type="checkbox"
-                    className="w-4 aspect-square"
-                    onChange={onChangeSelectAll}
-                  ></input>
-                </label>
-              )}
-            </>
-          )}
-          <button
-            type="button"
-            className={`${btnNewSelectClassName} bg-orange-500 hover:bg-yellow-500 py-[2px]`}
-            onClick={onClickSelect}
-          >
-            {isSelected && (language === "en" ? "Finish" : "終了")}
-            {!isSelected && (language === "en" ? "Select" : "選択")}
-          </button>
-        </>
-      }
-    </div>
+          </>
+        }
+      </div>
+    )
   );
 }
 

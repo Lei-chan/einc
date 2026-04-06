@@ -179,3 +179,9 @@ export interface IndexedDBEventTarget extends EventTarget {
 }
 
 export type IndexedDBType = "collections" | "words" | "journals" | "test";
+
+export type IndexedDBData = {
+  collections?: Collections;
+  words?: WordData[];
+  journals?: JournalDatabase[];
+};

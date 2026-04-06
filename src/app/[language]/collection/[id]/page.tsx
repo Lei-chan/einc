@@ -9,7 +9,8 @@ import LogoOnlineMark from "@/app/[language]/Components/LogoOnlineMark";
 import LinkAddVocab from "@/app/[language]/Components/LinkAddVocab";
 import PMessage from "@/app/[language]/Components/PMessage";
 // dal
-import { getUserWordsStatuses } from "@/app/lib/dal";
+// import { getUserWordsStatuses } from "@/app/lib/dal";
+import { getUserWordsStatuses } from "@/app/lib/indexedDB/database";
 // methods
 import {
   getGenericErrorMessage,
@@ -35,6 +36,7 @@ import {
   Language,
   Message,
 } from "@/app/lib/config/types/others";
+import { IsOnline } from "@/app/lib/hooks";
 
 export default function Collection({
   params,
@@ -64,9 +66,11 @@ function Top({
   return (
     <div className="relative w-full h-14 flex flex-row items-center mt-1">
       <LogoOnlineMark showOnlineMark={true} />
-      <div className="absolute w-[10rem] sm:w-[11rem] md:w-[12rem] xl:w-[13rem] 2xl:w-[14rem] h-[70%] flex flex-row items-center justify-end right-4 md:right-5 lg:right-6 text-center">
-        <LinkAddVocab language={language} collectionId={collectionId} />
-      </div>
+      {IsOnline() && (
+        <div className="absolute w-[10rem] sm:w-[11rem] md:w-[12rem] xl:w-[13rem] 2xl:w-[14rem] h-[70%] flex flex-row items-center justify-end right-4 md:right-5 lg:right-6 text-center">
+          <LinkAddVocab language={language} collectionId={collectionId} />
+        </div>
+      )}
     </div>
   );
 }
@@ -95,11 +99,13 @@ function ContentContainer({
         pathname={pathname}
         name={{ en: "Quiz", ja: "クイズ" }}
       />
-      <LinkContent
-        language={language}
-        pathname={pathname}
-        name={{ en: "Journal", ja: "ジャーナル" }}
-      />
+      {IsOnline() && (
+        <LinkContent
+          language={language}
+          pathname={pathname}
+          name={{ en: "Journal", ja: "ジャーナル" }}
+        />
+      )}
     </div>
   );
 }

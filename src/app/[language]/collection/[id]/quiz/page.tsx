@@ -1,13 +1,6 @@
 "use client";
 // React
-import {
-  startTransition,
-  use,
-  useActionState,
-  useEffect,
-  useReducer,
-  useState,
-} from "react";
+import { use, useEffect, useReducer, useState } from "react";
 // Next.js
 import Image from "next/image";
 import Link from "next/link";
@@ -18,12 +11,16 @@ import PMessage from "@/app/[language]/Components/PMessage";
 // Reducers
 import { paginationReducer } from "@/app/lib/reducers";
 // actions
-import {
-  addDefinitions,
-  updateStatusNextReviewDate,
-} from "@/app/actions/auth/words";
+// import {
+//   // addDefinitions,
+//   // updateStatusNextReviewDate,
+// } from "@/app/actions/auth/words";
 // dal
-import { getRandomWordsOneTurnQuiz } from "@/app/lib/dal";
+// import { getRandomWordsOneTurnQuiz } from "@/app/lib/dal";
+import {
+  getRandomWordsOneTurnQuiz,
+  addDefinitions,
+} from "@/app/lib/indexedDB/database";
 // Methods
 import {
   convertWordsToQuizData,
@@ -36,9 +33,11 @@ import {
   joinWithLineBreaks,
   wait,
 } from "@/app/lib/helper";
+import { updateStatusNextReviewDate } from "@/app/lib/indexedDB/database";
 // Types
 import {
   DefinitionsDataQuiz,
+  DisplayMessage,
   Language,
   QuizAnswer,
   QuizData,
@@ -46,7 +45,6 @@ import {
   UpdateStatusReviewDateDataQuiz,
 } from "@/app/lib/config/types/others";
 import { FormStateWordJournal } from "@/app/lib/config/types/formState";
-import { useRouter } from "next/router";
 // libraries
 // import distance from "jaro-winkler";
 
@@ -65,10 +63,10 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [state, action] = useActionState<
-    FormStateWordJournal,
-    UpdateStatusReviewDateDataQuiz
-  >(updateStatusNextReviewDate, undefined);
+  // const [state, action] = useActionState<
+  //   FormStateWordJournal,
+  //   UpdateStatusReviewDateDataQuiz
+  // >(updateStatusNextReviewDate, undefined);
 
   useEffect(() => {
     const getWordsForQuiz = async () => {
@@ -104,25 +102,30 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   }
 
   async function handleClickNext() {
-    if (!quiz) return;
-    if (!curQuizIndex && curQuizIndex !== 0) return;
+    try {
+      if (!quiz) return;
+      if (!curQuizIndex && curQuizIndex !== 0) return;
 
-    const wordId = quiz[curQuizIndex].id;
-    startTransition(() => action({ wordId, isCorrect }));
+      const wordId = quiz[curQuizIndex].id;
+      // startTransition(() => action({ wordId, isCorrect }));
+      await updateStatusNextReviewDate({ wordId, isCorrect });
 
-    // get rid of current quiz from quiz
-    const newQuiz = quiz.toSpliced(curQuizIndex, 1);
-    setQuiz(newQuiz);
+      // get rid of current quiz from quiz
+      const newQuiz = quiz.toSpliced(curQuizIndex, 1);
+      setQuiz(newQuiz);
 
-    // if no newQUiz => return
-    if (isArrayEmpty(newQuiz)) return;
+      // if no newQUiz => return
+      if (isArrayEmpty(newQuiz)) return;
 
-    // new random index for next quiz
-    const newQuizIndex = getRandomNumber(0, newQuiz.length - 1);
-    setCurQuizIndex(newQuizIndex);
+      // new random index for next quiz
+      const newQuizIndex = getRandomNumber(0, newQuiz.length - 1);
+      setCurQuizIndex(newQuizIndex);
 
-    dispatch("add");
-    toggleIsAnswering();
+      dispatch("add");
+      toggleIsAnswering();
+    } catch (err) {
+      setErrorMessage(getGenericErrorMessage(language));
+    }
   }
 
   return (
@@ -132,9 +135,9 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
           {curQuizPage} / {numberOfQuiz}
         </p>
       )}
-      {state?.error?.message && (
+      {/* {state?.error?.message && (
         <PMessage type="error" message={state.error.message[language]} />
-      )}
+      )} */}
       <p>
         {errorMessage && errorMessage}
         {!quiz && (language === "en" ? "Loading..." : "ロード中...")}
@@ -183,12 +186,12 @@ function QuizContent({
 }) {
   const answer = curQuiz?.answer;
   const [userAnswer, setUserAnswer] = useState<string[]>([]);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [messageData, setMessageData] = useState<DisplayMessage>();
 
-  const [state, action, isPending] = useActionState<
-    FormStateWordJournal,
-    DefinitionsDataQuiz
-  >(addDefinitions, undefined);
+  // const [state, action, isPending] = useActionState<
+  //   FormStateWordJournal,
+  //   DefinitionsDataQuiz
+  // >(addDefinitions, undefined);
 
   // think later about replace all
   const convertStringToCompare = (str: string) =>
@@ -249,39 +252,66 @@ function QuizContent({
   }
 
   async function handleClickAddDefinitions() {
-    if (!curQuiz?.id) return;
+    try {
+      if (!curQuiz?.id) return;
 
-    startTransition(() =>
-      action({ wordId: curQuiz.id, newDefinitions: userAnswer }),
-    );
+      setMessageData({
+        type: "pending",
+        message:
+          language === "en" ? "Adding definitions..." : "意味を追加中...",
+      });
+
+      // startTransition(() =>
+      //   action({ wordId: curQuiz.id, newDefinitions: userAnswer }),
+      // );
+      await addDefinitions({ wordId: curQuiz.id, newDefinitions: userAnswer });
+
+      setMessageData({
+        type: "success",
+        message:
+          language === "en"
+            ? "Definitions added successfully"
+            : "意味が追加されました",
+      });
+      await wait();
+      setMessageData(undefined);
+    } catch (err) {
+      setMessageData({
+        type: "error",
+        message: getGenericErrorMessage(language),
+      });
+    }
   }
 
-  useEffect(() => {
-    const displaySuccessMessage = async () => {
-      if (!state?.message) return;
+  // useEffect(() => {
+  //   const displaySuccessMessage = async () => {
+  //     if (!state?.message) return;
 
-      setSuccessMessage(state.message[language]);
-      await wait();
-      setSuccessMessage("");
-    };
+  //     setSuccessMessage(state.message[language]);
+  //     await wait();
+  //     setSuccessMessage("");
+  //   };
 
-    displaySuccessMessage();
-  }, [state?.message, language]);
+  //   displaySuccessMessage();
+  // }, [state?.message, language]);
 
   return (
     <div className="w-[80%] h-full flex flex-col items-center justify-center">
-      {isPending && (
+      {messageData && (
+        <PMessage type={messageData.type} message={messageData.message} />
+      )}
+      {/* {isPending && (
         <PMessage
           type="pending"
           message={
             language === "en" ? "Adding definitions..." : "意味を追加中..."
           }
         />
-      )}
-      {state?.error?.message && (
+      )} */}
+      {/* {state?.error?.message && (
         <PMessage type="error" message={state.error.message[language]} />
       )}
-      {successMessage && <PMessage type="success" message={successMessage} />}
+      {successMessage && <PMessage type="success" message={successMessage} />} */}
       {isAnswering ? (
         <QuizAnswerForm
           language={language}

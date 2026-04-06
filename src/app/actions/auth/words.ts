@@ -4,20 +4,12 @@ import Word from "@/app/lib/models/Word";
 import dbConnect from "@/app/lib/database";
 // methods
 import { verifySession } from "@/app/lib/dal";
-import {
-  convertWordDataToSendServer,
-  getNextReviewDate,
-} from "@/app/lib/helper";
+import { convertWordDataToSendServer } from "@/app/lib/helper";
 import { getError, isZodError } from "@/app/lib/errorHandler";
 // zod schema
 import { WordSchema } from "@/app/lib/zodSchemas";
 // types
-import {
-  DefinitionsDataQuiz,
-  MyZodError,
-  UpdateStatusReviewDateDataQuiz,
-  WordBeforeSent,
-} from "@/app/lib/config/types/others";
+import { MyZodError, WordBeforeSent } from "@/app/lib/config/types/others";
 import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 
 export async function addWords(
@@ -124,34 +116,34 @@ export async function deleteWords(
   }
 }
 
-export async function addDefinitions(
-  formState: FormStateWordJournal,
-  data: DefinitionsDataQuiz,
-) {
-  await verifySession();
-  try {
-    await dbConnect();
-    const word = await Word.findById(data.wordId).select("definitions");
-    if (!word)
-      return getError("notFound", {
-        en: "Word not found",
-        ja: "単語が見つかりません",
-      });
+// export async function addDefinitions(
+//   formState: FormStateWordJournal,
+//   data: DefinitionsDataQuiz,
+// ) {
+//   await verifySession();
+//   try {
+//     await dbConnect();
+//     const word = await Word.findById(data.wordId).select("definitions");
+//     if (!word)
+//       return getError("notFound", {
+//         en: "Word not found",
+//         ja: "単語が見つかりません",
+//       });
 
-    data.newDefinitions.forEach((def) => word.definitions.push(def));
+//     data.newDefinitions.forEach((def) => word.definitions.push(def));
 
-    await word.save();
+//     await word.save();
 
-    return {
-      message: {
-        en: `New definition${data.newDefinitions.length === 1 ? "" : "s"} added successfully`,
-        ja: "新しい意味が追加されました",
-      },
-    };
-  } catch (err: unknown) {
-    return getError("other", undefined, err);
-  }
-}
+//     return {
+//       message: {
+//         en: `New definition${data.newDefinitions.length === 1 ? "" : "s"} added successfully`,
+//         ja: "新しい意味が追加されました",
+//       },
+//     };
+//   } catch (err: unknown) {
+//     return getError("other", undefined, err);
+//   }
+// }
 
 const getNextStatus = (currentStatus: number, isCorrect: boolean) => {
   if (isCorrect) return currentStatus === 5 ? 5 : currentStatus + 1;
@@ -159,33 +151,33 @@ const getNextStatus = (currentStatus: number, isCorrect: boolean) => {
   return currentStatus === 0 ? 0 : currentStatus - 1;
 };
 
-export async function updateStatusNextReviewDate(
-  formState: FormStateWordJournal,
-  data: UpdateStatusReviewDateDataQuiz,
-) {
-  await verifySession();
-  try {
-    await dbConnect();
-    const word = await Word.findById(data.wordId);
-    if (!word)
-      return getError("notFound", {
-        en: "Word not found",
-        ja: "単語が見つかりません",
-      });
+// export async function updateStatusNextReviewDate(
+//   formState: FormStateWordJournal,
+//   data: UpdateStatusReviewDateDataQuiz,
+// ) {
+//   await verifySession();
+//   try {
+//     await dbConnect();
+//     const word = await Word.findById(data.wordId);
+//     if (!word)
+//       return getError("notFound", {
+//         en: "Word not found",
+//         ja: "単語が見つかりません",
+//       });
 
-    const nextStatus = getNextStatus(word.status, data.isCorrect);
-    word.status = nextStatus;
-    word.nextReviewAt = getNextReviewDate(nextStatus);
+//     const nextStatus = getNextStatus(word.status, data.isCorrect);
+//     word.status = nextStatus;
+//     word.nextReviewAt = getNextReviewDate(nextStatus);
 
-    await word.save();
+//     await word.save();
 
-    return {
-      message: {
-        en: "Status and review date updated successfully",
-        ja: "Statusとreview dateが更新されました",
-      },
-    };
-  } catch (err: unknown) {
-    return getError("other", undefined, err);
-  }
-}
+//     return {
+//       message: {
+//         en: "Status and review date updated successfully",
+//         ja: "Statusとreview dateが更新されました",
+//       },
+//     };
+//   } catch (err: unknown) {
+//     return getError("other", undefined, err);
+//   }
+// }

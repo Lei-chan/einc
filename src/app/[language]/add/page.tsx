@@ -16,6 +16,7 @@ import AudioWord from "../Components/AudioWord";
 import PMessage from "../Components/PMessage";
 // action
 import { addWords } from "../../actions/auth/words";
+
 // dal
 import { getCollections } from "../../lib/dal";
 // methods

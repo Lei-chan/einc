@@ -10,7 +10,8 @@ import WordCard from "@/app/[language]/Components/WordCard";
 // reducers
 import { paginationReducer } from "@/app/lib/reducers";
 // dal
-import { getRandomWordsFlashcard } from "@/app/lib/dal";
+// import { getRandomWordsFlashcard } from "@/app/lib/dal";
+import { getRandomWordsFlashcard } from "@/app/lib/indexedDB/database";
 // methods
 import {
   getGenericErrorMessage,

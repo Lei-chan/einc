@@ -21,30 +21,10 @@ import { Language } from "../lib/config/types/others";
 import { useInView } from "react-intersection-observer";
 import { subscribeUser, unsubscribeUser } from "../actions/pwa";
 import { FormStateSubscription } from "../lib/config/types/formState";
-import { createTestDB } from "../lib/indexedDB/create";
-import { getAllData, registerData } from "../lib/indexedDB/database";
 
 export default function Home() {
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
-
-  const [allData, setAllData] = useState<unknown>();
-
-  // useEffect(() => {
-  //   (async () => {
-  //     await createTestDB();
-  //     await registerData("test", [
-  //       { _id: "aaaa", name: "bbbb", password: "cccc" },
-  //       { _id: "bbbb", name: "cccc", password: "dddd" },
-  //       { _id: "cccc", name: "bbbb", password: "eeee" },
-  //     ]);
-
-  //     const data = await getAllData("test");
-  //     setAllData(data);
-  //   })();
-  // }, []);
-
-  console.log(allData);
 
   return (
     <div className="w-full h-fit flex flex-col items-center overflow-hidden ">

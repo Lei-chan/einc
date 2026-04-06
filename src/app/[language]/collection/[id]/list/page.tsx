@@ -20,7 +20,8 @@ import { paginationReducer } from "@/app/lib/reducers";
 // action
 import { deleteWords } from "@/app/actions/auth/words";
 // dal
-import { getMatchedWordsCurPage } from "@/app/lib/dal";
+// import { getMatchedWordsCurPage } from "@/app/lib/dal"；
+import { getMatchedWordsCurPage } from "@/app/lib/indexedDB/database";
 // methods
 import {
   getGenericErrorMessage,
@@ -41,7 +42,7 @@ import {
   Language,
   WordData,
 } from "@/app/lib/config/types/others";
-import { number } from "zod";
+import { IsOnline } from "@/app/lib/hooks";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -367,38 +368,38 @@ function Selector({
   onClickDelete: () => void;
 }) {
   return (
-    <div className="w-full flex flex-row justify-end gap-2 text-sm items-center mt-3">
-      {isSelected && (
-        <>
-          <button
-            type="button"
-            className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
-            onClick={onClickDelete}
-          ></button>
-          <label className="w-fit h-full flex flex-row items-center">
-            {language === "en" ? "Select all" : "全てを選択"}:&nbsp;
-            <input
-              type="checkbox"
-              className="w-4 aspect-square"
-              onChange={onChangeSelectAll}
-            ></input>
-          </label>
-        </>
-      )}
-      <button
-        type="button"
-        className="bg-orange-500 hover:bg-yellow-500 transition-all duration-300 text-white rounded py-[2px] px-1"
-        onClick={onClickSelected}
-      >
-        {isSelected && (language === "en" ? "Finish" : "終了")}
-        {!isSelected && (language === "en" ? "Select" : "選択")}
-      </button>
-    </div>
+    IsOnline() && (
+      <div className="w-full flex flex-row justify-end gap-2 text-sm items-center mt-3">
+        {isSelected && (
+          <>
+            <button
+              type="button"
+              className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
+              onClick={onClickDelete}
+            ></button>
+            <label className="w-fit h-full flex flex-row items-center">
+              {language === "en" ? "Select all" : "全てを選択"}:&nbsp;
+              <input
+                type="checkbox"
+                className="w-4 aspect-square"
+                onChange={onChangeSelectAll}
+              ></input>
+            </label>
+          </>
+        )}
+        <button
+          type="button"
+          className="bg-orange-500 hover:bg-yellow-500 transition-all duration-300 text-white rounded py-[2px] px-1"
+          onClick={onClickSelected}
+        >
+          {isSelected && (language === "en" ? "Finish" : "終了")}
+          {!isSelected && (language === "en" ? "Select" : "選択")}
+        </button>
+      </div>
+    )
   );
 }
 
-// reflect updates next.
-// delete words next. Current problem is that there is form element inside another form element.
 function WordLists({
   data,
   isSelected,

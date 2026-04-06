@@ -13,8 +13,11 @@ import PasswordInput from "./PasswordInput";
 import { signupViaGoogle, signupViaUserInfo } from "../../actions/auth/signup";
 import { loginViaGoogle, loginViaUserInfo } from "../../actions/auth/login";
 // methods
-import { getError } from "../../lib/errorHandler";
-import { getLanguageFromPathname } from "@/app/lib/helper";
+import { getError, isError } from "../../lib/errorHandler";
+import {
+  getLanguageFromPathname,
+  syncMongoDBWithIndexedDB,
+} from "@/app/lib/helper";
 // types
 import {
   Language,
@@ -28,6 +31,7 @@ import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.share
 // libraries
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import { createIndexedDBDatabase } from "@/app/lib/indexedDB/create";
 
 export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   const router = useRouter();
@@ -62,6 +66,11 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
     setIsPending(false);
     if (err.error?.message) setError(err.error.message[language]);
   }
+
+  //     // Create database in indexedDB
+  //     await createIndexedDBDatabase();
+
+  //     syncIndexedDBWithMongoDB();
 
   return (
     <div className="relative w-full min-h-[100dvh] pt-1 flex flex-col items-center">
@@ -122,11 +131,15 @@ function ViaUserInfo({
   );
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+    try {
+      e.preventDefault();
 
-    const formData = new FormData(e.currentTarget);
+      const formData = new FormData(e.currentTarget);
 
-    startTransition(() => action({ formData, language }));
+      startTransition(() => action({ formData, language }));
+    } catch (err: unknown) {
+      console.error("Error", isError(err) ? err.message : "");
+    }
   }
 
   useEffect(() => {
@@ -218,6 +231,14 @@ function ViaGoogle({
     { email: string; language: Language }
   >(typeToDisplay === "Sign up" ? signupViaGoogle : loginViaGoogle, undefined);
 
+  function handleSubmit() {
+    try {
+      startTransition(() => action({ email, language }));
+    } catch (err: unknown) {
+      console.error("Error", isError(err) ? err.message : "");
+    }
+  }
+
   useEffect(() => {
     handlePending(isPending);
   }, [handlePending, isPending]);
@@ -274,8 +295,7 @@ function ViaGoogle({
             setEmail(email);
 
             // only if it's login => submit when user select an account
-            if (typeToDisplay === "Log in")
-              startTransition(() => action({ email, language }));
+            if (typeToDisplay === "Log in") handleSubmit();
           } catch (err: unknown) {
             console.error("Error occured", err);
             return getError("other", undefined, err);
@@ -307,9 +327,10 @@ function ViaGoogle({
           <button
             type="submit"
             className="transition-all duration-150 rounded bg-purple-500 hover:bg-pink-400 text-white px-1.5 py-[2px] text-sm mt-3"
-            formAction={() =>
-              startTransition(() => action({ email, language }))
-            }
+            onClick={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
           >
             {language === "en" ? "Complete" : "完了"}
           </button>
