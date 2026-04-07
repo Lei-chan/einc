@@ -13,10 +13,21 @@ import { getLanguageFromPathname } from "@/app/lib/helper";
 // type
 import { Language } from "@/app/lib/config/types/others";
 import { IsOnline } from "@/app/lib/hooks";
+import { useEffect } from "react";
 
 export default function Main() {
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
+
+  // to get rid of old cached online offline state in sw
+  useEffect(() => {
+    const isReloaded = sessionStorage.getItem("isReloaded");
+
+    if (isReloaded === "true") return;
+
+    sessionStorage.setItem("isReloaded", "true");
+    window.location.reload();
+  }, []);
 
   return (
     <div className="relative w-screen h-[100dvh] flex flex-col items-center">
@@ -59,7 +70,10 @@ function ButtonLogout({ language }: { language: Language }) {
     IsOnline() && (
       <button
         className="fixed w-fit bg-blue-400 text-white  rounded py-[2px] px-1 text-sm self-center bottom-3 lg:bottom-4 transition-all duration-200 shadow-md shadow-black/20 hover:translate-y-[-1px] hover:bg-blue-300"
-        onClick={() => logout(language)}
+        onClick={async () => {
+          sessionStorage.clear();
+          await logout(language);
+        }}
       >
         {language === "en" ? "Logout" : "ログアウト"}
       </button>

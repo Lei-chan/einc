@@ -100,7 +100,6 @@ export const getCollections = cache(async () => {
 
 export async function logout(language: Language) {
   await deleteSession();
-  sessionStorage.removeItem("isAlreadySynced");
   redirect(`/${language}`);
 }
 

@@ -15,10 +15,8 @@ export async function proxy(req: NextRequest) {
   }
 
   // Run only language is included in pathname to avoid infinite loop
-  if (isLanguageIncluded) {
-    const authRes = proxyAuth(req, pathname);
-    if (authRes) return authRes;
-  }
+  const authRes = proxyAuth(req, pathname, isLanguageIncluded);
+  if (authRes) return authRes;
 
   return NextResponse.next();
 }
@@ -26,6 +24,6 @@ export async function proxy(req: NextRequest) {
 // Routes Proxy should not run on
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|apple-icons.png|icon.png|manifest.ts|manifest.json|robots.ts|robots.txt|serwist.ts|sitemap.ts|serwist.xml|sw.ts|sw.js|serwist|.*\\..*).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|apple-icons.png|icon.png|manifest.ts|manifest.json|robots.ts|robots.txt|serwist.*|sitemap.ts|sitemap.xml|sw.ts|sw.js|.*\\..*).*)",
   ],
 };

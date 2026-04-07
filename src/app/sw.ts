@@ -23,7 +23,13 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: defaultCache,
+  runtimeCaching: [
+    {
+      matcher: /\/api\/ping/,
+      handler: new NetworkOnly(),
+    },
+    ...defaultCache,
+  ],
   fallbacks: {
     entries: [
       {
@@ -37,6 +43,14 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// self.addEventListener("install", (event) => {
+//   self.skipWaiting();
+// });
+
+// self.addEventListener("activate", (event) => {
+//   event.waitUntil(self.clients.claim());
+// });
 
 // push notification
 self.addEventListener("push", function (event) {

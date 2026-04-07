@@ -1,37 +1,34 @@
 "use client";
-
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function IsOnline() {
-  const checkConnectivitySecond = 5;
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    const setConnectivity = async () => {
-      // const isConnected = await checkConnectivity();
-
+    const checkConnection = async () => {
       setIsOnline(navigator.onLine);
+      // try {
+      //   const res = await fetch("/api/ping?ts=" + Date.now(), {
+      //     cache: "no-store",
+      //   });
+      //   setIsOnline(res.ok);
+      // } catch {
+      //   setIsOnline(false);
+      // }
     };
-    setConnectivity();
+    checkConnection();
 
-    // check internet connectivity every 5 seconds
-    const intervalId = setInterval(
-      setConnectivity,
-      checkConnectivitySecond * 1000,
-    );
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
-    return () => clearInterval(intervalId);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
-    // const handleOnline = () => setIsOnline(true);
-    // const handleOffline = () => setIsOnline(false);
-
-    // window.addEventListener("online", handleOnline);
-    // window.addEventListener("offline", handleOffline);
-
-    // return () => {
-    //   window.removeEventListener("online", handleOnline);
-    //   window.removeEventListener("offline", handleOffline);
-    // };
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   return isOnline;
