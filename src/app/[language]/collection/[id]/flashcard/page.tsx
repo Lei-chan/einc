@@ -86,7 +86,7 @@ export default function Flashcard({
                 </button>
               )}
               <Link
-                href={`/collection/${id}`}
+                href={`/${language}/collection/${id}`}
                 className="text-purple-600 hover:text-purple-400"
               >
                 {language === "en" ? "Exit" : "終了"}

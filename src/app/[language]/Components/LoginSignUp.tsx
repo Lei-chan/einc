@@ -14,10 +14,7 @@ import { signupViaGoogle, signupViaUserInfo } from "../../actions/auth/signup";
 import { loginViaGoogle, loginViaUserInfo } from "../../actions/auth/login";
 // methods
 import { getError, isError } from "../../lib/errorHandler";
-import {
-  getLanguageFromPathname,
-  syncMongoDBWithIndexedDB,
-} from "@/app/lib/helper";
+import { getLanguageFromPathname } from "@/app/lib/helper";
 // types
 import {
   Language,
@@ -31,7 +28,6 @@ import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.share
 // libraries
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
-import { createIndexedDBDatabase } from "@/app/lib/indexedDB/create";
 
 export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   const router = useRouter();
@@ -66,11 +62,6 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
     setIsPending(false);
     if (err.error?.message) setError(err.error.message[language]);
   }
-
-  //     // Create database in indexedDB
-  //     await createIndexedDBDatabase();
-
-  //     syncIndexedDBWithMongoDB();
 
   return (
     <div className="relative w-full min-h-[100dvh] pt-1 flex flex-col items-center">
@@ -231,12 +222,8 @@ function ViaGoogle({
     { email: string; language: Language }
   >(typeToDisplay === "Sign up" ? signupViaGoogle : loginViaGoogle, undefined);
 
-  function handleSubmit() {
-    try {
-      startTransition(() => action({ email, language }));
-    } catch (err: unknown) {
-      console.error("Error", isError(err) ? err.message : "");
-    }
+  function handleSubmit(data: { email: string; language: Language }) {
+    startTransition(() => action(data));
   }
 
   useEffect(() => {
@@ -295,7 +282,9 @@ function ViaGoogle({
             setEmail(email);
 
             // only if it's login => submit when user select an account
-            if (typeToDisplay === "Log in") handleSubmit();
+            // if (typeToDisplay === "Log in")
+
+            handleSubmit({ email, language });
           } catch (err: unknown) {
             console.error("Error occured", err);
             return getError("other", undefined, err);
@@ -313,7 +302,7 @@ function ViaGoogle({
         <ErrorMessageInput errorMessage={state.errors.password[language]} />
       )}
       {/* only when it's sign up, submit when user select an account and click the sign up button */}
-      {typeToDisplay === "Sign up" && email && (
+      {/* {typeToDisplay === "Sign up" && email && (
         <>
           <p className="text-center mt-4 leading-tight">
             {language === "en"
@@ -329,13 +318,13 @@ function ViaGoogle({
             className="transition-all duration-150 rounded bg-purple-500 hover:bg-pink-400 text-white px-1.5 py-[2px] text-sm mt-3"
             onClick={(e) => {
               e.preventDefault();
-              handleSubmit();
+              handleSubmit({ email, language });
             }}
           >
             {language === "en" ? "Complete" : "完了"}
           </button>
         </>
-      )}
+      )} */}
     </form>
   );
 }

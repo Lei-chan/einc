@@ -9,16 +9,23 @@ export async function proxy(req: NextRequest) {
   const isLanguageIncluded =
     pathname.startsWith("/en") || pathname.startsWith("/ja");
 
-  const languageRes = proxyLanguage(req, pathname, isLanguageIncluded);
-  const authRes = proxyAuth(req, pathname, isLanguageIncluded);
+  if (!isLanguageIncluded) {
+    const languageRes = proxyLanguage(req, pathname);
+    if (languageRes) return languageRes;
+  }
 
-  if (languageRes) return languageRes;
-  if (authRes) return authRes;
+  // Run only language is included in pathname to avoid infinite loop
+  if (isLanguageIncluded) {
+    const authRes = proxyAuth(req, pathname);
+    if (authRes) return authRes;
+  }
 
   return NextResponse.next();
 }
 
 // Routes Proxy should not run on
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|apple-icons.png|icon.png|manifest.ts|manifest.json|robots.ts|robots.txt|serwist.ts|sitemap.ts|serwist.xml|sw.ts|sw.js|serwist|.*\\..*).*)",
+  ],
 };

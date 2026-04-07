@@ -2,13 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { decrypt } from "../session";
 import { getLanguageFromPathname } from "../helper";
 
-export default async function proxyAuth(
-  req: NextRequest,
-  pathname: string,
-  isLanguageIncluded: boolean,
-) {
+export default async function proxyAuth(req: NextRequest, pathname: string) {
   const languagePath = `/${getLanguageFromPathname(pathname)}`;
-  const additionalPath = isLanguageIncluded ? languagePath : "";
   const protectedRoutes = [
     "/account",
     "/add",
@@ -31,9 +26,7 @@ export default async function proxyAuth(
 
   //   redirect to /login if user is not authenticated
   if (isProtected && !session?.userId)
-    return NextResponse.redirect(
-      new URL(`${additionalPath}/login`, req.nextUrl),
-    );
+    return NextResponse.redirect(new URL(`${languagePath}/login`, req.nextUrl));
 
   //   redirect to [language]/main if user is authenticated
   if (
@@ -41,7 +34,5 @@ export default async function proxyAuth(
     session?.userId &&
     !pathnameWithoutLanguage.startsWith("/main")
   )
-    return NextResponse.redirect(
-      new URL(`${additionalPath}/main`, req.nextUrl),
-    );
+    return NextResponse.redirect(new URL(`${languagePath}/main`, req.nextUrl));
 }

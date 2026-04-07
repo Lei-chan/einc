@@ -98,7 +98,9 @@ export default function RootLayout({
     <html lang="en" dir="ltr">
       <body className={sawarabiGothic.className}>
         <SerwistProvider swUrl="/serwist/sw.js">
-          <GoogleOAuthProvider clientId={process.env.OAUTH_CLIENT_ID || ""}>
+          <GoogleOAuthProvider
+            clientId={process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || ""}
+          >
             {children}
           </GoogleOAuthProvider>
         </SerwistProvider>
