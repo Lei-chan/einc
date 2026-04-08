@@ -10,6 +10,15 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
   createSerwistRoute({
     additionalPrecacheEntries: [{ url: "/~offline", revision }],
     swSrc: "src/app/sw.ts",
+    manifestTransforms: [
+      (manifestEntries) => ({
+        manifest: manifestEntries.filter(
+          (entry) =>
+            !entry.url.match(/app-build-manifest\.json$|\.map$|_redirects/),
+        ),
+        warnings: [],
+      }),
+    ],
     // nextConfig,
     // If set to `false`, Serwist will attempt to use `esbuild-wasm`.
     useNativeEsbuild: true,
