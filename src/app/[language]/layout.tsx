@@ -13,11 +13,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { language } = await params;
 
-  const title = language === "en" ? APP_NAME : "einc -単語暗記アプリ-";
+  const title = language === "en" ? APP_NAME : "einc - 単語暗記アプリ -";
   const description =
     language === "en"
       ? APP_DESCRIPTION
-      : "eincはあなたが単語や表現をより効率的に覚えるのを手助けします！";
+      : "単語・表現の登録、暗記帳やクイズ機能を使った語彙の学習（オフライン対応）、新しい語彙を使ったジャーナルの登録機能などによって、単語や表現をより効率的に覚えるのを手助けします！";
 
   return {
     title,
@@ -30,14 +30,17 @@ export async function generateMetadata({
       "learn",
       "study",
       "memorize",
+      "memorization",
       "language",
       "language learning",
+      "offline supported",
       "単語",
       "勉強する",
       "学ぶ",
       "暗記",
       "言語",
       "言語学習",
+      "オフラインサポート",
     ],
     alternates: {
       canonical: `/${language}`,

@@ -14,7 +14,7 @@ export const INSTAGRAM_LINK =
   "https://www.instagram.com/leichanweb?igsh=NzJmb3Axc3ZvNWN6&utm_source=qr";
 
 // metadata
-export const APP_NAME = "einc -Vocab Memorizing App-";
+export const APP_NAME = "einc - Vocabulary Memorization App -";
 export const APP_DESCRIPTION =
-  "einc is here for you to help you remember words and exppressions more efficiently!";
+  "This web app helps you memorize vocabulary through features like registering words or expressions, studying them with flashcards or quizzes (offline supported), reinforcing them by writing your own journal entries.";
 export const METADATA_BASE = new URL(BASE_URL);

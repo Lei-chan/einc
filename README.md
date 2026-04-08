@@ -1,1 +1,21 @@
-# einc -Vocab Memorizing App-
+# einc - Vocabulary Memorization App -
+
+## About This Web App
+
+"einc" stands for "Efficiently INCrease your language skills"!
+It helps you memorize vocabulary through features like **registering words or expressions**, **studying them with flashcards or quizzes**, **reinforcing them by writing your own journal entries**. A dictionary feature is currently in development.
+"einc" is a PWA with **offline support**, so once you log in, you can use the flashcard and quiz features even without an internet connection!
+
+### Short Video of "einc"
+
+![Short Explanation Video](/my-app/public/explanation-en.mp4)
+
+## What You Can Do
+
+- Register words or expressions
+- Organize your vocabulary into collections (e.g., "English", "German", "Business")
+- Study your vocabulary using flashcards (offline supported)
+- Study your vocabulary using quizzes (offline supported)
+- Practice using words and expressions by writing your own journal entries
+- Manage your "einc" account
+- Receive notifications (is enables)

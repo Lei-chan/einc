@@ -6,17 +6,7 @@ export function IsOnline() {
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    const checkConnection = async () => {
-      setIsOnline(navigator.onLine);
-      // try {
-      //   const res = await fetch("/api/ping?ts=" + Date.now(), {
-      //     cache: "no-store",
-      //   });
-      //   setIsOnline(res.ok);
-      // } catch {
-      //   setIsOnline(false);
-      // }
-    };
+    const checkConnection = async () => setIsOnline(navigator.onLine);
     checkConnection();
 
     const handleOnline = () => setIsOnline(true);
