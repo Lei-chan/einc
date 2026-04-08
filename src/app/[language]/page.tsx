@@ -328,10 +328,13 @@ function PushNotificationManager({ language }: { language: Language }) {
   >(unsubscribeUser, undefined);
 
   async function registerServiceWorker() {
-    const registration = await navigator.serviceWorker.register("/sw.js", {
-      scope: "/",
-      updateViaCache: "none",
-    });
+    const registration = await navigator.serviceWorker.register(
+      "/serwist/sw.js",
+      {
+        scope: "/",
+        updateViaCache: "none",
+      },
+    );
     const sub = await registration.pushManager.getSubscription();
     setSubscription(sub);
   }
