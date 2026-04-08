@@ -3,7 +3,13 @@
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/turbopack/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { NetworkOnly, Serwist } from "serwist";
+import {
+  CacheFirst,
+  ExpirationPlugin,
+  NetworkOnly,
+  Serwist,
+  StaleWhileRevalidate,
+} from "serwist";
 
 // This declares the value of `injectionPoint` to TypeScript.
 // `injectionPoint` is the string that will be replaced by the
@@ -23,7 +29,54 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: false,
-  runtimeCaching: defaultCache,
+  runtimeCaching: [
+    // {
+    //   matcher: /\/_next\/static\/media\/.+\.woff2?$/i,
+    //   handler: new CacheFirst({
+    //     cacheName: "static-font-assets",
+    //     plugins: [
+    //       new ExpirationPlugin({
+    //         maxEntries: 10,
+    //         maxAgeSeconds: 365 * 24 * 60 * 60,
+    //       }),
+    //     ],
+    //   }),
+    // },
+    // RSC prefetch requests (hovering over links)
+    {
+      matcher: ({ request, url: { pathname }, sameOrigin }) =>
+        request.headers.get("RSC") === "1" &&
+        request.headers.get("Next-Router-Prefetch") === "1" &&
+        sameOrigin &&
+        !pathname.startsWith("/api/"),
+      handler: new StaleWhileRevalidate({
+        cacheName: "pages-rsc-prefetch",
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 200,
+            maxAgeSeconds: 24 * 60 * 60,
+          }),
+        ],
+      }),
+    },
+    // RSC navigation requests (clicking links)
+    {
+      matcher: ({ request, url: { pathname }, sameOrigin }) =>
+        request.headers.get("RSC") === "1" &&
+        sameOrigin &&
+        !pathname.startsWith("/api/"),
+      handler: new StaleWhileRevalidate({
+        cacheName: "pages-rsc",
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 200,
+            maxAgeSeconds: 24 * 60 * 60,
+          }),
+        ],
+      }),
+    },
+    ...defaultCache,
+  ],
   fallbacks: {
     entries: [
       {
