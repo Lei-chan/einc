@@ -8,11 +8,7 @@ It helps you memorize vocabulary through features like **registering words or ex
 
 ### Short Video of "einc"
 
-![Short Explanation Video](
-
 https://github.com/user-attachments/assets/50381ebd-94d5-4dcb-9453-0fa02ad31824
-
-)
 
 ## What You Can Do
 
