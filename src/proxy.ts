@@ -24,6 +24,6 @@ export async function proxy(req: NextRequest) {
 // Routes Proxy should not run on
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|apple-icons.png|icon.png|manifest.ts|manifest.json|robots.ts|robots.txt|serwist.*|sitemap.ts|sitemap.xml|sw.ts|sw.js|.*\\..*).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|apple-icons.png|icon.png|manifest.ts|manifest.json|robots.ts|robots.txt|serwist.*|sitemap.ts|sitemap.xml|sw.ts|sw.js|~offline|.*\\..*).*)",
   ],
 };
