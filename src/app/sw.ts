@@ -89,7 +89,156 @@ const serwist = new Serwist({
   },
 });
 
+export type Collection = {
+  _id?: string;
+  name: string;
+  numberOfWords: number;
+  allWords?: boolean;
+};
+
+export interface IndexedDBEventTarget extends EventTarget {
+  result: IDBDatabase;
+  error: { message: string };
+}
+
+export function getCollectionIdData() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("einc");
+
+    req.onsuccess = (e) => {
+      const db = (e.target as IDBOpenDBRequest).result;
+      const transaction = db.transaction(["collections"], "readonly");
+      const objStore = transaction.objectStore("collections");
+
+      const getReq = objStore.getAll();
+
+      getReq.onsuccess = (e) => {
+        const ids = (
+          (e.target as IndexedDBEventTarget).result as unknown as Collection[]
+        ).map((col) => col._id || "");
+
+        resolve(ids);
+      };
+
+      getReq.onerror = (e) => {
+        const error = `IndexedDB Error, getting all data failed: ${(e.target as IndexedDBEventTarget).error.message}`;
+        reject(error);
+      };
+    };
+    req.onerror = (e) => reject(req.error);
+  });
+}
+
 serwist.addEventListeners();
+
+const registerCollectionDataToIndexedDB = (event: ExtendableEvent) => {
+  event.waitUntil(
+    (async () => {
+      let ids: string[] = [];
+
+      try {
+        ids = (await getCollectionIdData()) as string[];
+      } catch (e) {
+        // IndexedDB might be empty on first install — that's fine
+        console.warn("Could not read IndexedDB during SW install:", e);
+      }
+
+      await Promise.all(
+        ids.map((id) =>
+          serwist.handleRequest({
+            request: new Request(`/collection/${id}`),
+            event,
+          }),
+        ),
+      );
+
+      await Promise.all(
+        ids.map((id) =>
+          serwist.handleRequest({
+            request: new Request(`/collection/${id}/list`),
+            event,
+          }),
+        ),
+      );
+
+      await Promise.all(
+        ids.map((id) =>
+          serwist.handleRequest({
+            request: new Request(`/collection/${id}/flashcard`),
+            event,
+          }),
+        ),
+      );
+
+      await Promise.all(
+        ids.map((id) =>
+          serwist.handleRequest({
+            request: new Request(`/collection/${id}/quiz`),
+            event,
+          }),
+        ),
+      );
+    })(),
+  );
+};
+
+//  check if they work
+self.addEventListener(
+  "install",
+  registerCollectionDataToIndexedDB,
+  //   (event) => {
+  //   event.waitUntil(
+  //     (async () => {
+  //       let ids: string[] = [];
+
+  //       try {
+  //         ids = (await getCollectionIdData()) as string[];
+  //       } catch (e) {
+  //         // IndexedDB might be empty on first install — that's fine
+  //         console.warn("Could not read IndexedDB during SW install:", e);
+  //       }
+
+  //       await Promise.all(
+  //         ids.map((id) =>
+  //           serwist.handleRequest({
+  //             request: new Request(`/collection/${id}`),
+  //             event,
+  //           }),
+  //         ),
+  //       );
+
+  //       await Promise.all(
+  //         ids.map((id) =>
+  //           serwist.handleRequest({
+  //             request: new Request(`/collection/${id}/list`),
+  //             event,
+  //           }),
+  //         ),
+  //       );
+
+  //       await Promise.all(
+  //         ids.map((id) =>
+  //           serwist.handleRequest({
+  //             request: new Request(`/collection/${id}/flashcard`),
+  //             event,
+  //           }),
+  //         ),
+  //       );
+
+  //       await Promise.all(
+  //         ids.map((id) =>
+  //           serwist.handleRequest({
+  //             request: new Request(`/collection/${id}/quiz`),
+  //             event,
+  //           }),
+  //         ),
+  //       );
+  //     })(),
+  //   );
+  // }
+);
+
+self.addEventListener("activate", registerCollectionDataToIndexedDB);
 
 // push notification
 self.addEventListener("push", function (event) {
