@@ -139,14 +139,14 @@ const registerCollectionDataToIndexedDB = (event: ExtendableEvent) => {
       try {
         ids = (await getCollectionIdData()) as string[];
       } catch (e) {
-        // IndexedDB might be empty on first install — that's fine
+        // IndexedDB might be empty on first install
         console.warn("Could not read IndexedDB during SW install:", e);
       }
 
       await Promise.all(
         ids.map((id) =>
           serwist.handleRequest({
-            request: new Request(`/collection/${id}`),
+            request: new Request(`/ja/collection/${id}`),
             event,
           }),
         ),
@@ -155,7 +155,7 @@ const registerCollectionDataToIndexedDB = (event: ExtendableEvent) => {
       await Promise.all(
         ids.map((id) =>
           serwist.handleRequest({
-            request: new Request(`/collection/${id}/list`),
+            request: new Request(`/en/collection/${id}`),
             event,
           }),
         ),
@@ -164,7 +164,7 @@ const registerCollectionDataToIndexedDB = (event: ExtendableEvent) => {
       await Promise.all(
         ids.map((id) =>
           serwist.handleRequest({
-            request: new Request(`/collection/${id}/flashcard`),
+            request: new Request(`/ja/collection/${id}/list`),
             event,
           }),
         ),
@@ -173,7 +173,43 @@ const registerCollectionDataToIndexedDB = (event: ExtendableEvent) => {
       await Promise.all(
         ids.map((id) =>
           serwist.handleRequest({
-            request: new Request(`/collection/${id}/quiz`),
+            request: new Request(`/en/collection/${id}/list`),
+            event,
+          }),
+        ),
+      );
+
+      await Promise.all(
+        ids.map((id) =>
+          serwist.handleRequest({
+            request: new Request(`/ja/collection/${id}/flashcard`),
+            event,
+          }),
+        ),
+      );
+
+      await Promise.all(
+        ids.map((id) =>
+          serwist.handleRequest({
+            request: new Request(`/en/collection/${id}/flashcard`),
+            event,
+          }),
+        ),
+      );
+
+      await Promise.all(
+        ids.map((id) =>
+          serwist.handleRequest({
+            request: new Request(`/ja/collection/${id}/quiz`),
+            event,
+          }),
+        ),
+      );
+
+      await Promise.all(
+        ids.map((id) =>
+          serwist.handleRequest({
+            request: new Request(`/en/collection/${id}/quiz`),
             event,
           }),
         ),
