@@ -38,6 +38,7 @@ export default function LogoOnlineMark({
   useEffect(() => {
     if (!isOnline || !showOnlineMark) {
       setIsSyncing(false);
+      setIsErrorVisible(false);
       return;
     }
 
@@ -45,8 +46,6 @@ export default function LogoOnlineMark({
       sessionStorage.getItem("isAlreadySynced") === "true";
 
     const runSync = async () => {
-      if (!isOnline) return;
-
       try {
         setIsSyncing(true);
 
