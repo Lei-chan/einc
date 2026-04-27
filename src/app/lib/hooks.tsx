@@ -1,9 +1,8 @@
 "use client";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function IsOnline() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(false);
 
   useEffect(() => {
     const checkConnection = async () => setIsOnline(navigator.onLine);
