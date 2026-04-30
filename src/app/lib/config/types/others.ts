@@ -185,3 +185,6 @@ export type IndexedDBData = {
   words?: WordData[];
   journals?: JournalDatabase[];
 };
+
+// for now
+export type DictionaryLanguage = "ja" | "en" | "de";

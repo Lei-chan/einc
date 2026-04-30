@@ -21,10 +21,44 @@ import { Language } from "../lib/config/types/others";
 import { useInView } from "react-intersection-observer";
 import { subscribeUser, unsubscribeUser } from "../actions/pwa";
 import { FormStateSubscription } from "../lib/config/types/formState";
+// import { Dictionary } from "@/app/lib/logics/Dictionaly";
+import { dictionary, translator } from "../lib/dal";
 
 export default function Home() {
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
+
+  useEffect(() => {
+    const getDictionary = async () => {
+      // const data = await dictionary("楽しい", "en", "ja", 0);
+      // console.log(data[0]);
+      // const data = await dictionary("元気", "ja", "ja", 0);
+      // console.log(data);
+      // const japaneseData = await translator(data[0], "ja");
+      // const englishData = await translator(data[0], "en");
+      // console.log(japaneseData, englishData);
+    };
+
+    getDictionary();
+    //   const dict = new Dictionary("おはよう", "ja", "en", "ja");
+
+    //   await dict.dictionary();
+    // };
+
+    // getDictionary();
+    // const translateQuery = async () => {
+    //   console.log(
+    //     await translator(
+    //       {
+    //         definitions: ["You are so pretty!", "Wonderful!"],
+    //         examples: ["Great!"],
+    //       },
+    //       "ja",
+    //     ),
+    //   );
+    // };
+    // translateQuery();
+  }, []);
 
   return (
     <div className="w-full h-fit flex flex-col items-center overflow-hidden ">

@@ -17,10 +17,18 @@ import { areDatesSame } from "./helper";
 // types
 import {
   Collections,
+  DictionaryData,
+  DictionaryLanguage,
   IndexedDBData,
   IndexedDBType,
   Language,
 } from "./config/types/others";
+// library
+import { translate } from "@vitalets/google-translate-api";
+import JapaneseDictionary from "japaneasy";
+import { DICTIONARY_ONE_PAGE } from "./config/settings";
+import { isCustomErrorPage } from "next/dist/build/utils";
+const NUM_WORDS_PER_PAGE_DICTIONARY = 10;
 
 export const verifySession = cache(async () => {
   const cookie = (await cookies()).get("session")?.value;
@@ -188,5 +196,146 @@ export const sendIndexedDBToMongoDB = async (data: IndexedDBData) => {
       );
   } catch (err) {
     throw err;
+  }
+};
+
+export const dictionary = cache(
+  async (
+    word: string,
+    dictionaryLanguage: DictionaryLanguage,
+    searchLanguage: DictionaryLanguage,
+    curPage: number, // 0 base
+  ) => {
+    try {
+      const indexFrom = DICTIONARY_ONE_PAGE * curPage;
+      const indexTo = indexFrom + DICTIONARY_ONE_PAGE;
+
+      if (!word) return;
+
+      if (dictionaryLanguage === "ja") {
+        const dict = new JapaneseDictionary();
+        const data = await dict(word);
+
+        if (typeof data[0] === "string")
+          return {
+            totalNumberOfResults: 0,
+            results: [],
+          };
+
+        const dataCurPage = data.slice(indexFrom, indexTo);
+
+        return {
+          totalNumberOfResults: data.length,
+          results: dataCurPage.map(
+            (data: {
+              japanese: string;
+              pos: string;
+              pronunciation?: string;
+              english: string[];
+            }) => {
+              return {
+                name: data.japanese,
+                pronunciationString: data.pronunciation || "",
+                pronunciationAudio: "",
+                definitions: data.english,
+                examples: [],
+                synonyms: [],
+              };
+            },
+          ),
+        };
+      }
+
+      if (dictionaryLanguage === "en") {
+        // if user searched in languages other than English => translate it first to English
+        const englishWord =
+          searchLanguage === "en"
+            ? word
+            : (await translate(word, { to: "en" })).text;
+
+        const res = await fetch(
+          `https://api.dictionaryapi.dev/api/v2/entries/en/${englishWord}`,
+        );
+
+        const data = await res.json();
+
+        if (data.title)
+          return {
+            totalNumberOfResults: 0,
+            results: [],
+          };
+
+        const dataCurPage = data.slice(indexFrom, indexTo);
+
+        return {
+          totalNumberOfResults: data.length,
+          results: dataCurPage.map(
+            (data: {
+              word: string;
+              phonetic: string;
+              phonetics: { text: string; audio?: string }[];
+              origin: string;
+              meanings: {
+                partOfSpeech: string;
+                definitions: {
+                  definition: string;
+                  example: string;
+                  synonyms: string[];
+                  antonyms: [];
+                }[];
+              }[];
+            }) => {
+              const phoneticTexts = data.phonetics.map(
+                (phonetic) => phonetic.text,
+              );
+              const definitions = data.meanings.map(
+                (m) => m.definitions[0].definition,
+              );
+              const examples = data.meanings.map(
+                (m) => m.definitions[0].example,
+              );
+              const synonyms = data.meanings.flatMap(
+                (m) => m.definitions[0].synonyms,
+              );
+
+              return {
+                name: data.word,
+                pronunciationString: phoneticTexts.join(" "),
+                pronunciationAudio: data.phonetics[0]?.audio || "",
+                definitions,
+                examples,
+                synonyms,
+              };
+            },
+          ),
+        };
+      }
+    } catch (err) {
+      console.error("Error", err);
+      return null;
+    }
+  },
+);
+
+export const translator = async (
+  result: DictionaryData,
+  outputLanguage: DictionaryLanguage,
+) => {
+  try {
+    const translatedDefinitions = await Promise.all(
+      result.definitions.map((def) => translate(def, { to: outputLanguage })),
+    );
+
+    const translatedExamples = await Promise.all(
+      result.examples.map((exam) => translate(exam, { to: outputLanguage })),
+    );
+
+    const newResult = { ...result };
+    newResult.definitions = translatedDefinitions.map((def) => def.text);
+    newResult.examples = translatedExamples.map((exam) => exam.text);
+    return newResult;
+  } catch (err) {
+    console.error("Error", err);
+    return null;
   }
 };

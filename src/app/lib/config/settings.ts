@@ -4,6 +4,16 @@ export const MIN_LENGTH_PASSWORD = 8;
 export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 export const LISTS_ONE_PAGE = 20;
 export const FLASHCARD_QUIZ_ONE_TURN = 10;
+// for now
+export const DICTIONARY_LANGUAGES = ["ja", "en"];
+export const DICTIONARY_LANGUAGES_FOR_MULTILANGUAGES = [
+  {
+    language: "ja",
+    languageForMultiLanguage: { en: "Japanese", ja: "日本語" },
+  },
+  { language: "en", languageForMultiLanguage: { en: "English", ja: "英語" } },
+];
+export const DICTIONARY_ONE_PAGE = 10;
 export const MILLISECONDS_A_DAY = 24 * 60 * 60 * 1000;
 
 // links
