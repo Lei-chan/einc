@@ -21,13 +21,18 @@ import { paginationReducer } from "@/app/lib/reducers";
 import { deleteWords } from "@/app/actions/auth/words";
 // dal
 // import { getMatchedWordsCurPage } from "@/app/lib/dal"；
-import { getMatchedWordsCurPage } from "@/app/lib/indexedDB/database";
+import {
+  getAllIndexedDBData,
+  getMatchedWordsCurPage,
+} from "@/app/lib/indexedDB/database";
 // methods
 import {
   getGenericErrorMessage,
   getLanguageFromPathname,
   getNumberOfPages,
   isArrayEmpty,
+  removeDataFromIndexedDB,
+  syncMongoDBWithIndexedDB,
   wait,
 } from "@/app/lib/helper";
 // settings
@@ -166,7 +171,9 @@ function Bottom({
     { _id: string; checked: boolean }[] | undefined
   >();
 
-  const [successMessage, setSuccessMessage] = useState("");
+  // console.log(data);
+
+  const [messageData, setMessageData] = useState<undefined | DisplayMessage>();
   const lastHandledDeleteRef = useRef<FormStateWordJournal>(null);
 
   const [state, action, isPending] = useActionState<
@@ -260,26 +267,45 @@ function Bottom({
     if (state === lastHandledDeleteRef.current || !state?.message) return;
 
     const displaySuccessMsg = async () => {
-      const successMsg = state?.message;
-      if (!successMsg) return;
+      try {
+        const successMsg = state?.message;
+        if (!successMsg) return;
+        if (!areWordsChecked) return;
 
-      handleToggleSelected();
-      handleUpdateUI();
-      setSuccessMessage(successMsg[language]);
-      await wait();
-      setSuccessMessage("");
+        const deletedWordIds = areWordsChecked
+          ?.filter((data) => data.checked)
+          .map((checkedData) => checkedData._id);
+
+        await removeDataFromIndexedDB("words", deletedWordIds);
+
+        handleToggleSelected();
+        handleUpdateUI();
+        setMessageData({ type: "success", message: successMsg[language] });
+      } catch (err) {
+        console.error("Error", err);
+        setMessageData({
+          type: "error",
+          message:
+            language === "en"
+              ? "Unexpected error occured 🙇‍♂️ There was possibility that the word wasn't registered properly in local database. Please check the collection later."
+              : "予期せぬエラーが発生しました🙇‍♂️単語がローカルデータベースに正しく保存されなかった可能性があります。後ほどコレクションをご確認ください。",
+        });
+      } finally {
+        await wait();
+        setMessageData(undefined);
+      }
     };
 
     displaySuccessMsg();
     lastHandledDeleteRef.current = state;
-  }, [state, language, handleUpdateUI]);
+  }, [state, language, handleUpdateUI, areWordsChecked]);
 
   return (
     <div className="w-[90%] sm:w-[85%] md:w-[70%] xl:w-[60%] 2xl:w-[50%] min-h-[80vh] max-h-fit flex flex-col items-center justify-center">
       {!data && <p>{language === "en" ? "Loading..." : "ロード中..."}</p>}
       {Array.isArray(data) && data?.length !== 0 && (
         <>
-          {(isPending || state?.error?.message || successMessage) && (
+          {(isPending || state?.error?.message || messageData) && (
             <div className="mt-2 h-fit">
               {isPending && (
                 <PMessage
@@ -295,8 +321,11 @@ function Bottom({
                   message={state.error.message[language]}
                 />
               )}
-              {successMessage && (
-                <PMessage type="success" message={successMessage} />
+              {messageData && (
+                <PMessage
+                  type={messageData.type}
+                  message={messageData.message}
+                />
               )}
             </div>
           )}

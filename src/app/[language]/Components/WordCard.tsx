@@ -99,7 +99,7 @@ export default function WordCard({
       const [imageName, imageDefinitions] = (await resizeImages([
         formData.get("imageName") as File,
         formData.get("imageDefinitions") as File,
-      ])) as (File | null)[];
+      ])) as (File | null | string)[];
 
       // data except for userId
       const submittedData = {

@@ -21,10 +21,12 @@ import {
 import {
   DICTIONARY_LANGUAGES_FOR_MULTILANGUAGES,
   DICTIONARY_ONE_PAGE,
+  separator,
 } from "@/app/lib/config/settings";
 import { dictionary } from "@/app/lib/dal";
 import PMessage from "./PMessage";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 // types
 
 export default function Dictionary({
@@ -287,30 +289,32 @@ function WordContainer({
 function Word({
   language,
   result,
-  // name,
-  // id,
 }: {
   language: Language;
   result: DictionaryData;
-  // name: string;
-  // id: string;
 }) {
+  const router = useRouter();
+
   const liClassName =
     "border-b-2 py-2 sm:py-3 md:py-4 px-4 sm:px-5 md:px-6 lg:px-7";
   const h3ClassName = "text-lg text-black";
 
-  // const [data, setData] = useState<DictionaryData | undefined>(undefined);
   const [isClicked, setIsClicked] = useState(false);
-  const [isPlusHovered, setIsPlusHovered] = useState(false);
 
   async function handleClickWord(e: React.MouseEvent<HTMLLIElement>) {
-    if ((e.target as HTMLElement).tagName === "BUTTON") return;
+    if (
+      (e.target as HTMLElement).tagName === "BUTTON" ||
+      (e.target as HTMLElement).closest("button")
+    )
+      return;
 
     setIsClicked(!isClicked);
   }
 
-  function handleToggleHoverPlus() {
-    setIsPlusHovered(!isPlusHovered);
+  function handleClickAdd() {
+    router.push(
+      `/${language}/add-to?name=${result.name || ""}&pronunciationString=${result.pronunciationString || ""}&pronunciationAudio=${result.pronunciationAudio || ""}&definitions=${result.definitions.join(separator)}&examples=${result.examples.join(separator)}&synonyms=${result.synonyms.join(separator)}`,
+    );
   }
 
   return !isClicked ? (
@@ -322,35 +326,16 @@ function Word({
     </li>
   ) : (
     <li
-      className={`${liClassName} bg-white flex flex-col gap-2`}
+      className={`${liClassName} relative bg-white flex flex-col gap-2`}
       onClick={handleClickWord}
     >
-      <div className="relative w-full h-fit flex flex-row gap-5 items-center">
+      <div className="w-full h-fit flex flex-row gap-5 items-center">
         <h2 className="text-2xl font-bold tracking-wide">{result.name}</h2>
         <div className="flex flex-row items-center gap-2">
           {result.pronunciationAudio && (
             <ButtonAudio src={result.pronunciationAudio} />
           )}
           <span>{result.pronunciationString}</span>
-        </div>
-        <div className="absolute right-1/4">
-          <div className="relative flex flex-row items-center">
-            <button
-              type="button"
-              className="h-10 text-6xl flex flex-col justify-center"
-              onMouseEnter={handleToggleHoverPlus}
-              onMouseLeave={handleToggleHoverPlus}
-            >
-              +
-            </button>
-            <p
-              className={`absolute w-fit left-[100%] transition-all duration-500 whitespace-nowrap pointer-events-none text-sm mt-[30%] ml-2 ${isPlusHovered ? "opacity-100" : "opacity-0"}`}
-            >
-              {language === "en" ? "Add this" : "この単語を"}
-              <br />
-              {language === "en" ? "word" : "追加する"}
-            </p>
-          </div>
         </div>
       </div>
       <div>
@@ -384,6 +369,18 @@ function Word({
             : "類義語はありません"}
         </p>
       </div>
+      <button
+        type="button"
+        className="relative flex flex-row items-center opacity-70 cursor-pointer hover:opacity-40 transition-all duration-200"
+        onClick={handleClickAdd}
+      >
+        <span className="text-5xl pb-3">+</span>
+        <span className="w-fit text-xs ml-2 leading-tight">
+          {language === "en" ? "Add this" : "この単語を"}
+          <br />
+          {language === "en" ? "word" : "追加する"}
+        </span>
+      </button>
     </li>
   );
 }

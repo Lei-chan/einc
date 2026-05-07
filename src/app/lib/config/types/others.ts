@@ -69,10 +69,13 @@ export type DictionaryData = {
 
 export type MongoBuffer = { type: "Buffer"; data: number[] };
 
-export type MediaDatabase = {
-  name: string;
-  buffer: Buffer | MongoBuffer;
-} | null;
+export type MediaDatabase =
+  | {
+      name: string;
+      buffer: Buffer | MongoBuffer;
+    }
+  | string
+  | null;
 
 export type MediaToDisplay = { name: string; data: string } | null;
 
@@ -81,11 +84,11 @@ export type WordBeforeSent = {
   userId?: string;
   collectionId: string;
   name: string;
-  audio: File | null;
+  audio: File | string | null;
   definitions: string;
   examples: string;
-  imageName: File | null;
-  imageDefinitions: File | null;
+  imageName: File | null | string;
+  imageDefinitions: File | null | string;
   status: number;
   nextReviewAt: string;
 };
@@ -95,9 +98,11 @@ export type WordData = {
   userId?: string;
   collectionId: string;
   name: string;
+  pronunciationString?: string;
   audio: MediaDatabase;
   definitions: string[];
   examples: string[];
+  synonyms?: string[];
   imageName: MediaDatabase;
   imageDefinitions: MediaDatabase;
   status: number;

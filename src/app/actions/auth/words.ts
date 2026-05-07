@@ -44,7 +44,9 @@ export async function addWords(
 
     await dbConnect();
     // create words
-    await Promise.all(wordDataToSendServer.map((data) => Word.create(data)));
+    const createdWords = await Promise.all(
+      wordDataToSendServer.map((data) => Word.create(data)),
+    );
 
     return {
       message: { en: `Word created successfully`, ja: "単語が作成されました" },

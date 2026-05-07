@@ -246,33 +246,6 @@ export async function getUserWordsStatuses(collectionId: string) {
   return statuses;
 }
 
-// function getWord(wordId: string) {
-//   return new Promise((resolve, reject) => {
-//     const req = indexedDB.open(getDatabaseName("words"));
-
-//     req.onsuccess = async (e) => {
-//       const db = (e.target as IndexedDBEventTarget).result;
-//       const transaction = db.transaction(["words"], "readonly");
-//       const objStore = transaction.objectStore("words");
-//       const req = objStore.get(wordId);
-
-//       req.onsuccess = (e) => resolve((e.target as IndexedDBEventTarget).result);
-
-//       req.onerror = (e) => {
-//         const error = `IndexedDB Error, getting word failed: ${(e.target as IndexedDBEventTarget).error.message}`;
-//         console.error(error);
-//         reject(error);
-//       };
-//     };
-
-//     req.onerror = (e) => {
-//       const error = getOpeningDatabaseErrorMsg(e, "words");
-//       console.error(error);
-//       reject(error);
-//     };
-//   });
-// }
-
 export function updateData(
   type: IndexedDBType,
   newData:
@@ -298,7 +271,7 @@ export function updateData(
 
         req.onerror = (e) => {
           const error = `IndexedDB Error, updating data for ${type} in indexedDB ${getDatabaseName(type)}:  ${(e.target as IndexedDBEventTarget).error.message}`;
-          console.log(error);
+          console.error(error);
           reject(error);
         };
       });

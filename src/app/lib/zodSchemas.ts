@@ -56,6 +56,7 @@ export const updatePasswordSchema = z.object({
 const mediaSchema = z
   .xor([
     z.object({ name: z.string().trim(), buffer: z.instanceof(Buffer) }),
+    z.string().trim(),
     z.null(),
   ])
   .optional();
@@ -64,6 +65,8 @@ export const WordSchema = z.object({
   userId: z.string(),
   collectionId: z.string(),
   name: z.string().trim().min(1, "Word is required"),
+  pronunciationString: z.xor([z.string().trim(), z.null()]).optional(),
+  synonyms: z.xor([z.array(z.string().trim()), z.null()]).optional(),
   audio: mediaSchema,
   definitions: z
     .array(z.string().trim().min(1, "Definition cannot be empty"))

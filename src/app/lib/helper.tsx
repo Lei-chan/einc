@@ -15,12 +15,14 @@ import {
   Message,
   IndexedDBData,
   IndexedDBType,
+  Collections,
 } from "./config/types/others";
 // library
 import Resizer from "react-image-file-resizer";
-import { registerData } from "./indexedDB/database";
+import { registerData, removeData } from "./indexedDB/database";
 import { getDataForIndexedDB } from "./dal";
 import { createIndexedDBDatabase } from "./indexedDB/create";
+import { blob } from "node:stream/consumers";
 
 export const getGenericErrorMessage = (language: Language) =>
   language === "en"
@@ -66,7 +68,8 @@ export const doesPathnameContainLanguage = (pathname: string) =>
   pathname.startsWith("/en") || pathname.startsWith("/ja");
 
 export const convertBufferToFile = (data: MediaDatabase | File) => {
-  if (!data || data instanceof File) return data;
+  // If data is url of the media => return the url
+  if (!data || data instanceof File || typeof data === "string") return data;
 
   const blob = new Blob([new Uint8Array((data.buffer as MongoBuffer).data)]);
   const file = new File([blob], data.name);
@@ -101,18 +104,26 @@ export const resizeImages = (
   return Promise.all(resizePromises) as Promise<(File | null)[]>;
 };
 
-const convertFilesToBuffersWithNames = async (files: (File | null)[]) => {
+const convertFilesToBuffersWithNames = async (
+  files: (File | null | string)[],
+) => {
   try {
+    // If data is url of the media => just return the url
     const bufferPromises = files.map((file) =>
-      file?.size ? file.arrayBuffer() : null,
+      typeof file === "string" ? file : file?.size ? file.arrayBuffer() : null,
     );
 
     const arrayBuffers = await Promise.all(bufferPromises);
     // Add file names to buffers
     const buffersWithNames = arrayBuffers.map((arrBuffer, i) => {
-      return arrBuffer
-        ? { name: files[i]?.name || "", buffer: Buffer.from(arrBuffer) }
-        : null;
+      return typeof arrBuffer === "string"
+        ? arrBuffer
+        : arrBuffer
+          ? {
+              name: (files[i] as File)?.name || "",
+              buffer: Buffer.from(arrBuffer),
+            }
+          : null;
     });
 
     return buffersWithNames;
@@ -160,19 +171,30 @@ export const getWordDataToDisplay = (wordData: WordData): WordToDisplay => {
 
   // convert buffers to blobs, and blobs to urls
   const [audio, imageName, imageDefinitions] = mediaBuffers
-    .map(
-      (media) =>
-        media?.buffer && {
-          name: media.name,
-          data: new Blob([new Uint8Array((media.buffer as MongoBuffer).data)]),
-        },
+    .map((media) =>
+      typeof media === "string" && media
+        ? { name: "media", data: media }
+        : typeof media !== "string" && media?.buffer
+          ? {
+              name: media.name,
+              data: new Blob([
+                new Uint8Array((media.buffer as MongoBuffer).data),
+              ]),
+            }
+          : undefined,
     )
-    .map(
-      (blobWithName) =>
-        blobWithName && {
-          name: blobWithName.name,
-          data: window.URL.createObjectURL(blobWithName.data),
-        },
+    .map((blobWithName) =>
+      typeof blobWithName?.data === "string"
+        ? (blobWithName as {
+            name: string;
+            data: string;
+          })
+        : blobWithName
+          ? {
+              name: blobWithName.name,
+              data: window.URL.createObjectURL(blobWithName.data),
+            }
+          : undefined,
     );
 
   // replace mediaBuffers with links
@@ -342,6 +364,19 @@ export const syncMongoDBWithIndexedDB = async (type: "all" | IndexedDBType) => {
     if (!mongoData) return;
 
     await registerMongoDBToIndexedDB(mongoData);
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const removeDataFromIndexedDB = async (
+  type: "collections" | "words",
+  dataIds: string[],
+) => {
+  try {
+    // await createIndexedDBDatabase();
+
+    await removeData(type, dataIds);
   } catch (err) {
     throw err;
   }

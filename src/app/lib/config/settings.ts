@@ -15,6 +15,7 @@ export const DICTIONARY_LANGUAGES_FOR_MULTILANGUAGES = [
 ];
 export const DICTIONARY_ONE_PAGE = 10;
 export const MILLISECONDS_A_DAY = 24 * 60 * 60 * 1000;
+export const separator = "\n";
 
 // links
 export const BASE_URL = "https://einc.lei-chan.website";

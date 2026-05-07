@@ -42,10 +42,16 @@ import {
 import { FormStateCollection } from "../../lib/config/types/formState";
 // library
 import { nanoid } from "nanoid";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { IsOnline } from "@/app/lib/hooks";
 
-export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
+export default function FolderPagination({
+  type,
+  onClickCollection,
+}: {
+  type: "main" | "addTo";
+  onClickCollection?: (collectionId: string) => void;
+}) {
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
 
@@ -164,6 +170,7 @@ export default function FolderPagination({ type }: { type: "main" | "addTo" }) {
         onClickSelected={handleToggleSelected}
         handleUpdate={handleSetIsUpdated}
         onClickCreate={handleToggleCreateFolder}
+        onClickCollection={onClickCollection}
         displayMessage={displayMessage}
         dispatch={dispatch}
       />
@@ -195,6 +202,7 @@ function FolderContainer({
   onClickSelected,
   handleUpdate,
   onClickCreate,
+  onClickCollection,
   displayMessage,
   dispatch,
 }: {
@@ -206,6 +214,7 @@ function FolderContainer({
   onClickSelected: () => void;
   handleUpdate: () => void;
   onClickCreate: () => void;
+  onClickCollection?: (collectionId: string) => void;
   displayMessage: (msgData: DisplayMessage) => void;
   dispatch: (type: ActionPaginationType) => void;
 }) {
@@ -281,6 +290,7 @@ function FolderContainer({
                   isAllSelected={isAllSelected}
                   isDeleted={isDeleted}
                   isEdited={isEdited}
+                  onClickCollection={onClickCollection}
                 />
               ))}
           </ul>
@@ -505,6 +515,7 @@ function Folder({
   isAllSelected,
   isDeleted,
   isEdited,
+  onClickCollection,
 }: {
   language: Language;
   data: Collection;
@@ -513,7 +524,10 @@ function Folder({
   isAllSelected: boolean;
   isDeleted: boolean;
   isEdited: boolean;
+  onClickCollection?: (collectionId: string) => void;
 }) {
+  const router = useRouter();
+
   const [isChecked, dispatch] = useReducer(checkboxReducer, false);
   const [name, setName] = useState(data.name);
 
@@ -526,12 +540,14 @@ function Folder({
     setName(value);
   }
 
-  // add-to page
-  function handleAddTo() {
-    console.log(data._id);
+  async function handleClickCollection() {
+    if (type === "main") router.push(`/${language}/collection/${data._id}`);
 
-    // if (displayMessage)
-    //   displayMessage("The word added to the folder successfully");
+    if (type === "addTo") {
+      if (!onClickCollection) return;
+
+      onClickCollection(data._id || "");
+    }
   }
 
   // Reset isChecked when user finished selecting
@@ -556,15 +572,14 @@ function Folder({
           onChange={handleToggleChecked}
         ></input>
       )}
-      <Link
-        href={`/${language}/collection/${data._id}`}
+      <div
         className={`relative w-full h-full bg-gradient-to-l from-red-500 to-orange-400 hover:from-orange-500 hover:to-yellow-400 rounded flex flex-row items-center text-center shadow-sm shadow-black/30 px-2 gap-1 overflow-hidden`}
+        onClick={handleClickCollection}
       >
         {type === "addTo" && (
           <button
             type="button"
             className="absolute w-full h-full top-0 left-0 bg-black/30 hover:bg-black/50 text-white text-xl font-bold"
-            onClick={handleAddTo}
           >
             ✓
           </button>
@@ -596,7 +611,7 @@ function Folder({
             {data.numberOfWords}
           </span>
         )}
-      </Link>
+      </div>
     </div>
   );
 }
