@@ -47,14 +47,14 @@ function Top({ language }: { language: Language }) {
       {IsOnline() && (
         <div className="absolute w-[11rem] lg:w-[13rem] 2xl:w-[14rem] h-[70%] flex flex-row items-center justify-center gap-[5%] right-1 lg:right-3 xl:right-4 sm:mt-2 md:mt-3 text-center">
           <Link
-            href="/dictionary"
+            href={`/${language}/dictionary`}
             className={`${btnClassName} w-[30%] bg-[url('/icons/dictionary.svg')] bg-[length:60%] pt-[20%]`}
           >
             {language === "en" ? "Dictionary" : "辞書"}
           </Link>
           <LinkAddVocab language={language} collectionId="" />
           <Link
-            href="/account"
+            href={`/${language}/account`}
             className={`${btnClassName} w-[35%] aspect-square bg-[url('/icons/account.svg')] bg-[length:52%] pt-[21%]`}
           >
             {language === "en" ? "Account" : "アカウント"}
