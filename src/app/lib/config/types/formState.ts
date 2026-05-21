@@ -1,4 +1,4 @@
-import { Message } from "./others";
+import { Message, WordData } from "./others";
 
 export type FormStateAccount =
   | {
@@ -40,6 +40,7 @@ export type FormStateWordJournal =
       error?: { status?: number; message?: Message };
       errors?: { [key: string]: Message };
       message?: Message;
+      data?: WordData[];
     }
   | undefined;
 

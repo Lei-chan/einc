@@ -22,6 +22,7 @@ import {
   IndexedDBData,
   IndexedDBType,
   Language,
+  WordData,
 } from "./config/types/others";
 // library
 import { translate } from "@vitalets/google-translate-api";
@@ -155,6 +156,23 @@ export const getDataForIndexedDB = cache(
     }
   },
 );
+
+export const sendWordsIndexedDBToMongoDB = async (words: WordData[]) => {
+  await verifySession();
+
+  try {
+    await dbConnect();
+    await Promise.all(
+      words.map((word) => {
+        const { _id, ...others } = word;
+        // console.log(word, { ...others });
+        return Word.findByIdAndUpdate(_id, { ...others });
+      }),
+    );
+  } catch (err) {
+    throw err;
+  }
+};
 
 export const sendIndexedDBToMongoDB = async (data: IndexedDBData) => {
   const { isAuth, userId } = await verifySession();

@@ -11,8 +11,12 @@ import { IsOnline } from "@/app/lib/hooks";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import PMessage from "./PMessage";
-import { sendIndexedDBToMongoDB } from "@/app/lib/dal";
-import { getAllIndexedDBData } from "@/app/lib/indexedDB/database";
+import {
+  sendIndexedDBToMongoDB,
+  sendWordsIndexedDBToMongoDB,
+} from "@/app/lib/dal";
+import { getAllData, getAllIndexedDBData } from "@/app/lib/indexedDB/database";
+import { WordData } from "@/app/lib/config/types/others";
 
 export default function LogoOnlineMark({
   showOnlineMark,
@@ -44,15 +48,22 @@ export default function LogoOnlineMark({
 
     const isAlreadySynced =
       sessionStorage.getItem("isAlreadySynced") === "true";
+    const wasQuizUsed = sessionStorage.getItem("wasQuizUsed") === "true";
 
     const runSync = async () => {
       try {
         setIsSyncing(true);
 
-        // push local changes to MongoDB
-        if (isAlreadySynced) {
-          const indexedDBData = await getAllIndexedDBData();
-          await sendIndexedDBToMongoDB(indexedDBData);
+        // push local changes to MongoDB (For now, only words if user used the quiz feature)
+        if (isAlreadySynced && wasQuizUsed) {
+          // const indexedDBData = await getAllIndexedDBData();
+          // console.log(indexedDBData);
+          // await sendIndexedDBToMongoDB(indexedDBData);
+          const wordsIndexedDB = (await getAllData("words")) as WordData[];
+          await sendWordsIndexedDBToMongoDB(wordsIndexedDB);
+
+          // After syncing indexedDB and mongoDB, remove wasQuizUsed to sync the next time when user uses the quiz page
+          sessionStorage.removeItem("wasQuizUsed");
         }
 
         // pull MongoDB into IndexedDB when first load

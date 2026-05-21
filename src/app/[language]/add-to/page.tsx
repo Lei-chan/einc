@@ -3,7 +3,9 @@
 import {
   startTransition,
   useActionState,
+  useCallback,
   useEffect,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -25,14 +27,13 @@ import {
 } from "@/app/lib/helper";
 import PMessage from "../Components/PMessage";
 import {
-  DictionaryData,
   DisplayMessage,
+  Message,
   WordBeforeSent,
-  WordData,
 } from "@/app/lib/config/types/others";
-import { separator } from "@/app/lib/config/settings";
 import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 import { addWords } from "@/app/actions/auth/words";
+import { registerData } from "@/app/lib/indexedDB/database";
 
 export default function AddTo() {
   const router = useRouter();
@@ -40,7 +41,14 @@ export default function AddTo() {
   const language = getLanguageFromPathname(pathname);
   const searchParams = useSearchParams();
 
-  const msgClassName = "text-white mx-3 mt-5 px-1 rounded text-center";
+  const [collectionId, setCollectionId] = useState("");
+  const [messageData, setMessageData] = useState<DisplayMessage>();
+
+  const [state, action, isPending] = useActionState<
+    FormStateWordJournal,
+    WordBeforeSent[]
+  >(addWords, undefined);
+  const alreadyHandledRef = useRef<boolean>(false);
 
   const getWordDataFromParams = (searchParams: ReadonlyURLSearchParams) => {
     const definitions = searchParams.get("definitions");
@@ -61,47 +69,45 @@ export default function AddTo() {
     };
   };
 
-  const wordData = getWordDataFromParams(searchParams);
+  const handleClickCollection = useCallback(
+    async (collectionId: string) => {
+      try {
+        const wordData = getWordDataFromParams(searchParams);
 
-  const [state, action, isPending] = useActionState<
-    FormStateWordJournal,
-    WordBeforeSent[]
-  >(addWords, undefined);
+        // reset message data
+        setMessageData(undefined);
 
-  const [messageData, setMessageData] = useState<DisplayMessage>();
+        const wordDataWithId = { ...wordData, collectionId };
 
-  async function handleClickCollection(collectionId: string) {
-    try {
-      // reset message data
-      setMessageData(undefined);
-
-      const wordDataWithId = { ...wordData, collectionId };
-
-      startTransition(() => action([wordDataWithId]));
-    } catch (err) {
-      console.error("Error", err);
-      setMessageData({
-        type: "error",
-        message: getGenericErrorMessage(language),
-      });
-    }
-  }
+        startTransition(() => action([wordDataWithId]));
+      } catch (err) {
+        console.error("Error", err);
+        setMessageData({
+          type: "error",
+          message: getGenericErrorMessage(language),
+        });
+      }
+    },
+    [action, language, searchParams],
+  );
 
   useEffect(() => {
-    if (!state?.message) return;
+    if (!state?.message || alreadyHandledRef.current) return;
+    alreadyHandledRef.current = true;
 
     const redirect = async () => {
       try {
         if (!state.message) return;
 
-        await syncMongoDBWithIndexedDB("words");
+        console.log(state.data);
+        if (state.data) await registerData("words", state.data);
 
         setMessageData({
           type: "success",
           message: state.message[language],
         });
 
-        await wait(2);
+        await wait(1.5);
 
         setMessageData({
           type: "pending",
@@ -122,47 +128,69 @@ export default function AddTo() {
       } finally {
         await wait(2);
 
-        router.push(`/${language}/dictionary`);
+        router.push(`/${language}/dictionary#${collectionId}`);
       }
     };
 
     redirect();
-  }, [state?.message, language, router]);
+  }, [state, language, router, collectionId]);
+
+  // If there is a collectionId in hash => use it to add a word
+  useEffect(() => {
+    const wordData = getWordDataFromParams(searchParams);
+    if (!wordData) return;
+
+    const getSetCollectionId = async () => {
+      const collectionIdFromHash = window.location.hash.slice(1);
+
+      if (!collectionIdFromHash) return;
+      setCollectionId(collectionIdFromHash);
+
+      await handleClickCollection(collectionIdFromHash);
+    };
+
+    getSetCollectionId();
+  }, [handleClickCollection, searchParams]);
 
   return (
-    <div className="w-full h-[100dvh] overflow-hidden">
-      <div className="relative w-full h-full flex flex-col items-center">
-        {messageData && (
-          <PMessage type={messageData.type} message={messageData.message} />
-        )}
-        {isPending && (
-          <PMessage
-            type="pending"
-            message={
-              language === "en"
-                ? "Adding to the collection..."
-                : "コレクションに追加中..."
-            }
+    <>
+      {collectionId && (
+        <div className="w-full h-[100dvh] overflow-hidden bg-black/30 cursor-wait z-10 fixed top-0 left-0"></div>
+      )}
+      <div className="w-full h-[100dvh] overflow-hidden">
+        <div className="relative w-full h-full flex flex-col items-center">
+          {messageData && (
+            <PMessage type={messageData.type} message={messageData.message} />
+          )}
+          {isPending && (
+            <PMessage
+              type="pending"
+              message={
+                language === "en"
+                  ? "Adding to the collection..."
+                  : "コレクションに追加中..."
+              }
+            />
+          )}
+          {state?.error?.message && (
+            <PMessage type="error" message={state.error.message[language]} />
+          )}
+          {state?.errors?.message && (
+            <PMessage type="error" message={state.errors.message[language]} />
+          )}
+          {!collectionId && (
+            <h1 className="text-xl w-[85%] mt-3">
+              {language === "en"
+                ? "Add this word to"
+                : "どのコレクションにこの単語を追加しますか？"}
+            </h1>
+          )}
+          <FolderPagination
+            type="addTo"
+            onClickCollection={handleClickCollection}
           />
-        )}
-        {state?.error?.message && (
-          <PMessage type="error" message={state.error.message[language]} />
-        )}
-        {state?.errors?.message && (
-          <PMessage type="error" message={state.errors.message[language]} />
-        )}
-        <h1 className="text-xl w-[85%] mt-3">
-          {language === "en"
-            ? "Add this word to"
-            : "どのコレクションにこの単語を追加しますか？"}
-        </h1>
-        <FolderPagination
-          type="addTo"
-          onClickCollection={handleClickCollection}
-          // displayError={displayError}
-          // displayMessage={displayMessage}
-        />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

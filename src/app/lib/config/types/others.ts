@@ -84,11 +84,13 @@ export type WordBeforeSent = {
   userId?: string;
   collectionId: string;
   name: string;
+  pronunciationString?: string | null;
   audio: File | string | null;
   definitions: string;
   examples: string;
   imageName: File | null | string;
   imageDefinitions: File | null | string;
+  synonyms?: string;
   status: number;
   nextReviewAt: string;
 };
@@ -98,7 +100,7 @@ export type WordData = {
   userId?: string;
   collectionId: string;
   name: string;
-  pronunciationString?: string;
+  pronunciationString?: string | null;
   audio: MediaDatabase;
   definitions: string[];
   examples: string[];
@@ -113,11 +115,13 @@ export type WordToDisplay = {
   _id: string;
   userId: string;
   name: string;
+  pronunciationString?: string | null;
   audio: MediaToDisplay;
   definitions: string[];
   examples: string[];
   imageName: MediaToDisplay;
   imageDefinitions: MediaToDisplay;
+  synonyms?: string[];
   collectionId: string;
   status: number;
   nextReviewAt: string;

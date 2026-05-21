@@ -44,12 +44,13 @@ export async function addWords(
 
     await dbConnect();
     // create words
-    const createdWords = await Promise.all(
+    const data = await Promise.all(
       wordDataToSendServer.map((data) => Word.create(data)),
     );
 
     return {
       message: { en: `Word created successfully`, ja: "単語が作成されました" },
+      data: JSON.parse(JSON.stringify(data)),
     };
   } catch (err: unknown) {
     if (isZodError(err) && err.name === "zodError" && err.zodErrorData)
@@ -77,10 +78,11 @@ export async function updateWord(
       return getError("zodError", undefined, undefined, undefined, result);
 
     await dbConnect();
-    await Word.findByIdAndUpdate(_id, others);
+    const data = await Word.findByIdAndUpdate(_id, others, { new: true });
 
     return {
       message: { en: "Word updated successfully", ja: "単語が更新されました" },
+      data: [JSON.parse(JSON.stringify(data))],
     };
   } catch (err: unknown) {
     return getError("other", undefined, err);
@@ -147,11 +149,11 @@ export async function deleteWords(
 //   }
 // }
 
-const getNextStatus = (currentStatus: number, isCorrect: boolean) => {
-  if (isCorrect) return currentStatus === 5 ? 5 : currentStatus + 1;
+// const getNextStatus = (currentStatus: number, isCorrect: boolean) => {
+//   if (isCorrect) return currentStatus === 5 ? 5 : currentStatus + 1;
 
-  return currentStatus === 0 ? 0 : currentStatus - 1;
-};
+//   return currentStatus === 0 ? 0 : currentStatus - 1;
+// };
 
 // export async function updateStatusNextReviewDate(
 //   formState: FormStateWordJournal,

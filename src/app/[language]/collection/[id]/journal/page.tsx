@@ -172,7 +172,7 @@ function Middle({
         <PMessage type="error" message={state.error.message[language]} />
       )}
       <div
-        className={`w-[90%] sm:w-[80%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%] overflow-y-auto my-3 ${!isDictionaryOpen ? "flex-[1.7]" : "flex-1"}`}
+        className={`w-[90%] sm:w-[80%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%] overflow-y-auto my-3 ${!isDictionaryOpen ? "flex-[1.7]" : "flex-[0.8]"}`}
       >
         <div className="flex flex-row justify-center gap-10">
           <button
@@ -210,14 +210,14 @@ function Middle({
           </button>
         </div>
       ) : (
-        <div className="relative overflow-y-auto flex-1">
+        <div className="flex flex-col items-end overflow-y-auto overflow-x-hidden flex-[1.2]">
           <button
-            className="absolute font-bold top-[2px] right-2 text-sm hover:text-amber-700"
+            className="text-sm hover:text-amber-700 mr-1 transition-all duration-500 translate-x-[90%] hover:translate-x-0"
             onClick={handleToggleDictionary}
           >
-            &#10005;
+            &#10005; {language === "en" ? "Close Dictionary" : "辞書を閉じる"}
           </button>
-          <Dictionary widthClassName="w-screen " heightClassName="h-full" />
+          <Dictionary widthClassName="w-screen " heightClassName="h-[95%]" />
         </div>
       )}
     </div>

@@ -36,15 +36,12 @@ import {
 import { updateStatusNextReviewDate } from "@/app/lib/indexedDB/database";
 // Types
 import {
-  DefinitionsDataQuiz,
   DisplayMessage,
   Language,
   QuizAnswer,
   QuizData,
   QuizQuestion,
-  UpdateStatusReviewDateDataQuiz,
 } from "@/app/lib/config/types/others";
-import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 // libraries
 // import distance from "jaro-winkler";
 
@@ -62,11 +59,6 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   const [isCorrect, setIsCorrect] = useState(true);
 
   const [errorMessage, setErrorMessage] = useState("");
-
-  // const [state, action] = useActionState<
-  //   FormStateWordJournal,
-  //   UpdateStatusReviewDateDataQuiz
-  // >(updateStatusNextReviewDate, undefined);
 
   useEffect(() => {
     const getWordsForQuiz = async () => {
@@ -107,8 +99,9 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
       if (!curQuizIndex && curQuizIndex !== 0) return;
 
       const wordId = quiz[curQuizIndex].id;
-      // startTransition(() => action({ wordId, isCorrect }));
+
       await updateStatusNextReviewDate({ wordId, isCorrect });
+      sessionStorage.setItem("wasQuizUsed", "true");
 
       // get rid of current quiz from quiz
       const newQuiz = quiz.toSpliced(curQuizIndex, 1);
@@ -135,9 +128,6 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
           {curQuizPage} / {numberOfQuiz}
         </p>
       )}
-      {/* {state?.error?.message && (
-        <PMessage type="error" message={state.error.message[language]} />
-      )} */}
       <p>
         {errorMessage && errorMessage}
         {!quiz && (language === "en" ? "Loading..." : "ロード中...")}
@@ -187,11 +177,6 @@ function QuizContent({
   const answer = curQuiz?.answer;
   const [userAnswer, setUserAnswer] = useState<string[]>([]);
   const [messageData, setMessageData] = useState<DisplayMessage>();
-
-  // const [state, action, isPending] = useActionState<
-  //   FormStateWordJournal,
-  //   DefinitionsDataQuiz
-  // >(addDefinitions, undefined);
 
   // think later about replace all
   const convertStringToCompare = (str: string) =>
@@ -261,10 +246,8 @@ function QuizContent({
           language === "en" ? "Adding definitions..." : "意味を追加中...",
       });
 
-      // startTransition(() =>
-      //   action({ wordId: curQuiz.id, newDefinitions: userAnswer }),
-      // );
       await addDefinitions({ wordId: curQuiz.id, newDefinitions: userAnswer });
+      sessionStorage.setItem("wasQuizUsed", "true");
 
       setMessageData({
         type: "success",
@@ -283,35 +266,11 @@ function QuizContent({
     }
   }
 
-  // useEffect(() => {
-  //   const displaySuccessMessage = async () => {
-  //     if (!state?.message) return;
-
-  //     setSuccessMessage(state.message[language]);
-  //     await wait();
-  //     setSuccessMessage("");
-  //   };
-
-  //   displaySuccessMessage();
-  // }, [state?.message, language]);
-
   return (
     <div className="w-[80%] h-full flex flex-col items-center justify-center">
       {messageData && (
         <PMessage type={messageData.type} message={messageData.message} />
       )}
-      {/* {isPending && (
-        <PMessage
-          type="pending"
-          message={
-            language === "en" ? "Adding definitions..." : "意味を追加中..."
-          }
-        />
-      )} */}
-      {/* {state?.error?.message && (
-        <PMessage type="error" message={state.error.message[language]} />
-      )}
-      {successMessage && <PMessage type="success" message={successMessage} />} */}
       {isAnswering ? (
         <QuizAnswerForm
           language={language}

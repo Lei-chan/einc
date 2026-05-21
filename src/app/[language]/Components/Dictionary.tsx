@@ -202,7 +202,7 @@ function Top({
         name="word"
         type="search"
         placeholder={language === "en" ? "search for..." : "単語を検索"}
-        className="w-1/2 sm:w-1/3 lg:w-[28%] xl:w-1/4 2xl:w-1/5 text-sm rounded-full py-1"
+        className="w-1/2 sm:w-1/3 lg:w-[28%] xl:w-1/4 2xl:w-1/5 text-sm rounded-full py-1 px-2"
       ></input>
       <button
         type="submit"
@@ -253,6 +253,17 @@ function WordContainer({
   isPending: boolean;
   results: DictionaryData[] | undefined;
 }) {
+  const [collectionId, setCollectionId] = useState("");
+
+  useEffect(() => {
+    const setcollectionIdFromHash = () => {
+      const collectionIdFromHash = window.location.hash.slice(1);
+
+      setCollectionId(collectionIdFromHash);
+    };
+    setcollectionIdFromHash();
+  }, []);
+
   return !results || isArrayEmpty(results) ? (
     <div className="w-full h-full flex flex-col items-center justify-center">
       {isPending ? (
@@ -280,7 +291,12 @@ function WordContainer({
   ) : (
     <ul className="w-full h-full overflow-y-auto">
       {results.map((result, i) => (
-        <Word key={i} language={language} result={result}></Word>
+        <Word
+          key={i}
+          language={language}
+          result={result}
+          collectionId={collectionId}
+        ></Word>
       ))}
     </ul>
   );
@@ -289,9 +305,11 @@ function WordContainer({
 function Word({
   language,
   result,
+  collectionId,
 }: {
   language: Language;
   result: DictionaryData;
+  collectionId: string;
 }) {
   const router = useRouter();
 
@@ -313,7 +331,7 @@ function Word({
 
   function handleClickAdd() {
     router.push(
-      `/${language}/add-to?name=${result.name || ""}&pronunciationString=${result.pronunciationString || ""}&pronunciationAudio=${result.pronunciationAudio || ""}&definitions=${result.definitions.join(separator)}&examples=${result.examples.join(separator)}&synonyms=${result.synonyms.join(separator)}`,
+      `/${language}/add-to?name=${result.name || ""}&pronunciationString=${result.pronunciationString || ""}&pronunciationAudio=${result.pronunciationAudio || ""}&definitions=${result.definitions.join(separator)}&examples=${result.examples.join(separator)}&synonyms=${result.synonyms.join(separator)}#${collectionId}`,
     );
   }
 

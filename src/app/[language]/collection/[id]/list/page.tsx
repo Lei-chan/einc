@@ -166,12 +166,9 @@ function Bottom({
   dispatch: (action: ActionPaginationType) => void;
 }) {
   const [isSelected, setIsSelected] = useState(false);
-  const [isAllChecked, setIsAllChecked] = useState(false);
   const [areWordsChecked, setAreWordsChecked] = useState<
     { _id: string; checked: boolean }[] | undefined
   >();
-
-  // console.log(data);
 
   const [messageData, setMessageData] = useState<undefined | DisplayMessage>();
   const lastHandledDeleteRef = useRef<FormStateWordJournal>(null);
@@ -194,8 +191,16 @@ function Bottom({
 
   function handleToggleSelected() {
     setIsSelected((prev) => {
-      // when user finished selecting, reset isAllCheched too
-      if (prev) setIsAllChecked(false);
+      // when user finished selecting, reset isAllCheched and areWordsChecked
+      if (prev) {
+        setAreWordsChecked((prev) => {
+          if (!prev) return;
+
+          return prev.map((data) => {
+            return { _id: data._id, checked: false };
+          });
+        });
+      }
 
       return !prev;
     });
@@ -203,7 +208,14 @@ function Bottom({
 
   function handleChangeAllSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const isChecked = e.currentTarget.checked;
-    setIsAllChecked(isChecked);
+
+    setAreWordsChecked((prev) => {
+      if (!prev) return;
+
+      return prev.map((data) => {
+        return { _id: data._id, checked: isChecked };
+      });
+    });
   }
 
   function handleClickPagination(type: ActionPaginationType) {
@@ -212,9 +224,6 @@ function Bottom({
 
   function handleClickDelete() {
     if (!areWordsChecked) return;
-
-    // reset pagination
-    dispatch("reset");
 
     startTransition(() =>
       action({ collectionId, checkedData: areWordsChecked }),
@@ -235,32 +244,6 @@ function Bottom({
     setInitialCheckedData();
   }, [data]);
 
-  // when user finished selecting, reset isChecked for the checkbox
-  // When user change the input of isAllSelected, change isChecked accordingly
-  useEffect(() => {
-    const changeAllCheckToFalse = () =>
-      setAreWordsChecked((prev) => {
-        if (!prev) return;
-
-        return prev.map((data) => {
-          return { _id: data._id, checked: false };
-        });
-      });
-
-    const changeAllCheckToTrue = () =>
-      setAreWordsChecked((prev) => {
-        if (!prev) return;
-
-        return prev.map((data) => {
-          return { _id: data._id, checked: true };
-        });
-      });
-
-    if (!isSelected || !isAllChecked) changeAllCheckToFalse();
-
-    if (isAllChecked) changeAllCheckToTrue();
-  }, [isSelected, isAllChecked]);
-
   // handle success
   useEffect(() => {
     // if it's executed already => return
@@ -269,8 +252,7 @@ function Bottom({
     const displaySuccessMsg = async () => {
       try {
         const successMsg = state?.message;
-        if (!successMsg) return;
-        if (!areWordsChecked) return;
+        if (!successMsg || !areWordsChecked) return;
 
         const deletedWordIds = areWordsChecked
           ?.filter((data) => data.checked)
@@ -278,6 +260,8 @@ function Bottom({
 
         await removeDataFromIndexedDB("words", deletedWordIds);
 
+        // reset pagination
+        dispatch("reset");
         handleToggleSelected();
         handleUpdateUI();
         setMessageData({ type: "success", message: successMsg[language] });

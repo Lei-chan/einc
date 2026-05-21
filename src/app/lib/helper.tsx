@@ -147,6 +147,10 @@ export const convertWordDataToSendServer = async (
     return {
       ...(wordData._id ? { _id: wordData._id } : {}),
       ...(wordData.userId ? { userId: wordData.userId } : {}),
+      ...(wordData.pronunciationString
+        ? { pronunciationString: wordData.pronunciationString.trim() }
+        : {}),
+      ...(wordData.synonyms ? { synonyms: wordData.synonyms.split("\n") } : {}),
       collectionId: wordData.collectionId,
       name: wordData.name.trim(),
       audio: audioBuffer,

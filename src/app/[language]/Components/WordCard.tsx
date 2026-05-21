@@ -32,6 +32,7 @@ import {
 import { WordData, WordBeforeSent } from "../../lib/config/types/others";
 import { FormStateWordJournal } from "../../lib/config/types/formState";
 import { IsOnline } from "@/app/lib/hooks";
+import { updateData } from "@/app/lib/indexedDB/database";
 
 export default function WordCard({
   type,
@@ -106,16 +107,18 @@ export default function WordCard({
         _id: wordDataToDisplay._id,
         collectionId: wordDataToDisplay.collectionId,
         name: String(formData.get("name") || ""),
+        pronunciationString: String(formData.get("pronunciationString") || ""),
         audio: formData.get("audio") as File,
         definitions: String(formData.get("definitions") || ""),
         examples: String(formData.get("examples") || ""),
         imageName,
         imageDefinitions,
+        synonyms: String(formData.get("synonyms") || ""),
         status: wordDataToDisplay.status,
         nextReviewAt: wordDataToDisplay.nextReviewAt,
       };
 
-      // if there are old media, convert the buffers to files
+      // if there are old medias, convert the buffers to files
       const oldAudio = wordData.audio
         ? convertBufferToFile(wordData.audio)
         : null;
@@ -151,19 +154,22 @@ export default function WordCard({
 
     lastHandledUpdateRef.current = state;
 
-    const displayMessage = async () => {
+    const handleSuccess = async () => {
+      if (state.data) await updateData("words", state.data);
+
       handleToggleEdit();
       setSuccessMessage(message[language]);
-      await wait();
+      await wait(2);
       setSuccessMessage("");
     };
 
-    displayMessage();
+    handleSuccess();
     if (handleUpdateUI) handleUpdateUI();
-  }, [state?.message, language, handleToggleEdit, state, handleUpdateUI]);
+  }, [state, language, handleToggleEdit, handleUpdateUI]);
 
   const getContent = () => {
-    const textareaClassName = "w-[65%]";
+    const textareaClassName =
+      "w-[65%] aspect-[1/0.5] leading-tight py-1 text-sm lg:text-base lg:leading-tight";
     const h3ClassName = "text-black/80 text-lg xl:text-[23px]";
     const pClassName = "w-[90%] xl:text-xl xl:mt-1";
     const imageClassName =
