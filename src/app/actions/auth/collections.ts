@@ -34,6 +34,7 @@ export async function createCollection(
         en: `Collection ${name} created`,
         ja: `コレクション${name}が作成されました`,
       },
+      data: JSON.parse(JSON.stringify(user.collections)),
     };
   } catch (err: unknown) {
     return getError("other", undefined, err);
@@ -81,11 +82,14 @@ export async function updateCollection(
 
     await user.save();
 
+    console.log(user.collections);
+
     return {
       message: {
         en: "Collections updated",
         ja: "コレクションが更新されました",
       },
+      data: JSON.parse(JSON.stringify(user.collections)),
     };
   } catch (err: unknown) {
     return getError("other", undefined, err);
@@ -120,6 +124,7 @@ export async function deleteCollection(
         en: `Collection${collectionIds.length === 1 ? "" : "s"} deleted`,
         ja: "コレクションが削除されました",
       },
+      deletedIds: collectionIds,
     };
   } catch (err: unknown) {
     return getError("other", undefined, err);

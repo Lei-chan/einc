@@ -1,15 +1,6 @@
 "use client";
 // react
-import {
-  startTransition,
-  useActionState,
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
-// next.js
-import Link from "next/link";
+import { useActionState, useEffect, useReducer, useRef, useState } from "react";
 // components
 import CreateFolder from "./CreateFolder";
 import ButtonPagination from "./ButtonPagination";
@@ -22,11 +13,15 @@ import {
   updateCollection,
 } from "../../actions/auth/collections";
 // dal
-// import { getCollectionDataCurPage } from "../../lib/dal";
-import { getCollectionDataCurPage } from "@/app/lib/indexedDB/database";
+import {
+  getCollectionDataCurPage,
+  removeData,
+  updateData,
+} from "@/app/lib/indexedDB/database";
 // methods
 import {
   getGenericErrorMessage,
+  getIndexedDBSaveError,
   getLanguageFromPathname,
   getNumberOfPages,
   wait,
@@ -44,6 +39,7 @@ import { FormStateCollection } from "../../lib/config/types/formState";
 import { nanoid } from "nanoid";
 import { usePathname, useRouter } from "next/navigation";
 import { IsOnline } from "@/app/lib/hooks";
+import { error } from "console";
 
 export default function FolderPagination({
   type,
@@ -370,22 +366,36 @@ function Selector({
 
     lastHandledUpdateStateRef.current = updateState;
 
-    if (updateState?.error?.message) {
-      displayMessage({
-        type: "error",
-        message: updateState.error.message[language],
-      });
-      return;
-    }
+    const handleSuccessUpdate = async () => {
+      try {
+        if (updateState?.error?.message) {
+          displayMessage({
+            type: "error",
+            message: updateState.error.message[language],
+          });
+          return;
+        }
 
-    if (updateState?.message) {
-      displayMessage({
-        type: "success",
-        message: updateState.message[language],
-      });
+        if (updateState?.message) {
+          if (updateState.data)
+            await updateData("collections", updateState.data);
 
-      handleUpdate();
-    }
+          displayMessage({
+            type: "success",
+            message: updateState.message[language],
+          });
+
+          handleUpdate();
+        }
+      } catch (err) {
+        displayMessage({
+          type: "error",
+          message: getIndexedDBSaveError(language),
+        });
+      }
+    };
+
+    handleSuccessUpdate();
   }, [updateState, language, handleUpdate, displayMessage]);
 
   useEffect(() => {
@@ -412,22 +422,36 @@ function Selector({
 
     lastHandledDeleteStateRef.current = deleteState;
 
-    if (deleteState.error?.message) {
-      displayMessage({
-        type: "error",
-        message: deleteState.error.message[language],
-      });
-      return;
-    }
+    const handleSuccessDelete = async () => {
+      try {
+        if (deleteState.error?.message) {
+          displayMessage({
+            type: "error",
+            message: deleteState.error.message[language],
+          });
+          return;
+        }
 
-    if (deleteState?.message) {
-      displayMessage({
-        type: "success",
-        message: deleteState.message[language],
-      });
+        if (deleteState?.message) {
+          if (deleteState.deletedIds)
+            await removeData("collections", deleteState.deletedIds);
 
-      handleUpdate();
-    }
+          displayMessage({
+            type: "success",
+            message: deleteState.message[language],
+          });
+
+          handleUpdate();
+        }
+      } catch (err) {
+        displayMessage({
+          type: "error",
+          message: getIndexedDBSaveError(language),
+        });
+      }
+    };
+
+    handleSuccessDelete();
   }, [deleteState, deleteIsPending, language, displayMessage, handleUpdate]);
 
   return (

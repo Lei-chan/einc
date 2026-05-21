@@ -1,4 +1,4 @@
-import { Message, WordData } from "./others";
+import { Collections, Message, WordData } from "./others";
 
 export type FormStateAccount =
   | {
@@ -32,6 +32,8 @@ export type FormStateCollection =
       };
       error?: { status?: number; message?: Message };
       message?: Message;
+      data?: Collections;
+      deletedIds?: string[];
     }
   | undefined;
 

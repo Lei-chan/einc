@@ -29,6 +29,11 @@ export const getGenericErrorMessage = (language: Language) =>
     ? "Unexpected error occured. Please try again this later 🙇‍♂️"
     : "予期せぬエラーが発生しました。後ほどもう一度お試し下さい🙇‍♂️";
 
+export const getIndexedDBSaveError = (language: Language) =>
+  language === "en"
+    ? "Unexpected error occured 🙇‍♂️ There was possibility that data wasn't registered properly in local database. Please check the collection later."
+    : "予期せぬエラーが発生しました🙇‍♂️データがローカルデータベースに正しく保存されなかった可能性があります。後ほどコレクションをご確認ください。";
+
 export const getRandomNumber = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
 

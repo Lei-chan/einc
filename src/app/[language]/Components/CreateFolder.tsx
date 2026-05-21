@@ -15,6 +15,7 @@ import {
 } from "../../lib/helper";
 // type
 import { FormStateCollection } from "../../lib/config/types/formState";
+import { registerData, updateData } from "@/app/lib/indexedDB/database";
 
 export default function CreateFolder({
   widthClassName,
@@ -49,6 +50,8 @@ export default function CreateFolder({
     lastHandledStateRef.current = state;
 
     const displaySuccessMsg = async () => {
+      if (state.data) await updateData("collections", state.data);
+
       setSuccessMsg(message[language]);
       await wait(2);
       setSuccessMsg("");
