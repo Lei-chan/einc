@@ -28,6 +28,8 @@ import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.share
 // libraries
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import Link from "next/link";
+import LinkPrivacyPolicy from "./LinkPrivacyPolicy";
 
 export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   const router = useRouter();
@@ -49,8 +51,13 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
     return type === "login" ? "ログイン中..." : "アカウント作成中...";
   };
 
+  const [isPolicyAgreed, setIsPolicyAgreed] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string>("");
+
+  function handleToggleCheckbox() {
+    setIsPolicyAgreed(!isPolicyAgreed);
+  }
 
   function handlePending(isPending: boolean) {
     setIsPending(isPending);
@@ -64,14 +71,35 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   }
 
   return (
-    <div className="relative w-full min-h-[100dvh] pt-1 flex flex-col items-center">
-      <Logo showOnlineMark={false} />
-      <div className="w-[18rem] sm:w-[22rem] xl:w-[23rem] 2xl:w-[24rem] h-screen flex flex-col items-center justify-center mb-2 xl:mb-0">
+    <div className="relative w-full min-h-[100dvh] pt-1 flex flex-col items-center justify-center">
+      <Logo showOnlineMark={false} topClassName="top-1" />
+      <div
+        className={`w-[18rem] sm:w-[22rem] xl:w-[23rem] 2xl:w-[24rem] h-full flex flex-col items-center justify-center ${type === "login" ? "mb-4" : "mb-2"}`}
+      >
+        <h1 className="text-xl lg:text-2xl m-2 text-orange-600 font-bold tracking-wider">
+          {typeToDisplayForLanguage}
+        </h1>
         {(isPending || error) && (
           <PMessage
             type={isPending ? "pending" : "error"}
             message={isPending ? getPendingSentence() : error}
           />
+        )}
+        {type === "signUp" && (
+          <div className="flex flex-row gap-3 my-2">
+            <input
+              name="privacyPolicy"
+              type="checkbox"
+              className="w-4 cursor-pointer"
+              checked={isPolicyAgreed}
+              onChange={handleToggleCheckbox}
+            ></input>
+            <p className="leading-tight">
+              {language === "en" ? "I agree to " : "こちらの"}
+              <LinkPrivacyPolicy />
+              {language === "ja" && "に同意します"}
+            </p>
+          </div>
         )}
         <div className="w-full h-fit bg-white/70 shadow-lg shadow-black/20 rounded text-base py-3 xl:py-4">
           <ViaUserInfo
@@ -79,6 +107,7 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
             router={router}
             typeToDisplay={typeToDisplay}
             typeToDisplayForLanguage={typeToDisplayForLanguage}
+            isPolicyAgreed={isPolicyAgreed}
             handlePending={handlePending}
             handleError={handleError}
           />
@@ -87,6 +116,7 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
             router={router}
             typeToDisplay={typeToDisplay}
             typeToDisplayForLanguage={typeToDisplayForLanguage}
+            isPolicyAgreed={isPolicyAgreed}
             handlePending={handlePending}
             handleError={handleError}
           />
@@ -101,6 +131,7 @@ function ViaUserInfo({
   router,
   typeToDisplay,
   typeToDisplayForLanguage,
+  isPolicyAgreed,
   handlePending,
   handleError,
 }: {
@@ -108,6 +139,7 @@ function ViaUserInfo({
   router: AppRouterInstance;
   typeToDisplay: "Log in" | "Sign up";
   typeToDisplayForLanguage: string;
+  isPolicyAgreed: boolean;
   handlePending: (isPending: boolean) => void;
   handleError: (error: ErrorFormState) => void;
 }) {
@@ -124,6 +156,16 @@ function ViaUserInfo({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     try {
       e.preventDefault();
+
+      if (typeToDisplay === "Sign up" && !isPolicyAgreed)
+        handleError({
+          error: {
+            message: {
+              en: "Please agree to the privacy policy to finish signing up",
+              ja: "登録を完了するためにプライバシーポリシーへの同意をしてください",
+            },
+          },
+        });
 
       const formData = new FormData(e.currentTarget);
 
@@ -204,6 +246,7 @@ function ViaGoogle({
   router,
   typeToDisplay,
   typeToDisplayForLanguage,
+  isPolicyAgreed,
   handlePending,
   handleError,
 }: {
@@ -211,6 +254,7 @@ function ViaGoogle({
   router: AppRouterInstance;
   typeToDisplay: "Log in" | "Sign up";
   typeToDisplayForLanguage: string;
+  isPolicyAgreed: boolean;
   handlePending: (isPending: boolean) => void;
   handleError: (error: ErrorFormState) => void;
 }) {
@@ -223,6 +267,17 @@ function ViaGoogle({
   >(typeToDisplay === "Sign up" ? signupViaGoogle : loginViaGoogle, undefined);
 
   function handleSubmit(data: { email: string; language: Language }) {
+    console.log(isPolicyAgreed);
+    if (typeToDisplay === "Sign up" && !isPolicyAgreed)
+      handleError({
+        error: {
+          message: {
+            en: "Please agree to the privacy policy to finish signing up",
+            ja: "登録を完了するためにプライバシーポリシーへの同意をしてください",
+          },
+        },
+      });
+
     startTransition(() => action(data));
   }
 
@@ -281,9 +336,6 @@ function ViaGoogle({
 
             setEmail(email);
 
-            // only if it's login => submit when user select an account
-            // if (typeToDisplay === "Log in")
-
             handleSubmit({ email, language });
           } catch (err: unknown) {
             console.error("Error occured", err);
@@ -301,30 +353,6 @@ function ViaGoogle({
       {state?.errors?.password && (
         <ErrorMessageInput errorMessage={state.errors.password[language]} />
       )}
-      {/* only when it's sign up, submit when user select an account and click the sign up button */}
-      {/* {typeToDisplay === "Sign up" && email && (
-        <>
-          <p className="text-center mt-4 leading-tight">
-            {language === "en"
-              ? "Please complete signing up"
-              : "下のボタンをクリックして"}
-            <br />
-            {language === "en"
-              ? "by clicking the button below"
-              : "登録を完了してください"}
-          </p>
-          <button
-            type="submit"
-            className="transition-all duration-150 rounded bg-purple-500 hover:bg-pink-400 text-white px-1.5 py-[2px] text-sm mt-3"
-            onClick={(e) => {
-              e.preventDefault();
-              handleSubmit({ email, language });
-            }}
-          >
-            {language === "en" ? "Complete" : "完了"}
-          </button>
-        </>
-      )} */}
     </form>
   );
 }

@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.2.0",
+    "@playwright/test": "^1.60.0",
     "@serwist/turbopack": "^9.5.7",
     "@types/bcrypt": "^6.0.0",
     "@types/jaro-winkler": "^0.2.4",

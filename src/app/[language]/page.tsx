@@ -28,38 +28,6 @@ export default function Home() {
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
 
-  useEffect(() => {
-    const getDictionary = async () => {
-      // const data = await dictionary("楽しい", "en", "ja", 0);
-      // console.log(data[0]);
-      // const data = await dictionary("元気", "ja", "ja", 0);
-      // console.log(data);
-      // const japaneseData = await translator(data[0], "ja");
-      // const englishData = await translator(data[0], "en");
-      // console.log(japaneseData, englishData);
-    };
-
-    getDictionary();
-    //   const dict = new Dictionary("おはよう", "ja", "en", "ja");
-
-    //   await dict.dictionary();
-    // };
-
-    // getDictionary();
-    // const translateQuery = async () => {
-    //   console.log(
-    //     await translator(
-    //       {
-    //         definitions: ["You are so pretty!", "Wonderful!"],
-    //         examples: ["Great!"],
-    //       },
-    //       "ja",
-    //     ),
-    //   );
-    // };
-    // translateQuery();
-  }, []);
-
   return (
     <div className="w-full h-fit flex flex-col items-center overflow-hidden ">
       <Top pathname={pathname} />
@@ -92,6 +60,7 @@ function Top({ pathname }: { pathname: string }) {
       <div className="absolute w-[60%] sm:w-[40%] md:w-[35%] lg:w-[29%] xl:w-[20%] 2xl:w-[16%] h-fit flex flex-row text-[15px] gap-3 xl:gap-5 right-4 xl:right-7 text-red-600 text-center items-center leading-tight justify-end ">
         <select
           value={language}
+          data-testid="language-select"
           className="w-[30%] bg-[url('/icons/language.svg')] bg-[2px] bg-contain bg-no-repeat text-sm pl-6 pr-2 appearance-none"
           onChange={handleChangeLanguage}
         >
@@ -303,10 +272,12 @@ function Footer() {
       <div className="w-full h-fit flex flex-row justify-center gap-4 lg:gap-5 mb-1 lg:mb-2 xl:mb-3">
         <Link
           href={GITHUB_LINK}
+          data-testid="github-link"
           className="bg-[url('/icons/github.svg')] w-9 aspect-square bg-center bg-contain"
         ></Link>
         <Link
           href={INSTAGRAM_LINK}
+          data-testid="instagram-link"
           className="bg-[url('/icons/instagram.svg')] w-9 aspect-square bg-center bg-contain"
         ></Link>
       </div>
@@ -326,10 +297,12 @@ function PWA({ language }: { language: Language }) {
 
   return (
     <div
+      data-testid="notification-form"
       className={`fixed w-full h-fit left-0 bottom-0 bg-white shadow-[-10px_-10px_20px_rgba(0,0,0,0.2)] text-center px-3 transition-all duration-500 ${isShown ? "" : "translate-y-full"}`}
     >
       <button
         type="button"
+        data-testid="close-notification-btn"
         className="absolute text-2xl right-2"
         onClick={handleClickClose}
       >
@@ -428,6 +401,8 @@ function PushNotificationManager({ language }: { language: Language }) {
                   : "プッシュ通知はオンになっています"}
               </p>
               <button
+                type="button"
+                data-testid="unsubscription-btn"
                 className={`${btnClassName} bg-green-400 hover:bg-green-300`}
                 onClick={unsubscribeFromPush}
               >
@@ -442,6 +417,7 @@ function PushNotificationManager({ language }: { language: Language }) {
                   : "プッシュ通知はオフになっています"}
               </p>
               <button
+                data-testid="subscription-btn"
                 className={`${btnClassName} bg-orange-500 hover:bg-orange-400`}
                 onClick={subscribeToPush}
               >
