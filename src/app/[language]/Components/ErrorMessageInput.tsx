@@ -4,7 +4,10 @@ export default function ErrorMessageInput({
   errorMessage: string;
 }) {
   return (
-    <p className="w-[12rem] text-left  text-red-500 text-sm ">
+    <p
+      data-testid="errorMsgInput"
+      className="w-[12rem] text-left  text-red-500 text-sm"
+    >
       {errorMessage}
       {/* {errorMessage.map((msg, i) => (
         <p key={i} className=" text-red-500 text-sm ">

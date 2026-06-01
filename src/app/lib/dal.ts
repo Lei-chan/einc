@@ -127,6 +127,16 @@ export const getJournalDataDate = cache(
   },
 );
 
+export const deleteTestDataFromMongoDB = async () => {
+  try {
+    await dbConnect();
+    const users = await User.deleteMany({ email: /@example.com/i });
+    console.log(users);
+  } catch (err) {
+    console.error("Error", err);
+  }
+};
+
 export const getDataForIndexedDB = cache(
   async (type: "all" | IndexedDBType) => {
     try {

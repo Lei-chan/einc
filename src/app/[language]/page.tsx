@@ -21,12 +21,19 @@ import { Language } from "../lib/config/types/others";
 import { useInView } from "react-intersection-observer";
 import { subscribeUser, unsubscribeUser } from "../actions/pwa";
 import { FormStateSubscription } from "../lib/config/types/formState";
-// import { Dictionary } from "@/app/lib/logics/Dictionaly";
-import { dictionary, translator } from "../lib/dal";
+import LinkPrivacyPolicy from "./Components/LinkPrivacyPolicy";
+import { deleteTestDataFromMongoDB } from "../lib/dal";
 
 export default function Home() {
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
+
+  // useEffect(() => {
+  //   const deleteTestData = async () => {
+  //     await deleteTestDataFromMongoDB();
+  //   };
+  //   deleteTestData();
+  // }, []);
 
   return (
     <div className="w-full h-fit flex flex-col items-center overflow-hidden ">
@@ -280,6 +287,9 @@ function Footer() {
           data-testid="instagram-link"
           className="bg-[url('/icons/instagram.svg')] w-9 aspect-square bg-center bg-contain"
         ></Link>
+      </div>
+      <div className="mt-2 mb-1">
+        <LinkPrivacyPolicy textSizeClassName="text-xs" />
       </div>
       <p>Designed by Freepik</p>
       <p className="2xl:mt-1">© 2026 Lei-chan</p>

@@ -14,7 +14,10 @@ import { signupViaGoogle, signupViaUserInfo } from "../../actions/auth/signup";
 import { loginViaGoogle, loginViaUserInfo } from "../../actions/auth/login";
 // methods
 import { getError, isError } from "../../lib/errorHandler";
-import { getLanguageFromPathname } from "@/app/lib/helper";
+import {
+  getGenericErrorMessage,
+  getLanguageFromPathname,
+} from "@/app/lib/helper";
 // types
 import {
   Language,
@@ -30,6 +33,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import Link from "next/link";
 import LinkPrivacyPolicy from "./LinkPrivacyPolicy";
+import { createIndexedDBDatabase } from "@/app/lib/indexedDB/create";
 
 export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
   const router = useRouter();
@@ -96,7 +100,7 @@ export default function LoginSignUp({ type }: { type: "login" | "signUp" }) {
             ></input>
             <p className="leading-tight">
               {language === "en" ? "I agree to " : "こちらの"}
-              <LinkPrivacyPolicy />
+              <LinkPrivacyPolicy textSizeClassName="text-sm" />
               {language === "ja" && "に同意します"}
             </p>
           </div>
@@ -157,7 +161,7 @@ function ViaUserInfo({
     try {
       e.preventDefault();
 
-      if (typeToDisplay === "Sign up" && !isPolicyAgreed)
+      if (typeToDisplay === "Sign up" && !isPolicyAgreed) {
         handleError({
           error: {
             message: {
@@ -166,6 +170,8 @@ function ViaUserInfo({
             },
           },
         });
+        return;
+      }
 
       const formData = new FormData(e.currentTarget);
 
@@ -187,9 +193,26 @@ function ViaUserInfo({
       return;
     }
 
-    if (state.message) {
-      router.push(`/${language}/main`);
-    }
+    const handleSuccess = async () => {
+      try {
+        // Create database in indexedDB
+        if (typeToDisplay === "Sign up") await createIndexedDBDatabase();
+
+        router.push(`/${language}/main`);
+      } catch (err) {
+        console.error("Error", err);
+        handleError({
+          error: {
+            message: {
+              en: "Unexpected local database error 🙇‍♂️ Please try again this later",
+              ja: "予期せぬローカルデータベースのエラーが発生しました🙇‍♂️後ほどもう一度お試しください",
+            },
+          },
+        });
+      }
+    };
+
+    if (state.message) handleSuccess();
   }, [handleError, state, language, router]);
 
   return (
@@ -267,8 +290,7 @@ function ViaGoogle({
   >(typeToDisplay === "Sign up" ? signupViaGoogle : loginViaGoogle, undefined);
 
   function handleSubmit(data: { email: string; language: Language }) {
-    console.log(isPolicyAgreed);
-    if (typeToDisplay === "Sign up" && !isPolicyAgreed)
+    if (typeToDisplay === "Sign up" && !isPolicyAgreed) {
       handleError({
         error: {
           message: {
@@ -277,6 +299,8 @@ function ViaGoogle({
           },
         },
       });
+      return;
+    }
 
     startTransition(() => action(data));
   }
@@ -293,7 +317,26 @@ function ViaGoogle({
       return;
     }
 
-    if (state.message) router.push(`/${language}/main`);
+    const handleSuccess = async () => {
+      try {
+        // Create database in indexedDB
+        if (typeToDisplay === "Sign up") await createIndexedDBDatabase();
+
+        router.push(`/${language}/main`);
+      } catch (err) {
+        console.error("Error", err);
+        handleError({
+          error: {
+            message: {
+              en: "Unexpected local database error 🙇‍♂️ Please try again this later",
+              ja: "予期せぬローカルデータベースのエラーが発生しました🙇‍♂️後ほどもう一度お試しください",
+            },
+          },
+        });
+      }
+    };
+
+    if (state.message) handleSuccess();
   }, [handleError, state, language, router]);
   return (
     <form className="w-full p-3 flex flex-col items-center">

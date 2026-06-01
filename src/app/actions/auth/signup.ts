@@ -12,7 +12,6 @@ import { FormStateAccount } from "@/app/lib/config/types/formState";
 import { Language } from "@/app/lib/config/types/others";
 // library
 import bcrypt from "bcrypt";
-import { createIndexedDBDatabase } from "@/app/lib/indexedDB/create";
 
 export async function signupViaUserInfo(
   formState: FormStateAccount,
@@ -43,9 +42,6 @@ export async function signupViaUserInfo(
     if (!user) return getError("notFound");
 
     await createSession(user._id);
-
-    // Create database in indexedDB
-    await createIndexedDBDatabase();
 
     return {
       message: {
@@ -82,9 +78,6 @@ export async function signupViaGoogle(
     if (!user) return getError("notFound");
 
     await createSession(user._id);
-
-    // Create indexedDB database
-    await createIndexedDBDatabase();
 
     return {
       message: {

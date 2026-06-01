@@ -68,6 +68,7 @@ export default function CreateFolder({
 
   return (
     <form
+      data-testid="formCreateFolder"
       action={action}
       className={`${widthClassName} ${heightClassName} ${transitionClassName} absolute bottom-0 text-white text-center flex flex-col items-center z-10 ${isVisible ? "translate-y-0" : "translate-y-[100%]"}`}
     >
@@ -109,6 +110,7 @@ export default function CreateFolder({
               : "コレクションの名前"}
           </p>
           <input
+            data-testid="inputFolderName"
             name="name"
             placeholder={language === "en" ? "name" : "名前"}
             className={`mt-1 w-[12rem] sm:w-[13rem] md:w-[14rem] lg:w-[15rem] xl:w-[16rem] 2xl:w-[17rem] ${state?.errors?.name && "border-2 border-red-500"}`}

@@ -1,7 +1,7 @@
-import { GITHUB_LINK, INSTAGRAM_LINK } from "@/app/lib/config/settings";
 import { test, expect } from "@playwright/test";
+import { GITHUB_LINK, INSTAGRAM_LINK } from "@/app/lib/config/settings";
 
-const languagePath = "/en";
+const languagePath = process.env.TEST_LANGUAGE_PATH || "";
 
 test.describe("navigation", () => {
   test.beforeEach(async ({ page }) => {
