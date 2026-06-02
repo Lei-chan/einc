@@ -16,7 +16,7 @@ test.describe("login", async () => {
     // wait for redirect
     await Promise.all([
       page.waitForURL(`${languagePath}/main`),
-      await page.click('button[type="submit"]'),
+      page.click('button[type="submit"]'),
     ]);
 
     await expect(page).toHaveURL(`${languagePath}/main`);

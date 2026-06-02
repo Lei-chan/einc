@@ -1,5 +1,4 @@
 "use client";
-import { resolve } from "path";
 import { IndexedDBEventTarget, IndexedDBType } from "../config/types/others";
 import {
   getOpeningDatabaseErrorMsg,

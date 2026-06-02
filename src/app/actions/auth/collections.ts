@@ -13,14 +13,14 @@ export async function createCollection(
   formState: FormStateCollection,
   formData: FormData,
 ) {
+  const { isAuth, userId } = await verifySession();
+
   try {
     const name = String(formData.get("name")).trim();
     if (!name)
       return getError("blank", undefined, undefined, [
         { en: "Name", ja: "名前" },
       ]);
-
-    const { isAuth, userId } = await verifySession();
 
     await dbConnect();
     const user = await User.findById(userId).select("collections");

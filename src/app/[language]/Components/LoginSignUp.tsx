@@ -158,27 +158,35 @@ function ViaUserInfo({
   );
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    try {
-      e.preventDefault();
+    // try {
+    e.preventDefault();
 
-      if (typeToDisplay === "Sign up" && !isPolicyAgreed) {
-        handleError({
-          error: {
-            message: {
-              en: "Please agree to the privacy policy to finish signing up",
-              ja: "登録を完了するためにプライバシーポリシーへの同意をしてください",
-            },
+    if (typeToDisplay === "Sign up" && !isPolicyAgreed) {
+      handleError({
+        error: {
+          message: {
+            en: "Please agree to the privacy policy to finish signing up",
+            ja: "登録を完了するためにプライバシーポリシーへの同意をしてください",
           },
-        });
-        return;
-      }
-
-      const formData = new FormData(e.currentTarget);
-
-      startTransition(() => action({ formData, language }));
-    } catch (err: unknown) {
-      console.error("Error", isError(err) ? err.message : "");
+        },
+      });
+      return;
     }
+
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(() => action({ formData, language }));
+    // } catch (err) {
+    //   console.error("Error", err);
+    //   handleError({
+    //     error: {
+    //       message: {
+    //         en: "Unexpected local database error 🙇‍♂️ Please try again this later",
+    //         ja: "予期せぬローカルデータベースのエラーが発生しました🙇‍♂️後ほどもう一度お試しください",
+    //       },
+    //     },
+    //   });
+    // }
   }
 
   useEffect(() => {
@@ -196,7 +204,7 @@ function ViaUserInfo({
     const handleSuccess = async () => {
       try {
         // Create database in indexedDB
-        if (typeToDisplay === "Sign up") await createIndexedDBDatabase();
+        await createIndexedDBDatabase();
 
         router.push(`/${language}/main`);
       } catch (err) {
@@ -290,6 +298,7 @@ function ViaGoogle({
   >(typeToDisplay === "Sign up" ? signupViaGoogle : loginViaGoogle, undefined);
 
   function handleSubmit(data: { email: string; language: Language }) {
+    // try {
     if (typeToDisplay === "Sign up" && !isPolicyAgreed) {
       handleError({
         error: {
@@ -303,6 +312,17 @@ function ViaGoogle({
     }
 
     startTransition(() => action(data));
+    // } catch (err) {
+    //   console.error("Error", err);
+    //   handleError({
+    //     error: {
+    //       message: {
+    //         en: "Unexpected local database error 🙇‍♂️ Please try again this later",
+    //         ja: "予期せぬローカルデータベースのエラーが発生しました🙇‍♂️後ほどもう一度お試しください",
+    //       },
+    //     },
+    //   });
+    // }
   }
 
   useEffect(() => {
@@ -320,7 +340,7 @@ function ViaGoogle({
     const handleSuccess = async () => {
       try {
         // Create database in indexedDB
-        if (typeToDisplay === "Sign up") await createIndexedDBDatabase();
+        await createIndexedDBDatabase();
 
         router.push(`/${language}/main`);
       } catch (err) {

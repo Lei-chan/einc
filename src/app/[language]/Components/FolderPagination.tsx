@@ -627,7 +627,11 @@ function Folder({
               isSelected ? "w-full" : "w-[75%]"
             }`}
           >
-            {data.name}
+            {data.allWords && language === "en"
+              ? "All"
+              : data.allWords && language === "ja"
+                ? "全て"
+                : data.name}
           </span>
         )}
         {!isSelected && (

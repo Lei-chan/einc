@@ -32,6 +32,8 @@ export async function registerData(
     | { _id: string; name: string; password: string }[],
 ): Promise<void> {
   return new Promise((resolve, reject) => {
+    if (!dataArr || isArrayEmpty(dataArr)) resolve();
+
     const req = indexedDB.open(getDatabaseName(type));
 
     req.onsuccess = (e) => {

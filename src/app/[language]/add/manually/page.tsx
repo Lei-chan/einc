@@ -147,7 +147,6 @@ export default function Add() {
     const displayMessageAndNavigate = async () => {
       if (!state.message) return;
 
-      console.log(state.data);
       if (state.data) await registerData("words", state.data);
 
       // success message

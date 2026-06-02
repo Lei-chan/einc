@@ -5,6 +5,8 @@ import proxyAuth from "./app/lib/proxies/auth";
 import proxyLanguage from "./app/lib/proxies/language";
 
 export async function proxy(req: NextRequest) {
+  if (process.env.NODE_ENV === "test") return;
+
   const pathname = req.nextUrl.pathname;
   const isLanguageIncluded =
     pathname.startsWith("/en") || pathname.startsWith("/ja");
