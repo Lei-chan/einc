@@ -34,7 +34,6 @@ test.describe("login", async () => {
     test.afterEach(async ({ page }) => {
       await page.click('button[type="submit"]');
 
-      // waits for React to render it
       await expect(
         page.getByTestId("error").or(page.getByTestId("errorMsgInput")),
       ).toBeVisible();
