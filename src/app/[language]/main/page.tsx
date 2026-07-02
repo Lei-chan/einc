@@ -19,15 +19,16 @@ export default function Main() {
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
 
-  // to get rid of old cached online offline state in sw
-  useEffect(() => {
-    const isReloaded = sessionStorage.getItem("isReloaded");
+  // // to get rid of old cached online offline state in sw
 
-    if (isReloaded === "true") return;
+  // useEffect(() => {
+  //   const isReloaded = sessionStorage.getItem("isReloaded");
 
-    sessionStorage.setItem("isReloaded", "true");
-    window.location.reload();
-  }, []);
+  //   if (isReloaded === "true") return;
+
+  //   sessionStorage.setItem("isReloaded", "true");
+  //   window.location.reload();
+  // }, []);
 
   return (
     <div className="relative w-screen h-[100dvh] flex flex-col items-center">

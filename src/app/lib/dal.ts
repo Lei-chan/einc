@@ -139,6 +139,8 @@ export const deleteTestDataFromMongoDB = async () => {
 
 export const getDataForIndexedDB = cache(
   async (type: "all" | IndexedDBType) => {
+    await verifySession();
+
     try {
       if (type === "test") return;
 

@@ -26,6 +26,7 @@ export default function Add() {
   return (
     <div className="w-full h-screen flex flex-col sm:flex-row justify-center items-center gap-8 md:gap-10 lg:gap-12 xl:gap-14 2xl:gap-16">
       <Link
+        data-testid="linkRegisterManually"
         href={`${pathname}/manually#${collectionId}`}
         className={`${linkClassName}  from-orange-500 to-orange-200 hover:to-orange-300`}
       >
@@ -43,6 +44,7 @@ export default function Add() {
         )}
       </Link>
       <Link
+        data-testid="linkRegisterDictionary"
         href={`/${language}/dictionary#${collectionId}`}
         className={`${linkClassName}  from-green-400 to-green-200 hover:to-green-300`}
       >

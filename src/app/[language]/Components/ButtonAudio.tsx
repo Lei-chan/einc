@@ -11,6 +11,7 @@ export default function ButtonAudio({ src }: { src: string }) {
   return (
     <>
       <button
+        data-testid="buttonAudio"
         className="w-5 aspect-square bg-[url('/icons/audio.svg')] bg-center bg-contain bg-no-repeat"
         onClick={handleToggleAudio}
       ></button>

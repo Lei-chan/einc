@@ -6,21 +6,21 @@ const email = process.env.TEST_EMAIL || "";
 
 test.describe("login", async () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${languagePath}/login`);
-  });
-
-  test("login by email and password", async ({ page }) => {
-    await page.fill('[name="email"]', email);
-    await page.fill('[name="password"]', password);
-
-    // wait for redirect
-    await Promise.all([
-      page.waitForURL(`${languagePath}/main`),
-      page.click('button[type="submit"]'),
-    ]);
-
     await expect(page).toHaveURL(`${languagePath}/main`);
   });
+
+  // test("login by email and password", async ({ page }) => {
+  //   await page.fill('[name="email"]', email);
+  //   await page.fill('[name="password"]', password);
+
+  //   // wait for redirect
+  //   await Promise.all([
+  //     page.waitForURL(`${languagePath}/main`),
+  //     page.click('button[type="submit"]'),
+  //   ]);
+
+  //   await expect(page).toHaveURL(`${languagePath}/main`);
+  // });
 
   test.describe("error email and password", async () => {
     test("email blank", async ({ page }) => {

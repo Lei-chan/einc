@@ -255,8 +255,12 @@ function Word({
   }
 
   return (
-    <div className="relative w-[18rem] sm:w-[19rem] md:w-[20rem] lg:w-[22rem] xl:w-[23rem] 2xl:w-[24rem] h-fit bg-gradient-to-l from-red-500 to-yellow-500 rounded-md shadow-md shadow-black/20 p-3 md:p-4 lg:p-5">
+    <div
+      data-testid="registerCard"
+      className="relative w-[18rem] sm:w-[19rem] md:w-[20rem] lg:w-[22rem] xl:w-[23rem] 2xl:w-[24rem] h-fit bg-gradient-to-l from-red-500 to-yellow-500 rounded-md shadow-md shadow-black/20 p-3 md:p-4 lg:p-5"
+    >
       <button
+        data-testid="btnX"
         type="button"
         className="absolute text-2xl top-0 right-2 text-white"
         onClick={onClickDelete}

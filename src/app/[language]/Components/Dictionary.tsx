@@ -199,6 +199,7 @@ function Top({
       onSubmit={onSubmitSearch}
     >
       <input
+        data-testid="inputSearch"
         name="word"
         type="search"
         placeholder={language === "en" ? "search for..." : "単語を検索"}
@@ -213,6 +214,7 @@ function Top({
       <div className="sm:absolute w-fit flex flex-col lg:flex-row right-3 xl:right-5 2xl:right-7 lg:gap-2">
         <div className="flex flex-row gap-1">
           <select
+            data-testid="searchLanguage"
             value={searchLanguage}
             className={selectClassName}
             onChange={onChangeSearchLanguage}
@@ -225,6 +227,7 @@ function Top({
           </select>
           <p> - </p>
           <select
+            data-testid="dictionaryLanguage"
             value={dictionaryLanguage}
             className={selectClassName}
             onChange={onChangeDictionaryLanguage}
@@ -289,7 +292,7 @@ function WordContainer({
       )}
     </div>
   ) : (
-    <ul className="w-full h-full overflow-y-auto">
+    <ul data-testid="ulDictionary" className="w-full h-full overflow-y-auto">
       {results.map((result, i) => (
         <Word
           key={i}
@@ -337,6 +340,7 @@ function Word({
 
   return !isClicked ? (
     <li
+      data-testid="closedWord"
       className={`${liClassName} bg-white/50 text-xl lg:text-2xl font-medium hover:bg-white`}
       onClick={handleClickWord}
     >
@@ -344,6 +348,7 @@ function Word({
     </li>
   ) : (
     <li
+      data-testid="openedWord"
       className={`${liClassName} relative bg-white flex flex-col gap-2`}
       onClick={handleClickWord}
     >
@@ -388,6 +393,7 @@ function Word({
         </p>
       </div>
       <button
+        data-testid="buttonAdd"
         type="button"
         className="relative flex flex-row items-center opacity-70 cursor-pointer hover:opacity-40 transition-all duration-200"
         onClick={handleClickAdd}

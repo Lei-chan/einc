@@ -81,7 +81,7 @@ export function createTestDB(): Promise<void> {
 
 export const createIndexedDBDatabase = (): Promise<void> =>
   new Promise((resolve, reject) => {
-    const req = window.indexedDB.open("einc");
+    const req = window.indexedDB.open("einc", 1);
 
     req.onupgradeneeded = (e) => {
       const db = (e.target as IndexedDBEventTarget).result;
@@ -118,10 +118,14 @@ export const createIndexedDBDatabase = (): Promise<void> =>
           unique: false,
         });
         objectStore.createIndex("examples", "examples", { unique: false });
+        objectStore.createIndex("pronunciationString", "pronunciationString", {
+          unique: false,
+        });
         objectStore.createIndex("imageName", "imageName", { unique: false });
         objectStore.createIndex("imageDefinitions", "imageDefinitions", {
           unique: false,
         });
+        objectStore.createIndex("synonyms", "synonyms", { unique: false });
         objectStore.createIndex("status", "status", { unique: false });
         objectStore.createIndex("nextReviewAt", "nextReviewAt", {
           unique: false,
@@ -142,7 +146,6 @@ export const createIndexedDBDatabase = (): Promise<void> =>
     };
 
     req.onsuccess = (e) => {
-      console.log("success!");
       req.result.close();
       resolve();
     };

@@ -367,6 +367,7 @@ const registerMongoDBToIndexedDB = async (mongoData: IndexedDBData) => {
 
 export const syncMongoDBWithIndexedDB = async (type: "all" | IndexedDBType) => {
   try {
+    console.log("syncing MongoDB with indexedDB");
     await createIndexedDBDatabase();
 
     const mongoData = await getDataForIndexedDB(type);

@@ -282,7 +282,7 @@ function Bottom({
 
     displaySuccessMsg();
     lastHandledDeleteRef.current = state;
-  }, [state, language, handleUpdateUI, areWordsChecked]);
+  }, [state, language, handleUpdateUI, areWordsChecked, dispatch]);
 
   return (
     <div className="w-[90%] sm:w-[85%] md:w-[70%] xl:w-[60%] 2xl:w-[50%] min-h-[80vh] max-h-fit flex flex-col items-center justify-center">

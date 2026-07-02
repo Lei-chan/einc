@@ -11,11 +11,8 @@ import { IsOnline } from "@/app/lib/hooks";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import PMessage from "./PMessage";
-import {
-  sendIndexedDBToMongoDB,
-  sendWordsIndexedDBToMongoDB,
-} from "@/app/lib/dal";
-import { getAllData, getAllIndexedDBData } from "@/app/lib/indexedDB/database";
+import { sendWordsIndexedDBToMongoDB } from "@/app/lib/dal";
+import { getAllData } from "@/app/lib/indexedDB/database";
 import { WordData } from "@/app/lib/config/types/others";
 
 export default function LogoOnlineMark({
@@ -39,6 +36,16 @@ export default function LogoOnlineMark({
   const [isSyncing, setIsSyncing] = useState(false);
   const [isErrorVisible, setIsErrorVisible] = useState(false);
 
+  // to get rid of old cached online offline state in sw
+  // useEffect(() => {
+  //   const isReloaded = sessionStorage.getItem("isReloaded");
+
+  //   if (isReloaded === "true") return;
+
+  //   sessionStorage.setItem("isReloaded", "true");
+  //   window.location.reload();
+  // }, []);
+
   useEffect(() => {
     if (!isOnline || !showOnlineMark) {
       setIsSyncing(false);
@@ -56,9 +63,6 @@ export default function LogoOnlineMark({
 
         // push local changes to MongoDB (For now, only words if user used the quiz feature)
         if (isAlreadySynced && wasQuizUsed) {
-          // const indexedDBData = await getAllIndexedDBData();
-          // console.log(indexedDBData);
-          // await sendIndexedDBToMongoDB(indexedDBData);
           const wordsIndexedDB = (await getAllData("words")) as WordData[];
           await sendWordsIndexedDBToMongoDB(wordsIndexedDB);
 
@@ -71,6 +75,9 @@ export default function LogoOnlineMark({
           await syncMongoDBWithIndexedDB("all");
           // set data 'isAlreadySynced' in sessionStorage
           sessionStorage.setItem("isAlreadySynced", "true");
+
+          // to get rid of old cached online offline state in sw
+          window.location.reload();
         }
       } catch (err) {
         setIsErrorVisible(true);

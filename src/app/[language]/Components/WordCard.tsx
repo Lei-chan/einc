@@ -186,6 +186,7 @@ export default function WordCard({
       return (
         <>
           <form
+            data-testid="wordCard"
             className="flex flex-col gap-2 md:gap-3 p-3 md:p-4"
             onSubmit={handleSubmit}
           >

@@ -39,7 +39,6 @@ import { FormStateCollection } from "../../lib/config/types/formState";
 import { nanoid } from "nanoid";
 import { usePathname, useRouter } from "next/navigation";
 import { IsOnline } from "@/app/lib/hooks";
-import { error } from "console";
 
 export default function FolderPagination({
   type,

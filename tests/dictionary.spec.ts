@@ -1,4 +1,10 @@
+import { Collection, Collections } from "@/app/lib/config/types/others";
+import dbConnect from "@/app/lib/database";
+import User from "@/app/lib/models/User";
 import { test, expect } from "@playwright/test";
+import { ObjectId } from "mongoose";
+
+const email = process.env.TEST_EMAIL || "";
 const languagePath = process.env.TEST_LANGUAGE_PATH || "";
 
 test.describe("dictionary", () => {
@@ -44,6 +50,8 @@ test.describe("dictionary", () => {
     });
 
     test.afterEach(async ({ page }) => {
+      test.use({ storageState: "playwright/.auth/user.json" });
+
       await page.click('button[type="submit"]');
 
       const ulDictionary = page.getByTestId("ulDictionary");
@@ -83,6 +91,8 @@ test.describe("dictionary", () => {
   });
 
   test("add word", async ({ page }) => {
+    test.use({ storageState: "playwright/.auth/user.json" });
+
     await page.getByTestId("searchLanguage").selectOption("en");
     await page.getByTestId("dictionaryLanguage").selectOption("en");
     await page.getByTestId("inputSearch").fill("banana");
@@ -98,18 +108,33 @@ test.describe("dictionary", () => {
       page.getByTestId("buttonAdd").click(),
     ]);
 
-    expect(page).toHaveURL(url);
+    await expect(page).toHaveURL(url);
+
+    const btnCollection = page.getByText(
+      languagePath === "/en" ? "All" : "全て",
+    );
+    await btnCollection.waitFor();
+
+    page.screenshot({ path: "screenshot.png" });
 
     const mainUrl = `${languagePath}/main`;
-    await Promise.all([
-      page.waitForURL(mainUrl),
-      page.getByText(languagePath === "/en" ? "All" : "全て").click(),
-    ]);
+    await Promise.all([page.waitForURL(mainUrl), btnCollection.click()]);
 
     await expect(page).toHaveURL(mainUrl);
 
     // check if new word was added successfully
-    const collectionUrl = `${languagePath}/collection/123`;
+    await dbConnect();
+    const collections = (
+      (await User.findOne({ email }).select("collections").lean()) as {
+        _id: ObjectId;
+        collections: Collections;
+      }
+    ).collections;
+    const collectionId = collections
+      .find((col: Collection) => col.allWords)
+      ?._id?.toString();
+
+    const collectionUrl = `${languagePath}/collection/${collectionId}`;
     const button = page.getByText(languagePath === "/en" ? "All" : "全て");
     await button.waitFor();
 

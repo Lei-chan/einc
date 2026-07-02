@@ -143,6 +143,8 @@ export async function getCollectionDataCurPage(
     const collectionData = (await getAllData("collections")) as Collections;
     const words = (await getAllData("words")) as WordData[];
 
+    console.log(collectionData);
+
     const collectionsCurPage = collectionData.slice(indexFrom, indexTo);
 
     // add numberOfWords property

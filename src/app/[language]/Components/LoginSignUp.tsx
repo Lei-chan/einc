@@ -31,7 +31,6 @@ import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.share
 // libraries
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
-import Link from "next/link";
 import LinkPrivacyPolicy from "./LinkPrivacyPolicy";
 import { createIndexedDBDatabase } from "@/app/lib/indexedDB/create";
 

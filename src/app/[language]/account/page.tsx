@@ -245,6 +245,7 @@ function Email({
       {!isGoogleConnected &&
         (!isClicked ? (
           <button
+            data-testid="btnChangeEmail"
             type="button"
             className={`${classNames.buttonChangeClassName} mt-0`}
             onClick={handleClickChange}
@@ -329,6 +330,7 @@ function Password({
       </h3>
       {!isClicked ? (
         <button
+          data-testid="btnChangePassword"
           type="button"
           className={`${classNames.buttonChangeClassName}`}
           onClick={handleClickChange}
@@ -485,6 +487,7 @@ function CloseAccount({
       </h3>
       {!isClicked ? (
         <button
+          data-testid="btnCloseAccount"
           type="button"
           className={`${classNames.buttonClassName} bg-red-500 hover:bg-red-400`}
           onClick={handleClickClose}
