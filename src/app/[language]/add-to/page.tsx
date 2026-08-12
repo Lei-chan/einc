@@ -13,7 +13,6 @@ import {
 import FolderPagination from "@/app/[language]/Components/FolderPagination";
 import {
   ReadonlyURLSearchParams,
-  useParams,
   usePathname,
   useRouter,
   useSearchParams,
@@ -22,15 +21,10 @@ import {
   getGenericErrorMessage,
   getLanguageFromPathname,
   getNextReviewDate,
-  syncMongoDBWithIndexedDB,
   wait,
 } from "@/app/lib/helper";
 import PMessage from "../Components/PMessage";
-import {
-  DisplayMessage,
-  Message,
-  WordBeforeSent,
-} from "@/app/lib/config/types/others";
+import { DisplayMessage, WordBeforeSent } from "@/app/lib/config/types/others";
 import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 import { addWords } from "@/app/actions/auth/words";
 import { registerData } from "@/app/lib/indexedDB/database";

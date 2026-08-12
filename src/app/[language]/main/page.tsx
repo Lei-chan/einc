@@ -8,27 +8,16 @@ import LinkAddVocab from "../Components/LinkAddVocab";
 import FolderPagination from "../Components/FolderPagination";
 // dal
 import { logout } from "@/app/lib/dal";
+// hooks
+import { IsOnline } from "@/app/lib/hooks";
 // methods
 import { getLanguageFromPathname } from "@/app/lib/helper";
 // type
 import { Language } from "@/app/lib/config/types/others";
-import { IsOnline } from "@/app/lib/hooks";
-import { useEffect } from "react";
 
 export default function Main() {
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
-
-  // // to get rid of old cached online offline state in sw
-
-  // useEffect(() => {
-  //   const isReloaded = sessionStorage.getItem("isReloaded");
-
-  //   if (isReloaded === "true") return;
-
-  //   sessionStorage.setItem("isReloaded", "true");
-  //   window.location.reload();
-  // }, []);
 
   return (
     <div className="relative w-screen h-[100dvh] flex flex-col items-center">

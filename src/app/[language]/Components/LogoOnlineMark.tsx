@@ -36,20 +36,12 @@ export default function LogoOnlineMark({
   const [isSyncing, setIsSyncing] = useState(false);
   const [isErrorVisible, setIsErrorVisible] = useState(false);
 
-  // to get rid of old cached online offline state in sw
-  // useEffect(() => {
-  //   const isReloaded = sessionStorage.getItem("isReloaded");
-
-  //   if (isReloaded === "true") return;
-
-  //   sessionStorage.setItem("isReloaded", "true");
-  //   window.location.reload();
-  // }, []);
-
   useEffect(() => {
     if (!isOnline || !showOnlineMark) {
-      setIsSyncing(false);
-      setIsErrorVisible(false);
+      (() => {
+        setIsSyncing(false);
+        setIsErrorVisible(false);
+      })();
       return;
     }
 

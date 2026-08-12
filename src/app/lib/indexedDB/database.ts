@@ -1,3 +1,4 @@
+import { register } from "module";
 import { FLASHCARD_QUIZ_ONE_TURN, LISTS_ONE_PAGE } from "../config/settings";
 import {
   DefinitionsDataQuiz,
@@ -20,8 +21,7 @@ import {
   isArrayEmpty,
 } from "../helper";
 
-const getDatabaseName = (type: IndexedDBType) =>
-  type === "test" ? "test" : "einc";
+const databaseName = "einc";
 
 export async function registerData(
   type: IndexedDBType | "test",
@@ -34,7 +34,7 @@ export async function registerData(
   return new Promise((resolve, reject) => {
     if (!dataArr || isArrayEmpty(dataArr)) resolve();
 
-    const req = indexedDB.open(getDatabaseName(type));
+    const req = indexedDB.open(databaseName);
 
     req.onsuccess = (e) => {
       const db = (e.target as IndexedDBEventTarget).result;
@@ -66,7 +66,7 @@ export function removeData(
   dataIds: string[],
 ): Promise<void> {
   return new Promise(async (resolve, reject) => {
-    const req = indexedDB.open(getDatabaseName(type));
+    const req = indexedDB.open(databaseName);
 
     req.onsuccess = (e) => {
       const db = (e.target as IndexedDBEventTarget).result;
@@ -77,7 +77,7 @@ export function removeData(
 
       transaction.oncomplete = (e) => {
         console.log(
-          `Data for ${type} in indexedDB ${getDatabaseName(type)} removed successfully`,
+          `Data for ${type} in indexedDB ${databaseName} removed successfully`,
         );
         resolve();
       };
@@ -96,9 +96,9 @@ export function removeData(
   });
 }
 
-export function getAllData(type: IndexedDBType) {
+export async function getAllData(type: IndexedDBType) {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(getDatabaseName(type));
+    const req = indexedDB.open(databaseName);
 
     req.onsuccess = (e) => {
       const db = (e.target as IndexedDBEventTarget).result;
@@ -143,8 +143,6 @@ export async function getCollectionDataCurPage(
     const collectionData = (await getAllData("collections")) as Collections;
     const words = (await getAllData("words")) as WordData[];
 
-    console.log(collectionData);
-
     const collectionsCurPage = collectionData.slice(indexFrom, indexTo);
 
     // add numberOfWords property
@@ -166,7 +164,7 @@ export async function getCollectionDataCurPage(
 
 function getCollection(collectionId: string) {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(getDatabaseName("collections"));
+    const req = indexedDB.open(databaseName);
 
     req.onsuccess = (e) => {
       const db = (e.target as IndexedDBEventTarget).result;
@@ -203,7 +201,7 @@ export async function getDataForCollection(
   }
 
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(getDatabaseName(type));
+    const req = indexedDB.open(databaseName);
 
     req.onsuccess = async (e) => {
       const db = (e.target as IndexedDBEventTarget).result;
@@ -259,7 +257,7 @@ export function updateData(
     | { _id: string; name: string; password: string }[],
 ): Promise<void> {
   return new Promise(async (resolve, reject) => {
-    const req = indexedDB.open(getDatabaseName(type));
+    const req = indexedDB.open(databaseName);
 
     req.onsuccess = (e) => {
       const db = (e.target as IndexedDBEventTarget).result;
@@ -274,7 +272,7 @@ export function updateData(
         req.onsuccess = (e) => resolve();
 
         req.onerror = (e) => {
-          const error = `IndexedDB Error, updating data for ${type} in indexedDB ${getDatabaseName(type)}:  ${(e.target as IndexedDBEventTarget).error.message}`;
+          const error = `IndexedDB Error, updating data for ${type} in indexedDB ${databaseName}:  ${(e.target as IndexedDBEventTarget).error.message}`;
           console.error(error);
           reject(error);
         };
@@ -387,7 +385,7 @@ export async function updateStatusNextReviewDate(
   data: UpdateStatusReviewDateDataQuiz,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(getDatabaseName("words"));
+    const req = indexedDB.open(databaseName);
 
     req.onsuccess = async (e) => {
       const db = (e.target as IndexedDBEventTarget).result;
@@ -438,7 +436,7 @@ export async function updateStatusNextReviewDate(
 
 export function addDefinitions(data: DefinitionsDataQuiz): Promise<void> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(getDatabaseName("words"));
+    const req = indexedDB.open(databaseName);
 
     req.onsuccess = async (e) => {
       const db = (e.target as IndexedDBEventTarget).result;

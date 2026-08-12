@@ -175,17 +175,6 @@ function ViaUserInfo({
     const formData = new FormData(e.currentTarget);
 
     startTransition(() => action({ formData, language }));
-    // } catch (err) {
-    //   console.error("Error", err);
-    //   handleError({
-    //     error: {
-    //       message: {
-    //         en: "Unexpected local database error 🙇‍♂️ Please try again this later",
-    //         ja: "予期せぬローカルデータベースのエラーが発生しました🙇‍♂️後ほどもう一度お試しください",
-    //       },
-    //     },
-    //   });
-    // }
   }
 
   useEffect(() => {
