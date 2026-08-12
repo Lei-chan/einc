@@ -3,19 +3,19 @@ import { IndexedDBEventTarget } from "../config/types/others";
 
 export const createIndexedDBDatabase = (): Promise<void> =>
   new Promise((resolve, reject) => {
-    // delete indexedDB first to make the data same as online database
-    const deleteReq = window.indexedDB.deleteDatabase("einc");
+    // // delete indexedDB first to make the data same as online database
+    // const deleteReq = window.indexedDB.deleteDatabase("einc");
 
-    deleteReq.onsuccess = (e) =>
-      console.log("indexedDB deleted successfully or it didn't exist!");
+    // deleteReq.onsuccess = (e) =>
+    //   console.log("indexedDB deleted successfully or it didn't exist!");
 
-    deleteReq.onerror = (e) =>
-      console.error(
-        "Delete indexedDB failed: ",
-        (e.target as IndexedDBEventTarget).error,
-      );
+    // deleteReq.onerror = (e) =>
+    //   console.error(
+    //     "Delete indexedDB failed: ",
+    //     (e.target as IndexedDBEventTarget).error,
+    //   );
 
-    const openReq = window.indexedDB.open("einc", 1);
+    const openReq = window.indexedDB.open("einc", 2);
 
     openReq.onupgradeneeded = (e) => {
       const db = (e.target as IndexedDBEventTarget).result;
