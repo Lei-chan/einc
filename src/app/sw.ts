@@ -101,12 +101,16 @@ export interface IndexedDBEventTarget extends EventTarget {
   error: { message: string };
 }
 
-export function getCollectionIdData() {
+export function getCollectionIdData(): Promise<null | string[]> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open("einc");
 
     req.onsuccess = (e) => {
       const db = (e.target as IDBOpenDBRequest).result;
+
+      // if database doens't have any object stores, then do nothing
+      if (!db.objectStoreNames.contains("collections")) resolve(null);
+
       const transaction = db.transaction(["collections"], "readonly");
       const objStore = transaction.objectStore("collections");
 
@@ -134,14 +138,15 @@ serwist.addEventListeners();
 const registerCollectionDataToIndexedDB = (event: ExtendableEvent) => {
   event.waitUntil(
     (async () => {
-      let ids: string[] = [];
+      let ids: null | string[] = null;
 
       try {
-        ids = (await getCollectionIdData()) as string[];
+        ids = await getCollectionIdData();
       } catch (e) {
         // IndexedDB might be empty on first install
         console.warn("Could not read IndexedDB during SW install:", e);
       }
+      if (!ids) return;
 
       await Promise.all(
         ids.map((id) =>
@@ -219,60 +224,7 @@ const registerCollectionDataToIndexedDB = (event: ExtendableEvent) => {
 };
 
 //  check if they work
-self.addEventListener(
-  "install",
-  registerCollectionDataToIndexedDB,
-  //   (event) => {
-  //   event.waitUntil(
-  //     (async () => {
-  //       let ids: string[] = [];
-
-  //       try {
-  //         ids = (await getCollectionIdData()) as string[];
-  //       } catch (e) {
-  //         // IndexedDB might be empty on first install — that's fine
-  //         console.warn("Could not read IndexedDB during SW install:", e);
-  //       }
-
-  //       await Promise.all(
-  //         ids.map((id) =>
-  //           serwist.handleRequest({
-  //             request: new Request(`/collection/${id}`),
-  //             event,
-  //           }),
-  //         ),
-  //       );
-
-  //       await Promise.all(
-  //         ids.map((id) =>
-  //           serwist.handleRequest({
-  //             request: new Request(`/collection/${id}/list`),
-  //             event,
-  //           }),
-  //         ),
-  //       );
-
-  //       await Promise.all(
-  //         ids.map((id) =>
-  //           serwist.handleRequest({
-  //             request: new Request(`/collection/${id}/flashcard`),
-  //             event,
-  //           }),
-  //         ),
-  //       );
-
-  //       await Promise.all(
-  //         ids.map((id) =>
-  //           serwist.handleRequest({
-  //             request: new Request(`/collection/${id}/quiz`),
-  //             event,
-  //           }),
-  //         ),
-  //       );
-  //     })(),
-  //   );
-  // }
-);
+self.addEventListener("install", registerCollectionDataToIndexedDB);
 
 self.addEventListener("activate", registerCollectionDataToIndexedDB);
 
