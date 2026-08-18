@@ -1,9 +1,7 @@
-import { test as setup } from "@playwright/test";
+import { test as setup, expect } from "@playwright/test";
 import dbConnect from "@/app/lib/database";
 import User from "@/app/lib/models/User";
 import { SignJWT } from "jose";
-import { Collection } from "@/app/lib/config/types/others";
-import Word from "@/app/lib/models/Word";
 
 const secretKey = process.env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
@@ -13,13 +11,6 @@ const languagePath = process.env.TEST_LANGUAGE_PATH || "";
 const email = process.env.TEST_EMAIL || "";
 const password = process.env.TEST_PASSWORD || "";
 
-/*Error: Playwright Test did not expect test.use() to be called here.
-Most common reasons include:
-- You are calling test.use() in a configuration file.
-- You are calling test.use() in a file that is imported by the configuration file.
-- You have two different versions of @playwright/test. This usually happens
-  when one of the dependencies in your package.json depends on @playwright/test. */
-
 setup("create new database", async ({ page, context }) => {
   console.log("creating new database...");
 
@@ -27,14 +18,14 @@ setup("create new database", async ({ page, context }) => {
 
   await page.fill('[name="email"]', email);
   await page.fill('[name="password"]', password);
+  await page
+    .getByRole("button", {
+      name: languagePath === "/en" ? "Log in" : "ログイン",
+    })
+    .click();
 
-  // wait for redirect
-  await Promise.all([
-    page.waitForURL(`${languagePath}/main`),
-    page.click('button[type="submit"]'),
-  ]);
+  await expect(page).toHaveURL(`${languagePath}/main`, { timeout: 10000 });
 
-  // later!! TYPEERROR: cannot read property of null (testUser._id)
   await dbConnect();
   const testUser = await User.findOne({ email }).lean();
   const userId = testUser._id;
@@ -55,187 +46,14 @@ setup("create new database", async ({ page, context }) => {
     { name: "session", value: session, path: "/", domain: "localhost" },
   ]);
 
-  await page.waitForTimeout(10000);
-
   await page.evaluate(() => {
     window.dispatchEvent(new Event("online"));
     window.dispatchEvent(new Event("offline"));
     window.dispatchEvent(new Event("resize"));
   });
 
-  // Later!! IndexedDB not stored correctly!
   await context.storageState({
     path: "playwright/.auth/.user.json",
     indexedDB: true,
   });
-
-  // await page.screenshot({ path: "screenshot.png" });
-  // // create indexedDB database
-  // await page.evaluate(async (): Promise<void> => {
-  //   return new Promise((resolve, reject) => {
-  //     const req = window.indexedDB.open("einc");
-
-  //     req.onupgradeneeded = (e) => {
-  //       const db = (e.target as IndexedDBEventTarget).result;
-  //       const transaction = (e.target as IDBOpenDBRequest).transaction!;
-
-  //       transaction.onerror = (e) =>
-  //         console.error(
-  //           `IndexedDB Error in transaction: ${(e.target as IDBTransaction).error}`,
-  //         );
-
-  //       transaction.oncomplete = () => resolve();
-
-  //       // If collections has not been created yet
-  //       if (!db.objectStoreNames.contains("collections")) {
-  //         const objectStore = db.createObjectStore("collections", {
-  //           keyPath: "_id",
-  //         });
-
-  //         objectStore.createIndex("name", "name", { unique: false });
-  //         objectStore.createIndex("numberOfWords", "numberOfWords", {
-  //           unique: false,
-  //         });
-  //         objectStore.createIndex("allWords", "allWords", { unique: false });
-  //       }
-
-  //       // If words objectStore has not been created yet
-  //       if (!db.objectStoreNames.contains("words")) {
-  //         const objectStore = db.createObjectStore("words", {
-  //           keyPath: "_id",
-  //         });
-
-  //         objectStore.createIndex("collectionId", "collectionId", {
-  //           unique: false,
-  //         });
-  //         objectStore.createIndex("name", "name", { unique: false });
-  //         objectStore.createIndex("audio", "audio", { unique: false });
-
-  //         objectStore.createIndex("definitions", "definitions", {
-  //           unique: false,
-  //         });
-  //         objectStore.createIndex("examples", "examples", { unique: false });
-  //         objectStore.createIndex(
-  //           "pronunciationString",
-  //           "pronunciationString",
-  //           { unique: false },
-  //         );
-  //         objectStore.createIndex("synonyms", "synonyms", { unique: false });
-  //         objectStore.createIndex("imageName", "imageName", {
-  //           unique: false,
-  //         });
-  //         objectStore.createIndex("imageDefinitions", "imageDefinitions", {
-  //           unique: false,
-  //         });
-  //         objectStore.createIndex("status", "status", { unique: false });
-  //         objectStore.createIndex("nextReviewAt", "nextReviewAt", {
-  //           unique: false,
-  //         });
-  //       }
-
-  //       // If journals objectStore has not been created yet
-  //       // if (!db.objectStoreNames.contains("journals")) {
-  //       //   const objectStore = db.createObjectStore("journals", {
-  //       //     keyPath: "_id",
-  //       //   });
-
-  //       //   objectStore.createIndex("collectionId", "collectionId", {
-  //       //     unique: false,
-  //       //   });
-  //       //   objectStore.createIndex("journal", "journal", { unique: false });
-  //       // }
-  //     };
-
-  //     req.onsuccess = (e) => {
-  //       req.result.close();
-  //       resolve();
-  //     };
-
-  //     req.onerror = (e) => {
-  //       const error = `IndexedDB Error: ${(e.target as IDBOpenDBRequest).error}`;
-  //       console.error(error);
-  //       reject(error);
-  //     };
-  //   });
-  // });
-
-  // // sync user collections with indexedDB
-  // await page.evaluate(async (collections): Promise<void> => {
-  //   return new Promise((resolve, reject) => {
-  //     const req = indexedDB.open("einc");
-
-  //     req.onsuccess = (e) => {
-  //       try {
-  //         const db = (e.target as IndexedDBEventTarget).result;
-  //         const transaction = db.transaction(["collections"], "readwrite");
-  //         const objStore = transaction.objectStore("collections");
-
-  //         collections.forEach((data: Collection) => objStore.put(data));
-
-  //         transaction.oncomplete = (e) => {
-  //           resolve();
-  //         };
-
-  //         transaction.onerror = (e) => {
-  //           const error = `IndexedDB error, adding data for collections failed: ${(e.target as IndexedDBEventTarget).error.message}`;
-  //           console.error(error);
-  //           reject(error);
-  //         };
-  //       } catch (err) {
-  //         console.log(err);
-  //         reject(err);
-  //       }
-  //     };
-
-  //     req.onerror = (e) => {
-  //       console.log("indexedDB Error", e);
-  //       reject("indexedDB Error");
-  //     };
-
-  //     req.onblocked = () => {
-  //       console.log("blocked");
-  //       reject(new Error("blocked"));
-  //     };
-  //   });
-  // }, collections);
-
-  // // sync user words with indexedDB
-  // await page.evaluate(async (words): Promise<void> => {
-  //   return new Promise((resolve, reject) => {
-  //     const req = indexedDB.open("einc");
-
-  //     req.onsuccess = (e) => {
-  //       try {
-  //         const db = (e.target as IndexedDBEventTarget).result;
-  //         const transaction = db.transaction(["words"], "readwrite");
-  //         const objStore = transaction.objectStore("words");
-
-  //         words.forEach((data) => objStore.put(data));
-
-  //         transaction.oncomplete = (e) => {
-  //           resolve();
-  //         };
-
-  //         transaction.onerror = (e) => {
-  //           const error = `IndexedDB error, adding data for words failed: ${(e.target as IndexedDBEventTarget).error.message}`;
-  //           console.error(error);
-  //           reject(error);
-  //         };
-  //       } catch (err) {
-  //         console.log(err);
-  //         reject(err);
-  //       }
-  //     };
-
-  //     req.onerror = (e) => {
-  //       console.log("indexedDB Error", e);
-  //       reject("indexedDB Error");
-  //     };
-
-  //     req.onblocked = () => {
-  //       console.log("blocked");
-  //       reject(new Error("blocked"));
-  //     };
-  //   });
-  // }, words);
 });

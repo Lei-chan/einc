@@ -38,6 +38,7 @@ export async function registerData(
 
     req.onsuccess = (e) => {
       const db = (e.target as IndexedDBEventTarget).result;
+
       const transaction = db.transaction([type], "readwrite");
       const objStore = transaction.objectStore(type);
 

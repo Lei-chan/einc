@@ -14,6 +14,8 @@ import Journal from "@/app/lib/models/Journal";
 import { decrypt, deleteSession } from "./session";
 // methods
 import { areDatesSame } from "./helper";
+// settings
+import { DICTIONARY_ONE_PAGE } from "./config/settings";
 // types
 import {
   Collections,
@@ -27,8 +29,8 @@ import {
 // library
 import { translate } from "@vitalets/google-translate-api";
 import JapaneseDictionary from "japaneasy";
-import { DICTIONARY_ONE_PAGE } from "./config/settings";
-import { isCustomErrorPage } from "next/dist/build/utils";
+import JishoAPI from "unofficial-jisho-api";
+
 const NUM_WORDS_PER_PAGE_DICTIONARY = 10;
 
 export const verifySession = cache(async () => {
@@ -243,35 +245,87 @@ export const dictionary = cache(
       if (!word) return;
 
       if (dictionaryLanguage === "ja") {
-        const dict = new JapaneseDictionary();
-        const data = await dict(word);
+        const dict = new JishoAPI();
+        const wordData = (await dict.searchForPhrase(word)) as unknown as {
+          meta: { status: number };
+          data: {
+            slug: string;
+            is_common: boolean;
+            tags: string[];
+            jlpt: string[];
+            japanese: { word: string; reading: string }[];
+            senses: { english_definitions: string[][] }[];
+            attribution: {
+              jmdict: boolean;
+              jmnedict: boolean;
+              dbpedia: boolean;
+            };
+          }[];
+        };
 
-        if (typeof data[0] === "string")
-          return {
-            totalNumberOfResults: 0,
-            results: [],
-          };
+        // const dict = new JapaneseDictionary();
+        // const data = await dict(word);
 
-        const dataCurPage = data.slice(indexFrom, indexTo);
+        // if (typeof data[0] === "string")
+        //   return {
+        //     totalNumberOfResults: 0,
+        //     results: [],
+        //   };
+
+        if (!Array.isArray(wordData.data)) return null;
+
+        const wordDataCurPage = wordData.data.slice(indexFrom, indexTo);
+        const exampleDataCurPage = (await Promise.all(
+          wordDataCurPage.map((data) => dict.searchForExamples(data.slug)),
+        )) as unknown as {
+          query: string;
+          found: boolean;
+          results: {
+            english: string;
+            kanji: string;
+            kana: string;
+            pieces: [];
+          }[];
+        }[];
 
         return {
-          totalNumberOfResults: data.length,
-          results: dataCurPage.map(
-            (data: {
-              japanese: string;
-              pos: string;
-              pronunciation?: string;
-              english: string[];
-            }) => {
+          totalNumberOfResults: wordData.data.length,
+          results: wordDataCurPage.map(
+            (data, i) => {
+              const allUniquePronunciations = new Set(
+                data.japanese.map((obj) => obj.reading),
+              );
+              const allDefinitions = data.senses.flatMap(
+                (sense) => sense.english_definitions,
+              );
               return {
-                name: data.japanese,
-                pronunciationString: data.pronunciation || "",
+                name: data.slug,
+                pronunciationString: [...allUniquePronunciations].join("、"),
                 pronunciationAudio: "",
-                definitions: data.english,
-                examples: [],
+                definitions: allDefinitions,
+                examples: exampleDataCurPage[i].found
+                  ? exampleDataCurPage[i].results
+                      .slice(0, 2)
+                      .map((res) => res.kanji)
+                  : [],
                 synonyms: [],
               };
             },
+            // (data: {
+            //   japanese: string;
+            //   pos: string;
+            //   pronunciation?: string;
+            //   english: string[];
+            // }) => {
+            //   return {
+            //     name: data.japanese,
+            //     pronunciationString: data.pronunciation || "",
+            //     pronunciationAudio: "",
+            //     definitions: data.english,
+            //     examples: [],
+            //     synonyms: [],
+            //   };
+            // },
           ),
         };
       }

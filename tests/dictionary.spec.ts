@@ -18,21 +18,12 @@ test.describe("dictionary", () => {
     await expect(page.getByTestId("dictionaryLanguage")).toBeEditable();
   });
 
-  test.describe("search", () => {
+  test.describe("search without translation API", () => {
     test("searchEnglishByEnglish", async ({ page }) => {
       await page.getByTestId("searchLanguage").selectOption("en");
       await page.getByTestId("dictionaryLanguage").selectOption("en");
 
       await page.getByTestId("inputSearch").fill("apple");
-    });
-
-    // later!
-    // only webkit fails (maybe because of the translation api limitation?)
-    test("searchEnglishByJapanese", async ({ page }) => {
-      await page.getByTestId("searchLanguage").selectOption("ja");
-      await page.getByTestId("dictionaryLanguage").selectOption("en");
-
-      await page.getByTestId("inputSearch").fill("りんご");
     });
 
     test("searchJapaneseByJapanese", async ({ page }) => {
@@ -87,6 +78,60 @@ test.describe("dictionary", () => {
       ]);
 
       expect(page).toHaveURL(url);
+    });
+  });
+
+  // Check it!
+  // only webkit fails (maybe because of the translation api limitation?)
+  // took out from test.describe with other search tests
+  test.describe("search with translation API", () => {
+    // second worker process will start by retrying the failed test and continue from there.
+    test.describe.configure({ retries: 2 });
+
+    test("searchEnglishByJapanese", async ({ page }) => {
+      test.slow(); //extend default timeout
+
+      await page.getByTestId("searchLanguage").selectOption("ja");
+      await page.getByTestId("dictionaryLanguage").selectOption("en");
+
+      await page.getByTestId("inputSearch").fill("りんご");
+
+      test.use({ storageState: "playwright/.auth/user.json" });
+
+      await page.click('button[type="submit"]');
+
+      const ulDictionary = page.getByTestId("ulDictionary");
+      // Explicit generous timeout to absorb translation API latency,
+      // instead of relying on the (shorter) shared default.
+      await ulDictionary.waitFor({ timeout: 30_000 });
+      await expect(ulDictionary).toBeVisible();
+
+      const firstWord = page.getByTestId("closedWord").first();
+      await firstWord.click();
+
+      const openedWord = page.getByTestId("openedWord");
+      await openedWord.waitFor();
+      await expect(openedWord).toBeVisible();
+
+      const audio = page.getByTestId("buttonAudio");
+
+      if (await audio.isVisible()) {
+        await audio.click();
+
+        await page.waitForFunction(() => {
+          const audio = document.querySelector("audio");
+          return audio && !audio.paused && audio.currentTime > 0;
+        });
+      }
+
+      const url = new URLPattern({ pathname: `${languagePath}/add-to*` });
+
+      await Promise.all([
+        page.waitForURL(url),
+        page.getByTestId("buttonAdd").click(),
+      ]);
+
+      await expect(page).toHaveURL(url);
     });
   });
 

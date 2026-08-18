@@ -155,6 +155,7 @@ function ViaUserInfo({
     typeToDisplay === "Sign up" ? signupViaUserInfo : loginViaUserInfo,
     undefined,
   );
+  const [isIndexedDBPending, setIsIndexedDBPending] = useState(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     // try {
@@ -178,8 +179,13 @@ function ViaUserInfo({
   }
 
   useEffect(() => {
-    handlePending(isPending);
-  }, [handlePending, isPending]);
+    if (isPending || isIndexedDBPending) {
+      handlePending(true);
+      return;
+    }
+
+    handlePending(false);
+  }, [handlePending, isPending, isIndexedDBPending]);
 
   useEffect(() => {
     if (!state) return;
@@ -191,9 +197,11 @@ function ViaUserInfo({
 
     const handleSuccess = async () => {
       try {
+        setIsIndexedDBPending(true);
         // Create database in indexedDB
         await createIndexedDBDatabase();
 
+        setIsIndexedDBPending(false);
         router.push(`/${language}/main`);
       } catch (err) {
         console.error("Error", err);
@@ -250,6 +258,7 @@ function ViaUserInfo({
         />
         <button
           type="submit"
+          name={typeToDisplayForLanguage}
           className="w-fit text-sm text-white px-1 py-[1px] rounded mt-2 transition-all duration-150 bg-green-400 hover:bg-yellow-400"
         >
           {typeToDisplayForLanguage}
