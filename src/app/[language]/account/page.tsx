@@ -198,7 +198,7 @@ function Email({
 
   // set user email as curEmail when it's fetched
   useEffect(() => {
-    setCurEmail(email);
+    (() => setCurEmail(email))();
   }, [email]);
 
   // display pending state at the top of the page
@@ -268,7 +268,11 @@ function Email({
                 state?.errors?.email ? state.errors.email[language] : ""
               }
             />
-            <button type="submit" className={classNames.buttonSubmitClassName}>
+            <button
+              data-testid="btnSubmitEmail"
+              type="submit"
+              className={classNames.buttonSubmitClassName}
+            >
               {language === "en" ? "Submit" : "更新"}
             </button>
           </div>

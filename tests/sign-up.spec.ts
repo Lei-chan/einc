@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 const languagePath = process.env.TEST_LANGUAGE_PATH || "";
 const password = process.env.TEST_PASSWORD || "";
-const email = `test-${Date.now()}@example.com`;
+const email = process.env.TEST_EMAIL || "";
 
 test.describe("sign-up", async () => {
   test.beforeEach(async ({ page }) => {
@@ -13,14 +13,14 @@ test.describe("sign-up", async () => {
     await page.check('[name="privacyPolicy"]');
     await page.fill('[name="email"]', email);
     await page.fill('[name="password"]', password);
+    await page.click('button[type="submit"]');
 
+    await page.screenshot({ path: "screenshot.png" });
+
+    const mainPath = `${languagePath}/main`;
     // wait for redirect
-    await Promise.all([
-      page.waitForURL(`${languagePath}/main`),
-      await page.click('button[type="submit"]'),
-    ]);
-
-    await expect(page).toHaveURL(`${languagePath}/main`);
+    await page.waitForURL(mainPath);
+    await expect(page).toHaveURL(mainPath);
   });
 
   test.describe("error email and password", async () => {

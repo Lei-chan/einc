@@ -28,6 +28,7 @@ export default defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
     baseURL: "https://localhost:3000",
+    ignoreHTTPSErrors: true,
     // storageState: "auth/user.json",
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -40,18 +41,36 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
       dependencies: ["setup db"],
+      testIgnore: /sign-up\.spec\.ts/, // exclude the special file
+    },
+    {
+      name: "chromium-no-setup",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /sign-up\.spec\.ts/, // only this file
     },
 
     {
       name: "firefox",
       use: { ...devices["Desktop Firefox"] },
       dependencies: ["setup db"],
+      testIgnore: /sign-up\.spec\.ts/, // exclude the special file
+    },
+    {
+      name: "firefox-no-setup",
+      use: { ...devices["Desktop Firefox"] },
+      testMatch: /sign-up\.spec\.ts/, // only this file
     },
 
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
       dependencies: ["setup db"],
+      testIgnore: /sign-up\.spec\.ts/, // exclude the special file
+    },
+    {
+      name: "webkit-no-setup",
+      use: { ...devices["Desktop Safari"] },
+      testMatch: /sign-up\.spec\.ts/, // exclude the special file
     },
 
     /* Test against mobile viewports. */

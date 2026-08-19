@@ -56,16 +56,19 @@ function Top({ language }: { language: Language }) {
 }
 
 function ButtonLogout({ language }: { language: Language }) {
+  const btnName = language === "en" ? "Logout" : "ログアウト";
+
   return (
     IsOnline() && (
       <button
+        name={btnName}
         className="fixed w-fit bg-blue-400 text-white  rounded py-[2px] px-1 text-sm self-center bottom-3 lg:bottom-4 transition-all duration-200 shadow-md shadow-black/20 hover:translate-y-[-1px] hover:bg-blue-300"
         onClick={async () => {
           sessionStorage.clear();
           await logout(language);
         }}
       >
-        {language === "en" ? "Logout" : "ログアウト"}
+        {btnName}
       </button>
     )
   );

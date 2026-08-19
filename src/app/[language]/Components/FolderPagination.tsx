@@ -584,7 +584,10 @@ function Folder({
   }, [isAllSelected]);
 
   return (
-    <div className="w-[90%] h-[85%] flex flex-row gap-2">
+    <div
+      data-testid="collection"
+      className="w-[90%] h-[85%] flex flex-row gap-2"
+    >
       {/* Remove the collection 'All' so it cannot be deleted or edited */}
       {!data.allWords && (isEdited || isDeleted) && (
         <input

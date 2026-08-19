@@ -1,11 +1,4 @@
 import { test as setup, expect } from "@playwright/test";
-import dbConnect from "@/app/lib/database";
-import User from "@/app/lib/models/User";
-import { SignJWT } from "jose";
-
-const secretKey = process.env.SESSION_SECRET;
-const encodedKey = new TextEncoder().encode(secretKey);
-const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
 const languagePath = process.env.TEST_LANGUAGE_PATH || "";
 const email = process.env.TEST_EMAIL || "";
@@ -24,27 +17,8 @@ setup("create new database", async ({ page, context }) => {
     })
     .click();
 
+  // page.screenshot({ path: "screenshot.png" });
   await expect(page).toHaveURL(`${languagePath}/main`, { timeout: 10000 });
-
-  await dbConnect();
-  const testUser = await User.findOne({ email }).lean();
-  const userId = testUser._id;
-
-  const session = await new SignJWT({
-    userId: userId.toString(),
-    expiresAt,
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(expiresAt)
-    .sign(encodedKey);
-
-  await context.addCookies([
-    { name: "session", value: session, path: "/", domain: "localhost" },
-  ]);
 
   await page.evaluate(() => {
     window.dispatchEvent(new Event("online"));

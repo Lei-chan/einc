@@ -2,22 +2,24 @@ import { test, expect } from "@playwright/test";
 
 const languagePath = process.env.TEST_LANGUAGE_PATH || "";
 
+// Next!!
 test.describe("add", () => {
+  test.use({ storageState: "playwright/.auth/.user.json" });
+
   test.beforeEach(async ({ page }) => {
     await page.goto(`${languagePath}/add`);
   });
 
   test.describe("registerManually", () => {
     test.beforeEach(async ({ page }) => {
-      const collectionId = window.location.hash.slice(1);
+      const collectionId = await page.evaluate(() =>
+        window.location.hash.slice(1),
+      );
 
       const url = `${languagePath}/add/manually#${collectionId}`;
 
-      await Promise.all([
-        page.waitForURL(url),
-        page.getByTestId("linkRegisterManually").click(),
-      ]);
-
+      await page.getByTestId("linkRegisterManually").click();
+      await page.waitForURL(url);
       await expect(page).toHaveURL(url);
     });
 
@@ -84,21 +86,23 @@ test.describe("add", () => {
       await page.waitForURL(url);
       await expect(page).toHaveURL(url);
 
-      const collectionUrl = `${languagePath}/collection/123`;
-      const button = page.getByText(languagePath === "/en" ? "All" : "全て");
+      const collectionUrl = `${languagePath}/collection**`;
+      await page
+        .getByText(languagePath === "/en" ? "All" : "全て")
+        .click({ timeout: 5000 });
 
-      await button.waitFor();
-
-      await Promise.all([page.waitForURL(collectionUrl), button.click()]);
-
+      await page.waitForURL(collectionUrl);
       await expect(page).toHaveURL(collectionUrl);
 
-      const listUrl = `${collectionUrl}/list`;
+      const collectionId = await page.evaluate(() => {
+        console.log(window.location.pathname);
+        return window.location.pathname.at(-1);
+      });
 
-      await Promise.all([
-        await expect(page).toHaveURL(listUrl),
-        page.getByText(languagePath === "/en" ? "List" : "リスト").click(),
-      ]);
+      console.log(collectionId);
+      const listUrl = `${languagePath}/${collectionId}/list`;
+
+      await page.getByText(languagePath === "/en" ? "List" : "リスト").click();
 
       await expect(page).toHaveURL(listUrl);
 
@@ -109,60 +113,61 @@ test.describe("add", () => {
     });
   });
 
-  test.describe("registerDictionary", () => {
-    test.beforeEach(async ({ page }) => {
-      const collectionId = window.location.hash.slice(1);
-      const dictionaryUrl = `${languagePath}/dictionary#${collectionId}`;
+  test("registerDictionary", async ({ page }) => {
+    const collectionId = await page.evaluate(() =>
+      window.location.hash.slice(1),
+    );
+    const dictionaryUrl = `${languagePath}/dictionary#${collectionId}`;
 
-      await Promise.all([
-        page.waitForURL(dictionaryUrl),
-        page.getByTestId("linkRegisterDictionary").click(),
-      ]);
+    await page.getByTestId("linkRegisterDictionary").click();
 
-      await expect(page).toHaveURL(dictionaryUrl);
+    await page.waitForURL(dictionaryUrl);
+    await expect(page).toHaveURL(dictionaryUrl);
 
-      // search word by dictionary
-      await page.getByTestId("searchLanguage").selectOption("en");
-      await page.getByTestId("dictionaryLanguage").selectOption("en");
-      await page.getByTestId("inputSearch").fill("apple");
-      await page.click('button[type="submit"]');
+    // search word by dictionary
+    await page.getByTestId("searchLanguage").selectOption("en");
+    await page.getByTestId("dictionaryLanguage").selectOption("en");
+    await page.getByTestId("inputSearch").fill("apple");
+    await page.click('button[type="submit"]');
 
-      const ulDictionary = page.getByTestId("ulDictionary");
-      await ulDictionary.waitFor();
+    const ulDictionary = page.getByTestId("ulDictionary");
+    await ulDictionary.waitFor();
 
-      const firstWord = page.getByTestId("closedWord").first();
-      await firstWord.click();
+    const firstWord = page.getByTestId("closedWord").first();
+    await firstWord.click();
 
-      const openedWord = page.getByTestId("openedWord");
-      await openedWord.waitFor();
+    const openedWord = page.getByTestId("openedWord");
+    await openedWord.waitFor();
 
-      // redirect to main
-      const mainUrl = `${languagePath}/main`;
-      await page.waitForURL(mainUrl);
-      await expect(page).toHaveURL(mainUrl);
+    // redirect to main
+    const mainUrl = `${languagePath}/main`;
+    await page.waitForURL(mainUrl);
+    await expect(page).toHaveURL(mainUrl);
 
-      // check if new word was added successfully
-      const collectionUrl = `${languagePath}/collection/123`;
-      const button = page.getByText(languagePath === "/en" ? "All" : "全て");
-      await button.waitFor();
+    // check if new word was added successfully
+    const collectionUrl = `${languagePath}/collection**`;
+    await page
+      .getByText(languagePath === "/en" ? "All" : "全て")
+      .click({ timeout: 5000 });
 
-      await Promise.all([page.waitForURL(collectionUrl), button.click()]);
+    await page.waitForURL(collectionUrl);
+    await expect(page).toHaveURL(collectionUrl);
 
-      await expect(page).toHaveURL(collectionUrl);
-
-      const listUrl = `${collectionUrl}/list`;
-
-      await Promise.all([
-        await expect(page).toHaveURL(listUrl),
-        page.getByText(languagePath === "/en" ? "List" : "リスト").click(),
-      ]);
-
-      await expect(page).toHaveURL(listUrl);
-
-      await page.fill("[type=search]", "apple");
-      await page.locator("[type=submit]").click();
-
-      expect(await page.getByTestId("wordCard").count()).toBe(1);
+    const newCollectionId = await page.evaluate(() => {
+      console.log(window.location.pathname);
+      return window.location.pathname.at(-1);
     });
+
+    console.log(newCollectionId);
+
+    const listUrl = `${languagePath}/${newCollectionId}/list`;
+    await page.getByText(languagePath === "/en" ? "List" : "リスト").click();
+
+    await expect(page).toHaveURL(listUrl);
+
+    await page.fill("[type=search]", "apple");
+    await page.locator("[type=submit]").click();
+
+    expect(await page.getByTestId("wordCard").count()).toBe(1);
   });
 });

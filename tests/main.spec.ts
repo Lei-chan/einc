@@ -67,7 +67,6 @@ test.describe("main", async () => {
       const collectionUrl = `${languagePath}/collection/${collectionId}`;
       const button = page.getByText(languagePath === "/en" ? "All" : "全て");
 
-      page.screenshot({ path: "screenshot.png" });
       await button.waitFor();
 
       await Promise.all([page.waitForURL(collectionUrl), button.click()]);
@@ -75,23 +74,34 @@ test.describe("main", async () => {
       await expect(page).toHaveURL(collectionUrl);
     });
 
-    // check next time!
-    test("logout", async ({ page }) => {
-      await Promise.all([
-        page.waitForURL(languagePath),
-        page
-          .getByText(languagePath === "/en" ? "Logout" : "ログアウト")
-          .click(),
-      ]);
+    test("logout", async ({ page, context }) => {
+      await page.goto(`${languagePath}/main`);
+      // wait for the contents to load
+      await page.waitForTimeout(5000);
 
-      expect(page).toHaveURL(languagePath);
+      await page
+        .getByRole("button", {
+          name: languagePath === "/en" ? "Logout" : "ログアウト",
+        })
+        .click();
+
+      await page.waitForURL(languagePath, { timeout: 10000 });
+      await expect(page).toHaveURL(languagePath);
+
+      const cookies = await context.cookies();
+      const sessionCookie = cookies.find((cookie) => cookie.name === "session");
+      expect(sessionCookie).toBe(undefined);
     });
   });
 
-  // Later!!
-  // Sometimes work but sometimes doesn't work
   test("create new collection", async ({ page }) => {
+    test.slow();
+
     await page.goto(`${languagePath}/main`);
+    // wait for the contents to load
+    await page.waitForTimeout(8000);
+
+    const curNumberOfCollections = await page.getByTestId("collection").count();
 
     const button = page.getByText(
       languagePath === "/en" ? "New collection" : "新しいコレクション",
@@ -103,9 +113,16 @@ test.describe("main", async () => {
 
     await expect(form).toBeInViewport();
 
-    await page.getByTestId("inputFolderName").fill("Example Name");
+    await page.getByTestId("inputFolderName").fill("Example Name 3");
     await page.getByText("OK").click();
 
     await expect(form).not.toBeInViewport({ timeout: 10000 });
+
+    expect(curNumberOfCollections).toBeLessThan(
+      await page.getByTestId("collection").count(),
+    );
+    // await expect(
+    //   page.getByText("Example Name 3", { exact: true }),
+    // ).toBeVisible();
   });
 });
