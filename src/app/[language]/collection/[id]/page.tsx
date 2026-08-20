@@ -201,42 +201,44 @@ function PieGraph({
   statuses: number[];
 }) {
   return (
-    <Pie
-      data={{
-        labels:
-          language === "en"
-            ? [
-                "New",
-                "Seen Once",
-                "Getting Familier",
-                "Remembered",
-                "Strong Memory",
-                "Mastered",
-              ]
-            : [
-                "新しい",
-                "一度確認済み",
-                "慣れてきた",
-                "覚えた",
-                "深く覚えた",
-                "習得済み",
+    <div data-testid="pie" className="w-full h-fit flex flex-col items-center">
+      <Pie
+        data={{
+          labels:
+            language === "en"
+              ? [
+                  "New",
+                  "Seen Once",
+                  "Getting Familier",
+                  "Remembered",
+                  "Strong Memory",
+                  "Mastered",
+                ]
+              : [
+                  "新しい",
+                  "一度確認済み",
+                  "慣れてきた",
+                  "覚えた",
+                  "深く覚えた",
+                  "習得済み",
+                ],
+          datasets: [
+            {
+              label: language === "en" ? "Number of words" : "単語数",
+              data: statuses,
+              backgroundColor: [
+                "rgba(255, 99, 132, 0.9)",
+                "rgba(255, 206, 86, 0.9)",
+                "rgba(54, 162, 235, 0.9)",
+                "rgba(75, 192, 192, 0.9)",
+                "rgb(89, 238, 2, 0.9)",
+                "rgb(255, 115, 0.9)",
               ],
-        datasets: [
-          {
-            label: language === "en" ? "Number of words" : "単語数",
-            data: statuses,
-            backgroundColor: [
-              "rgba(255, 99, 132, 0.9)",
-              "rgba(255, 206, 86, 0.9)",
-              "rgba(54, 162, 235, 0.9)",
-              "rgba(75, 192, 192, 0.9)",
-              "rgb(89, 238, 2, 0.9)",
-              "rgb(255, 115, 0.9)",
-            ],
-          },
-        ],
-      }}
-    />
+            },
+          ],
+        }}
+      />
+    </div>
   );
 }
 

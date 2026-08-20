@@ -605,6 +605,7 @@ function Folder({
       >
         {type === "addTo" && (
           <button
+            data-testid="btnCheck"
             type="button"
             className="absolute w-full h-full top-0 left-0 bg-black/30 hover:bg-black/50 text-white text-xl font-bold"
           >

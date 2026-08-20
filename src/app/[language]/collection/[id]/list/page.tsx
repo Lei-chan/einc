@@ -32,7 +32,6 @@ import {
   getNumberOfPages,
   isArrayEmpty,
   removeDataFromIndexedDB,
-  syncMongoDBWithIndexedDB,
   wait,
 } from "@/app/lib/helper";
 // settings
@@ -361,7 +360,7 @@ function NumberOfLists({
   numberOfWords: number;
 }) {
   return (
-    <p className=" text-right self-end mt-3 text-lg">
+    <p data-testid="numberOfCards" className="text-right self-end mt-3 text-lg">
       {passedWords} / {numberOfWords} {language === "en" ? "words" : "単語"}
     </p>
   );

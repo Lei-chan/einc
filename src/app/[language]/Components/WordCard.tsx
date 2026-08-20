@@ -186,7 +186,6 @@ export default function WordCard({
       return (
         <>
           <form
-            data-testid="wordCard"
             className="flex flex-col gap-2 md:gap-3 p-3 md:p-4"
             onSubmit={handleSubmit}
           >
@@ -329,6 +328,7 @@ export default function WordCard({
 
   return (
     <div
+      data-testid="wordCard"
       className="relative w-full min-h-44 sm:min-h-[12rem] md:min-h-[13rem] lg:min-h-[14rem] xl:min-h-[15rem] 2xl:min-h-[16rem] max-h-fit bg-yellow-100 shadow-md shadow-black/20 rounded flex flex-col items-center justify-center cursor-pointer py-3"
       onClick={handleClickList}
     >
@@ -359,6 +359,7 @@ export default function WordCard({
       </div>
       {type === "list" && IsOnline() && (
         <button
+          name="btnEdit"
           type="button"
           className="absolute w-4 aspect-square bg-[url('/icons/edit.svg')] bg-center bg-contain bg-no-repeat right-3 top-2 transition-all duration-150 hover:translate-y-[-2px]"
           onClick={handleToggleEdit}
