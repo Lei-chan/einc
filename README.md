@@ -12,7 +12,7 @@ https://github.com/user-attachments/assets/50381ebd-94d5-4dcb-9453-0fa02ad31824
 
 ## What You Can Do
 
-- Register words or expressions
+- Register words or expressions manually or automatically by selecting in the dicrionary on the website
 - Organize your vocabulary into collections (e.g., "English", "German", "Business")
 - Study your vocabulary using flashcards (offline supported)
 - Study your vocabulary using quizzes (offline supported)
