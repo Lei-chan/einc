@@ -272,7 +272,11 @@ export const dictionary = cache(
         //     results: [],
         //   };
 
-        if (!Array.isArray(wordData.data)) return null;
+        if (!Array.isArray(wordData.data))
+          return {
+            totalNumberOfResults: 0,
+            results: [],
+          };
 
         const wordDataCurPage = wordData.data.slice(indexFrom, indexTo);
         const exampleDataCurPage = (await Promise.all(
@@ -340,10 +344,9 @@ export const dictionary = cache(
         const res = await fetch(
           `https://api.dictionaryapi.dev/api/v2/entries/en/${englishWord}`,
         );
-
         const data = await res.json();
 
-        if (data.title)
+        if (!data || data?.title)
           return {
             totalNumberOfResults: 0,
             results: [],

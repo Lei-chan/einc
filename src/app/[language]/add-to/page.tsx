@@ -28,6 +28,7 @@ import { DisplayMessage, WordBeforeSent } from "@/app/lib/config/types/others";
 import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 import { addWords } from "@/app/actions/auth/words";
 import { registerData } from "@/app/lib/indexedDB/database";
+import { separator } from "@/app/lib/config/settings";
 
 export default function AddTo() {
   const router = useRouter();
@@ -53,8 +54,9 @@ export default function AddTo() {
       name: searchParams.get("name") || "",
       pronunciationString: searchParams.get("pronunciationString"),
       audio: searchParams.get("pronunciationAudio"),
-      definitions: definitions || "",
-      examples: examples || "",
+      // change the separator with \n (new line) for the server helper function 'convertWordDataToSendServer'
+      definitions: definitions?.split(separator).join("\n") || "",
+      examples: examples?.split(separator).join("\n") || "",
       synonyms: synonyms || "",
       imageName: null,
       imageDefinitions: null,
@@ -72,6 +74,7 @@ export default function AddTo() {
         setMessageData(undefined);
 
         const wordDataWithId = { ...wordData, collectionId };
+        console.log("wordDataWithId: ", wordDataWithId);
 
         startTransition(() => action([wordDataWithId]));
       } catch (err) {
@@ -93,7 +96,6 @@ export default function AddTo() {
       try {
         if (!state.message) return;
 
-        console.log(state.data);
         if (state.data) await registerData("words", state.data);
 
         setMessageData({
