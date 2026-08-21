@@ -199,12 +199,10 @@ export const sendIndexedDBToMongoDB = async (data: IndexedDBData) => {
         const { _id, ...others } = col;
         return { ...others };
       });
-      // console.log(collections, collectionsWithoutId);
 
       const user = await User.findById(userId).select("collections");
       user.collections = collections;
 
-      // console.log("new user", user);
       await user.save();
     }
 
@@ -278,7 +276,19 @@ export const dictionary = cache(
             results: [],
           };
 
-        const wordDataCurPage = wordData.data.slice(indexFrom, indexTo);
+        // filter out long weird Jisho string word data that contains number
+        const wordDataWithoutWeirdString = wordData.data.filter((data) => {
+          const wordName = data.slug;
+          const regexNumber = /\d/;
+          return wordName.length < 10 || !regexNumber.test(wordName);
+        });
+
+        const wordDataCurPage = wordDataWithoutWeirdString.slice(
+          indexFrom,
+          indexTo,
+        );
+
+        // fetch example sentence data of the fetched words
         const exampleDataCurPage = (await Promise.all(
           wordDataCurPage.map((data) => dict.searchForExamples(data.slug)),
         )) as unknown as {

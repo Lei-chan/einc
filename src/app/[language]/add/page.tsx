@@ -3,6 +3,7 @@ import { getLanguageFromPathname } from "@/app/lib/helper";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import ButtonGoBack from "../Components/ButtonGoBack";
 
 export default function Add() {
   const pathname = usePathname();
@@ -62,6 +63,7 @@ export default function Add() {
           </>
         )}
       </Link>
+      <ButtonGoBack language={language} navigateTo="previous" />
     </div>
   );
 }

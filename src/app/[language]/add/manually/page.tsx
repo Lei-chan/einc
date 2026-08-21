@@ -39,13 +39,14 @@ import {
 // libraries
 import { nanoid } from "nanoid";
 import { registerData, updateData } from "@/app/lib/indexedDB/database";
+import ButtonGoBack from "../../Components/ButtonGoBack";
 
 export default function Add() {
   const router = useRouter();
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
 
-  const topRef = useRef<HTMLFormElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
 
   const [vocabKeys, setVocabKeys] = useState([{ id: nanoid() }]);
   const [collections, setCollections] = useState<Collections | undefined>();
@@ -174,50 +175,52 @@ export default function Add() {
   }, [state, router, language]);
 
   return (
-    <form
-      ref={topRef}
-      className="w-full min-h-[100dvh] max-h-fit flex flex-col items-center py-6 md:py-8 lg:py-9 2xl:py-10 gap-7 md:gap-8 lg:gap-10"
-      onSubmit={handleSubmit}
-    >
-      {messageData && (
-        <PMessage type={messageData.type} message={messageData.message} />
-      )}
-      {isPending && (
-        <PMessage
-          type="pending"
-          message={language === "en" ? "Creating word..." : "単語を作成中..."}
-        />
-      )}
-      {state?.errors && (
-        <PMessage
-          type="error"
-          message={getMessagesFromFieldError(language, state.errors)}
-        />
-      )}
-      {state?.error?.message && (
-        <PMessage type="error" message={state.error.message[language]} />
-      )}
-      {vocabKeys.map((keyObj, i) => (
-        <Word
-          key={keyObj.id}
-          language={language}
-          i={i}
-          collections={collections}
-          onClickDelete={() => handleClickDelete(i)}
-        />
-      ))}
-      <div className="mt-11">
-        <ButtonPlus onClickButton={handleClickPlus} />
-      </div>
-      {vocabKeys.length !== 0 && (
-        <button
-          type="submit"
-          className="bg-green-400 p-1 shadow-sm shadow-black/20 rounded text-white transition-all duration-200 hover:-translate-y-[1px] hover:bg-yellow-400"
-        >
-          {language === "en" ? "Submit" : "完了"}
-        </button>
-      )}
-    </form>
+    <div ref={topRef} className="w-full min-h-[100dvh]">
+      <form
+        className="w-full min-h-full max-h-fit flex flex-col items-center py-6 md:py-8 lg:py-9 2xl:py-10 gap-7 md:gap-8 lg:gap-10"
+        onSubmit={handleSubmit}
+      >
+        {messageData && (
+          <PMessage type={messageData.type} message={messageData.message} />
+        )}
+        {isPending && (
+          <PMessage
+            type="pending"
+            message={language === "en" ? "Creating word..." : "単語を作成中..."}
+          />
+        )}
+        {state?.errors && (
+          <PMessage
+            type="error"
+            message={getMessagesFromFieldError(language, state.errors)}
+          />
+        )}
+        {state?.error?.message && (
+          <PMessage type="error" message={state.error.message[language]} />
+        )}
+        {vocabKeys.map((keyObj, i) => (
+          <Word
+            key={keyObj.id}
+            language={language}
+            i={i}
+            collections={collections}
+            onClickDelete={() => handleClickDelete(i)}
+          />
+        ))}
+        <div className="mt-11">
+          <ButtonPlus onClickButton={handleClickPlus} />
+        </div>
+        {vocabKeys.length !== 0 && (
+          <button
+            type="submit"
+            className="bg-green-400 p-1 shadow-sm shadow-black/20 rounded text-white transition-all duration-200 hover:-translate-y-[1px] hover:bg-yellow-400"
+          >
+            {language === "en" ? "Submit" : "完了"}
+          </button>
+        )}
+      </form>
+      <ButtonGoBack language={language} navigateTo="main" />
+    </div>
   );
 }
 

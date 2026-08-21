@@ -48,8 +48,6 @@ export async function addWords(
       wordDataToSendServer.map((data) => Word.create(data)),
     );
 
-    // console.log(data);
-
     return {
       message: { en: `Word created successfully`, ja: "単語が作成されました" },
       data: JSON.parse(JSON.stringify(data)),

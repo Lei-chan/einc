@@ -27,6 +27,7 @@ import { dictionary } from "@/app/lib/dal";
 import PMessage from "./PMessage";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import ButtonGoBack from "./ButtonGoBack";
 // types
 
 export default function Dictionary({
@@ -267,41 +268,48 @@ function WordContainer({
     setcollectionIdFromHash();
   }, []);
 
-  return !results || isArrayEmpty(results) ? (
-    <div className="w-full h-full flex flex-col items-center justify-center">
-      {isPending ? (
-        <Image
-          src="/icons/loading.png"
-          alt="loading icon"
-          width={30}
-          height={30}
-          className="animate-spin opacity-70"
-        ></Image>
-      ) : (
-        <p className="text-xl opacity-70 self-center">
-          {!results ? (
-            <>
-              {language === "en"
-                ? "Let's start by searching!"
-                : "検索して始めましょう！"}
-            </>
+  return (
+    <>
+      {!results || isArrayEmpty(results) ? (
+        <div className="w-full h-full flex flex-col items-center justify-center">
+          {isPending ? (
+            <Image
+              src="/icons/loading.png"
+              alt="loading icon"
+              width={30}
+              height={30}
+              className="animate-spin opacity-70"
+            ></Image>
           ) : (
-            <>{language === "en" ? "No search results" : "検索結果０件"}</>
+            <p className="text-xl opacity-70 self-center">
+              {!results ? (
+                <>
+                  {language === "en"
+                    ? "Let's start by searching!"
+                    : "検索して始めましょう！"}
+                </>
+              ) : (
+                <>{language === "en" ? "No search results" : "検索結果０件"}</>
+              )}
+            </p>
           )}
-        </p>
+        </div>
+      ) : (
+        <ul
+          data-testid="ulDictionary"
+          className="w-full h-full overflow-y-auto"
+        >
+          {results.map((result, i) => (
+            <Word
+              key={i}
+              language={language}
+              result={result}
+              collectionId={collectionId}
+            ></Word>
+          ))}
+        </ul>
       )}
-    </div>
-  ) : (
-    <ul data-testid="ulDictionary" className="w-full h-full overflow-y-auto">
-      {results.map((result, i) => (
-        <Word
-          key={i}
-          language={language}
-          result={result}
-          collectionId={collectionId}
-        ></Word>
-      ))}
-    </ul>
+    </>
   );
 }
 
