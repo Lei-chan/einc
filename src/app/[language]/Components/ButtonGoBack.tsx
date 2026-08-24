@@ -22,7 +22,7 @@ export default function ButtonGoBack({
 
     // if it's a test or dev mode => use localhost, otherwise use production url
     router.push(
-      `${process.env.ENV === "test" || "dev" ? LOCAL_URL : BASE_URL}/${language}/main`,
+      `${process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development" ? LOCAL_URL : BASE_URL}/${language}/main`,
     );
   }
 
