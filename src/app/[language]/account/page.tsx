@@ -34,6 +34,7 @@ import {
   Language,
   UserData,
 } from "@/app/lib/config/types/others";
+import ButtonGoBack from "../Components/ButtonGoBack";
 
 type TYPE_CLASSNAMES = {
   h3ClassName: string;
@@ -166,6 +167,7 @@ function UserInfo({ language }: { language: Language }) {
           handleStateChange={handleStateChange}
         />
       </div>
+      <ButtonGoBack language={language} navigateTo="main" />
     </>
   );
 }

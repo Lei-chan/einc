@@ -11,6 +11,7 @@ export default function DictionaryPage() {
   return (
     <div className="w-full h-[100dvh]">
       <Dictionary widthClassName="w-full" heightClassName="h-full"></Dictionary>
+      {/* after making adding words async, I will change "navigateTo" to previous */}
       <ButtonGoBack language={language} navigateTo="main" />
     </div>
   );

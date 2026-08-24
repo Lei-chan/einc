@@ -29,6 +29,7 @@ import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 import { addWords } from "@/app/actions/auth/words";
 import { registerData } from "@/app/lib/indexedDB/database";
 import { separator } from "@/app/lib/config/settings";
+import ButtonGoBack from "../Components/ButtonGoBack";
 
 export default function AddTo() {
   const router = useRouter();
@@ -74,7 +75,6 @@ export default function AddTo() {
         setMessageData(undefined);
 
         const wordDataWithId = { ...wordData, collectionId };
-        console.log("wordDataWithId: ", wordDataWithId);
 
         startTransition(() => action([wordDataWithId]));
       } catch (err) {
@@ -151,7 +151,7 @@ export default function AddTo() {
   return (
     <>
       {collectionId && (
-        <div className="w-full h-[100dvh] overflow-hidden bg-black/30 cursor-wait z-10 fixed top-0 left-0"></div>
+        <div className="w-full h-[100dvh] overflow-hidden bg-black/30 cursor-wait z-0 fixed top-0 left-0"></div>
       )}
       <div className="w-full h-[100dvh] overflow-hidden">
         <div className="relative w-full h-full flex flex-col items-center">
@@ -186,6 +186,9 @@ export default function AddTo() {
             onClickCollection={handleClickCollection}
           />
         </div>
+        {!collectionId && !messageData && !isPending && (
+          <ButtonGoBack language={language} navigateTo="previous" />
+        )}
       </div>
     </>
   );

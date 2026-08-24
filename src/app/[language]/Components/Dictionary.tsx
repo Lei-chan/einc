@@ -27,7 +27,6 @@ import { dictionary } from "@/app/lib/dal";
 import PMessage from "./PMessage";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import ButtonGoBack from "./ButtonGoBack";
 // types
 
 export default function Dictionary({

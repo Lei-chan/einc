@@ -37,6 +37,7 @@ import {
   Message,
 } from "@/app/lib/config/types/others";
 import { IsOnline } from "@/app/lib/hooks";
+import ButtonGoBack from "../../Components/ButtonGoBack";
 
 export default function Collection({
   params,
@@ -52,6 +53,7 @@ export default function Collection({
       <Top language={language} collectionId={id} />
       <ContentContainer language={language} pathname={pathname} />
       <Graphs language={language} collectionId={id} />
+      <ButtonGoBack language={language} navigateTo="main" />
     </div>
   );
 }

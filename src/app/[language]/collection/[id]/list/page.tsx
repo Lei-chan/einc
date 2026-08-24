@@ -37,7 +37,6 @@ import {
 // settings
 import { LISTS_ONE_PAGE } from "@/app/lib/config/settings";
 // type
-
 import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 import {
   ActionPaginationType,
@@ -47,6 +46,9 @@ import {
   WordData,
 } from "@/app/lib/config/types/others";
 import { IsOnline } from "@/app/lib/hooks";
+import ButtonGoBack from "@/app/[language]/Components/ButtonGoBack";
+// library
+import { nanoid } from "nanoid";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -115,6 +117,7 @@ export default function List({ params }: { params: Promise<{ id: string }> }) {
         handleUpdateUI={handleUpdateUI}
         dispatch={dispatch}
       />
+      <ButtonGoBack language={language} navigateTo="previous" />
     </div>
   );
 }
@@ -283,6 +286,8 @@ function Bottom({
     lastHandledDeleteRef.current = state;
   }, [state, language, handleUpdateUI, areWordsChecked, dispatch]);
 
+  console.log(data);
+
   return (
     <div className="w-[90%] sm:w-[85%] md:w-[70%] xl:w-[60%] 2xl:w-[50%] min-h-[80vh] max-h-fit flex flex-col items-center justify-center">
       {!data && <p>{language === "en" ? "Loading..." : "ロード中..."}</p>}
@@ -429,7 +434,7 @@ function WordLists({
     <ul className="w-[17rem] sm:w-[19rem] md:w-[22rem] lg:w-[27rem] xl:w-[30rem] flex flex-col gap-5 sm:gap-7 lg:gap-8 py-5">
       {data.map((word, i) => (
         <div
-          key={i}
+          key={nanoid()}
           className="flex flex-row gap-3 sm:gap-4 md:gap-5 lg:gap-6 xl:gap-7 2xl:gap-8"
         >
           {isSelected && areWordsChecked?.at(i) && (

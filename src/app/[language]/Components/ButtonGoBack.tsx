@@ -1,9 +1,10 @@
 "use client";
 
-import { BASE_URL } from "@/app/lib/config/settings";
+import { BASE_URL, LOCAL_URL } from "@/app/lib/config/settings";
 import { Language } from "@/app/lib/config/types/others";
 import { useRouter } from "next/navigation";
 
+// add this to add-to, collection, list, journal, account next
 export default function ButtonGoBack({
   language,
   navigateTo,
@@ -19,7 +20,10 @@ export default function ButtonGoBack({
       return;
     }
 
-    router.push(`${BASE_URL}/${language}/main`);
+    // if it's a test or development mode => use localhost, otherwise use production url
+    router.push(
+      `${process.env.NODE_ENV === "test" || "development" ? LOCAL_URL : BASE_URL}/${language}/main`,
+    );
   }
 
   return (

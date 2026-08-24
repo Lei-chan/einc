@@ -33,6 +33,7 @@ import { WordData, WordBeforeSent } from "../../lib/config/types/others";
 import { FormStateWordJournal } from "../../lib/config/types/formState";
 import { IsOnline } from "@/app/lib/hooks";
 import { updateData } from "@/app/lib/indexedDB/database";
+import { workerData } from "worker_threads";
 
 export default function WordCard({
   type,
@@ -47,14 +48,11 @@ export default function WordCard({
   const language = getLanguageFromPathname(pathname);
 
   const maxPage = 3;
-  const originalWordData = word;
   const wordDataToDisplay = getWordDataToDisplay(word);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [isEdited, setIsEdited] = useState(false);
-  const [wordData, setWordData] = useState<WordData | WordBeforeSent>(
-    originalWordData,
-  );
+  const [wordData, setWordData] = useState<WordData | WordBeforeSent>(word);
 
   const [state, action, isPending] = useActionState<
     FormStateWordJournal,

@@ -219,7 +219,7 @@ export default function Add() {
           </button>
         )}
       </form>
-      <ButtonGoBack language={language} navigateTo="main" />
+      <ButtonGoBack language={language} navigateTo="previous" />
     </div>
   );
 }

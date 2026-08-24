@@ -30,6 +30,7 @@ import { MILLISECONDS_A_DAY } from "@/app/lib/config/settings";
 
 import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 import { JournalDatabase, Language } from "@/app/lib/config/types/others";
+import ButtonGoBack from "@/app/[language]/Components/ButtonGoBack";
 
 export default function Journal({
   params,
@@ -40,10 +41,24 @@ export default function Journal({
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
 
+  const [isDictionaryOpen, setIsDectionaryOpen] = useState(false);
+
+  function handleToggleDictionary() {
+    setIsDectionaryOpen(!isDictionaryOpen);
+  }
+
   return (
     <div className="w-screen h-[100dvh]">
       <Top language={language} />
-      <Middle language={language} collectionId={id} />
+      <Middle
+        language={language}
+        collectionId={id}
+        isDictionaryOpen={isDictionaryOpen}
+        onClickDictionary={handleToggleDictionary}
+      />
+      {!isDictionaryOpen && (
+        <ButtonGoBack language={language} navigateTo="previous" />
+      )}
     </div>
   );
 }
@@ -59,9 +74,13 @@ function Top({ language }: { language: Language }) {
 function Middle({
   language,
   collectionId,
+  isDictionaryOpen,
+  onClickDictionary,
 }: {
   language: Language;
   collectionId: string;
+  isDictionaryOpen: boolean;
+  onClickDictionary: () => void;
 }) {
   const arrowButtonClassName =
     "w-5 aspect-square bg-[url('/icons/arrow.svg')] bg-no-repeat bg-center bg-contain";
@@ -77,7 +96,6 @@ function Middle({
   });
   const journalContent = journalDataDate.journal.content;
 
-  const [isDictionaryOpen, setIsDectionaryOpen] = useState(false);
   const [isContentEditableFocused, setIsContentEditableFocused] =
     useState(false);
 
@@ -87,10 +105,6 @@ function Middle({
     addUpdateJournal,
     undefined,
   );
-
-  function handleToggleDictionary() {
-    setIsDectionaryOpen(!isDictionaryOpen);
-  }
 
   function handleChangeDate(e: React.MouseEvent<HTMLButtonElement>) {
     const name = e.currentTarget.name;
@@ -202,7 +216,7 @@ function Middle({
         <div className="flex-[0.3] flex flex-col justify-center">
           <button
             className="w-fit h-fit bg-green-400 hover:bg-green-300 text-white px-2 rounded"
-            onClick={handleToggleDictionary}
+            onClick={onClickDictionary}
           >
             {language === "en"
               ? "Search words with dictionary"
@@ -213,11 +227,11 @@ function Middle({
         <div className="flex flex-col items-end overflow-y-auto overflow-x-hidden flex-[1.2]">
           <button
             className="text-sm hover:text-amber-700 mr-1 transition-all duration-500 translate-x-[90%] hover:translate-x-0"
-            onClick={handleToggleDictionary}
+            onClick={onClickDictionary}
           >
             &#10005; {language === "en" ? "Close Dictionary" : "辞書を閉じる"}
           </button>
-          <Dictionary widthClassName="w-screen " heightClassName="h-[95%]" />
+          <Dictionary widthClassName="w-full" heightClassName="h-full" />
         </div>
       )}
     </div>

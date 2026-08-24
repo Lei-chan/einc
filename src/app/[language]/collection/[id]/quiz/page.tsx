@@ -10,13 +10,7 @@ import ButtonAudio from "@/app/[language]/Components/ButtonAudio";
 import PMessage from "@/app/[language]/Components/PMessage";
 // Reducers
 import { paginationReducer } from "@/app/lib/reducers";
-// actions
-// import {
-//   // addDefinitions,
-//   // updateStatusNextReviewDate,
-// } from "@/app/actions/auth/words";
-// dal
-// import { getRandomWordsOneTurnQuiz } from "@/app/lib/dal";
+// database
 import {
   getRandomWordsOneTurnQuiz,
   addDefinitions,
@@ -42,6 +36,7 @@ import {
   QuizData,
   QuizQuestion,
 } from "@/app/lib/config/types/others";
+import ButtonGoBack from "@/app/[language]/Components/ButtonGoBack";
 // libraries
 // import distance from "jaro-winkler";
 
@@ -151,6 +146,7 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
           onClickNext={handleClickNext}
         />
       )}
+      <ButtonGoBack language={language} navigateTo="previous" />
     </div>
   );
 }

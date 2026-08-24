@@ -18,6 +18,7 @@ export const MILLISECONDS_A_DAY = 24 * 60 * 60 * 1000;
 export const separator = "ЭИФй";
 
 // links
+export const LOCAL_URL = "https://localhost:3000";
 export const BASE_URL = "https://einc.lei-chan.website";
 export const API_ALLOWED_ORIGIN = "https://management.lei-chan.website";
 export const GITHUB_LINK = "https://github.com/Lei-chan";
