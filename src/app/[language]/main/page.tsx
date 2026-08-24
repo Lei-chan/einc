@@ -44,10 +44,10 @@ function Top({ language }: { language: Language }) {
           </Link>
           <LinkAddVocab language={language} collectionId="" />
           <Link
-            href={`/${language}/account`}
-            className={`${btnClassName} w-[35%] aspect-square bg-[url('/icons/account.svg')] bg-[length:52%] pt-[21%]`}
+            href={`/${language}/settings`}
+            className={`${btnClassName} w-[35%] aspect-square bg-[url('/icons/account.svg')] bg-[length:52%] pt-[20%]`}
           >
-            {language === "en" ? "Account" : "アカウント"}
+            {language === "en" ? "Settings" : "設定"}
           </Link>
         </div>
       )}

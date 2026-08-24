@@ -40,26 +40,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
       },
     },
     {
-      url: `${BASE_URL}/en/account`,
+      url: `${BASE_URL}/en/settings`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.1,
       alternates: {
         languages: {
-          en: `${BASE_URL}/en/account`,
-          ja: `${BASE_URL}/ja/account`,
+          en: `${BASE_URL}/en/settings`,
+          ja: `${BASE_URL}/ja/settings`,
         },
       },
     },
     {
-      url: `${BASE_URL}/ja/account`,
+      url: `${BASE_URL}/ja/settings`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.1,
       alternates: {
         languages: {
-          en: `${BASE_URL}/en/account`,
-          ja: `${BASE_URL}/ja/account`,
+          en: `${BASE_URL}/en/settings`,
+          ja: `${BASE_URL}/ja/settings`,
         },
       },
     },

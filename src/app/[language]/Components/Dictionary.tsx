@@ -29,6 +29,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 // types
 
+const storageNameDictLanguage = "dictionaryLanguage";
+const storageNameSearchLanguage = "searchLanguage";
+
 export default function Dictionary({
   widthClassName,
   heightClassName,
@@ -60,6 +63,10 @@ export default function Dictionary({
   ) {
     const dictLanguage = e.currentTarget.value as DictionaryLanguage;
     setDictionaryLanguage(dictLanguage);
+
+    // store user's preferred dictionary language in locale storage
+    localStorage.setItem(storageNameDictLanguage, dictLanguage);
+
     setResults([]);
     setCurPage(0);
   }
@@ -67,6 +74,9 @@ export default function Dictionary({
   function handleChangeSearchLanguage(e: React.ChangeEvent<HTMLSelectElement>) {
     const searchLanguage = e.currentTarget.value as DictionaryLanguage;
     setSearchLanguage(searchLanguage);
+
+    // store user's preferred search language in locale storage
+    localStorage.setItem(storageNameSearchLanguage, searchLanguage);
     setResults([]);
     setCurPage(0);
   }
@@ -111,7 +121,7 @@ export default function Dictionary({
     setIsPending(false);
   }, [language, dictionaryLanguage, searchLanguage, curPage, searchedWord]);
 
-  async function handleSubmitSearch(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmitSearch(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const word = String(formData.get("word")).trim();
@@ -121,9 +131,23 @@ export default function Dictionary({
     // reset curPage and results
     setCurPage(0);
     setResults([]);
-
-    // await fetchDictionaryData(word, 0, []);
   }
+
+  // set user's preferred dictionary and search language settings
+  useEffect(() => {
+    const setUserPreferredSettings = () => {
+      const dictionaryLanguage = (localStorage.getItem(
+        storageNameDictLanguage,
+      ) || "en") as DictionaryLanguage;
+      const searchLanguage = (localStorage.getItem(storageNameSearchLanguage) ||
+        "en") as DictionaryLanguage;
+
+      setDictionaryLanguage(dictionaryLanguage);
+      setSearchLanguage(searchLanguage);
+    };
+
+    setUserPreferredSettings();
+  }, []);
 
   // when user scrolls down to the bottom of the page => add curPage to render more words
   useEffect(() => {
@@ -189,7 +213,7 @@ function Top({
   searchLanguage: DictionaryLanguage;
   onChangeDictionaryLanguage: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   onChangeSearchLanguage: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  onSubmitSearch: (e: React.FormEvent<HTMLFormElement>) => void;
+  onSubmitSearch: (e: React.SubmitEvent<HTMLFormElement>) => void;
 }) {
   const selectClassName = "w-1/2 sm:w-fit text-xs";
 

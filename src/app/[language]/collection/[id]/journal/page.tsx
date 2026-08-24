@@ -224,7 +224,7 @@ function Middle({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col items-end overflow-y-auto overflow-x-hidden flex-[1.2]">
+        <div className="flex flex-col items-end overflow-y-auto overflow-x-hidden flex-[1.2] w-full h-full">
           <button
             className="text-sm hover:text-amber-700 mr-1 transition-all duration-500 translate-x-[90%] hover:translate-x-0"
             onClick={onClickDictionary}

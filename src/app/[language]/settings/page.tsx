@@ -11,6 +11,8 @@ import {
 import PasswordInput from "../Components/PasswordInput";
 import EmailInput from "../Components/EmailInput";
 import PMessage from "../Components/PMessage";
+import ButtonGoBack from "../Components/ButtonGoBack";
+import LinkPrivacyPolicy from "../Components/LinkPrivacyPolicy";
 // actions
 import {
   deleteAccount,
@@ -34,38 +36,77 @@ import {
   Language,
   UserData,
 } from "@/app/lib/config/types/others";
-import ButtonGoBack from "../Components/ButtonGoBack";
 
-type TYPE_CLASSNAMES = {
-  h3ClassName: string;
+type TYPE_SECTION_CLASSNAMES = {
+  containerClassName: string;
+  smallHeaderClassName: string;
   pClassName: string;
+};
+
+type TYPE_BUTTON_CLASSNAMES = {
   buttonClassName: string;
   buttonChangeClassName: string;
   buttonSubmitClassName: string;
 };
 
-export default function Account() {
+export default function Settings() {
   const pathname = usePathname();
   const language = getLanguageFromPathname(pathname);
 
+  const sectionClassNames = {
+    containerClassName:
+      "w-[18rem] sm:w-[19rem] md:w-[20rem] lg:w-[22rem] xl:w-[25rem] 2xl:w-[27rem] h-fit bg-slate-50 rounded mb-6 shadow-md shadow-black/20 overflow-hidden",
+    smallHeaderClassName: "text-lg px-3 py-1",
+    pClassName: "mx-3 my-5",
+  };
+
   return (
     <div className="w-full min-h-[100dvh] py-6 text-center flex flex-col items-center justify-center">
-      <h1 className="text-xl ">
-        {language === "en" ? "Accound Information" : "アカウント情報"}
+      <h1 className="text-xl font-bold tracking-wider">
+        {language === "en" ? "Settings" : "設定"}
       </h1>
-      <UserInfo language={language} />
+      <SectionHeader
+        language={language}
+        title={{ en: "Accound Information", ja: "アカウント情報" }}
+      />
+      <UserInfo language={language} sectionClassNames={sectionClassNames} />
+      <SectionHeader
+        language={language}
+        title={{ en: "About The App", ja: "このアプリについて" }}
+      />
+      <AppInfo language={language} sectionClassNames={sectionClassNames} />
     </div>
   );
 }
 
-function UserInfo({ language }: { language: Language }) {
+function SectionHeader({
+  language,
+  title,
+}: {
+  language: Language;
+  title: { en: string; ja: string };
+}) {
+  return <h3 className="text-lg mt-2">{title[language]}</h3>;
+}
+
+function UserInfo({
+  language,
+  sectionClassNames,
+}: {
+  language: Language;
+  sectionClassNames: TYPE_SECTION_CLASSNAMES;
+}) {
   const buttonClassName =
     "w-fit h-fit transition-all duration-150 text-sm text-white leading-none rounded p-[5px] my-4";
-  const classNames = {
-    h3ClassName: "text-lg bg-green-200 px-3 py-1",
-    pClassName: "mx-3 my-5",
+  const sectionClassNamesUserInfo = {
+    ...sectionClassNames,
+    smallHeaderClassName:
+      sectionClassNames.smallHeaderClassName + " bg-green-200",
+  };
+
+  const btnClassNames = {
     buttonClassName,
-    buttonChangeClassName: `${buttonClassName}  bg-orange-500 hover:bg-yellow-500`,
+    buttonChangeClassName: `${buttonClassName} bg-orange-500 hover:bg-yellow-500`,
     buttonSubmitClassName: `${buttonClassName} mt-2 bg-green-500 hover:bg-yellow-500`,
   };
 
@@ -116,7 +157,7 @@ function UserInfo({ language }: { language: Language }) {
 
   return (
     <>
-      <div className="w-full h-fit my-2 flex flex-col items-center">
+      <div className="w-full h-fit my-1 flex flex-col items-center">
         {messageData && (
           <PMessage type={messageData.type} message={messageData.message} />
         )}
@@ -132,20 +173,22 @@ function UserInfo({ language }: { language: Language }) {
         )}
       </div>
       <div
-        className={`w-[18rem] sm:w-[19rem] md:w-[20rem] lg:w-[22rem] xl:w-[25rem] 2xl:w-[27rem] h-fit bg-slate-50 rounded mb-6 shadow-md shadow-black/20 overflow-hidden ${!user ? "animate-pulse" : "animation-none"}`}
+        className={`${sectionClassNames.containerClassName} ${!user ? "animate-pulse" : "animation-none"}`}
       >
         <Email
           language={language}
           email={user?.email}
           isGoogleConnected={user?.isGoogleConnected}
-          classNames={classNames}
+          sectionClassNames={sectionClassNamesUserInfo}
+          btnClassNames={btnClassNames}
           displayPending={displayPending}
           handleStateChange={handleStateChange}
         />
         {!user?.isGoogleConnected && (
           <Password
             language={language}
-            classNames={classNames}
+            sectionClassNames={sectionClassNamesUserInfo}
+            btnClassNames={btnClassNames}
             displayPending={displayPending}
             handleStateChange={handleStateChange}
           />
@@ -153,16 +196,17 @@ function UserInfo({ language }: { language: Language }) {
         <GoogleConnected
           language={language}
           isGoogleConnected={user?.isGoogleConnected}
-          classNames={classNames}
+          sectionClassNames={sectionClassNamesUserInfo}
         />
         <MemberSince
           language={language}
           memberSince={user?.createdAt}
-          classNames={classNames}
+          sectionClassNames={sectionClassNamesUserInfo}
         />
         <CloseAccount
           language={language}
-          classNames={classNames}
+          sectionClassNames={sectionClassNamesUserInfo}
+          btnClassNames={btnClassNames}
           displayPending={displayPending}
           handleStateChange={handleStateChange}
         />
@@ -176,14 +220,16 @@ function Email({
   language,
   email,
   isGoogleConnected,
-  classNames,
+  sectionClassNames,
+  btnClassNames,
   displayPending,
   handleStateChange,
 }: {
   language: Language;
   email: string | undefined;
   isGoogleConnected: boolean | undefined;
-  classNames: TYPE_CLASSNAMES;
+  sectionClassNames: TYPE_SECTION_CLASSNAMES;
+  btnClassNames: TYPE_BUTTON_CLASSNAMES;
   displayPending: (pendingMsg: string) => void;
   handleStateChange: (state: FormStateAccount) => void;
 }) {
@@ -231,11 +277,11 @@ function Email({
 
   return (
     <form action={action}>
-      <h3 className={classNames.h3ClassName}>
+      <h3 className={sectionClassNames.smallHeaderClassName}>
         {language === "en" ? "Email" : "メールアドレス"}
       </h3>
       <p
-        className={`${classNames.pClassName} overflow-hidden whitespace-nowrap text-ellipsis`}
+        className={`${sectionClassNames.pClassName} overflow-hidden whitespace-nowrap text-ellipsis`}
       >
         {isClicked && (
           <span className="leading-none bg-blue-400 text-sm text-white rounded-sm px-1">
@@ -249,7 +295,7 @@ function Email({
           <button
             data-testid="btnChangeEmail"
             type="button"
-            className={`${classNames.buttonChangeClassName} mt-0`}
+            className={`${btnClassNames.buttonChangeClassName} mt-0`}
             onClick={handleClickChange}
           >
             {language === "en" ? "Change" : "変更"}
@@ -273,7 +319,7 @@ function Email({
             <button
               data-testid="btnSubmitEmail"
               type="submit"
-              className={classNames.buttonSubmitClassName}
+              className={btnClassNames.buttonSubmitClassName}
             >
               {language === "en" ? "Submit" : "更新"}
             </button>
@@ -285,12 +331,14 @@ function Email({
 
 function Password({
   language,
-  classNames,
+  sectionClassNames,
+  btnClassNames,
   displayPending,
   handleStateChange,
 }: {
   language: Language;
-  classNames: TYPE_CLASSNAMES;
+  sectionClassNames: TYPE_SECTION_CLASSNAMES;
+  btnClassNames: TYPE_BUTTON_CLASSNAMES;
   displayPending: (pendingMsg: string) => void;
   handleStateChange: (state: FormStateAccount) => void;
 }) {
@@ -331,14 +379,14 @@ function Password({
 
   return (
     <form action={action}>
-      <h3 className={classNames.h3ClassName}>
+      <h3 className={sectionClassNames.smallHeaderClassName}>
         {language === "en" ? "Password" : "パスワード"}
       </h3>
       {!isClicked ? (
         <button
           data-testid="btnChangePassword"
           type="button"
-          className={`${classNames.buttonChangeClassName}`}
+          className={`${btnClassNames.buttonChangeClassName}`}
           onClick={handleClickChange}
         >
           {language === "en" ? "Change" : "変更"}
@@ -379,7 +427,7 @@ function Password({
           />
           <button
             type="submit"
-            className={`${classNames.buttonClassName} mt-2 bg-green-500 hover:bg-yellow-500`}
+            className={`${btnClassNames.buttonClassName} mt-2 bg-green-500 hover:bg-yellow-500`}
           >
             {language === "en" ? "Submit" : "更新"}
           </button>
@@ -392,18 +440,18 @@ function Password({
 function GoogleConnected({
   language,
   isGoogleConnected,
-  classNames,
+  sectionClassNames,
 }: {
   language: Language;
   isGoogleConnected: boolean | undefined;
-  classNames: TYPE_CLASSNAMES;
+  sectionClassNames: TYPE_SECTION_CLASSNAMES;
 }) {
   return (
     <div>
-      <h3 className={classNames.h3ClassName}>
+      <h3 className={sectionClassNames.smallHeaderClassName}>
         {language === "en" ? "Google Connection" : "Google連携"}
       </h3>
-      <p className={classNames.pClassName}>
+      <p className={sectionClassNames.pClassName}>
         {isGoogleConnected !== undefined && (
           <span>
             {isGoogleConnected &&
@@ -420,11 +468,11 @@ function GoogleConnected({
 function MemberSince({
   language,
   memberSince,
-  classNames,
+  sectionClassNames,
 }: {
   language: Language;
   memberSince: string | undefined;
-  classNames: TYPE_CLASSNAMES;
+  sectionClassNames: TYPE_SECTION_CLASSNAMES;
 }) {
   const [userLocale, setUserLocale] = useState("en-US");
 
@@ -434,10 +482,10 @@ function MemberSince({
   }, []);
   return (
     <div>
-      <h3 className={classNames.h3ClassName}>
+      <h3 className={sectionClassNames.smallHeaderClassName}>
         {language === "en" ? "Member Since" : "登録日"}
       </h3>
-      <p className={classNames.pClassName}>
+      <p className={sectionClassNames.pClassName}>
         {memberSince && formatDate(memberSince, userLocale, true)}
       </p>
     </div>
@@ -446,12 +494,14 @@ function MemberSince({
 
 function CloseAccount({
   language,
-  classNames,
+  sectionClassNames,
+  btnClassNames,
   displayPending,
   handleStateChange,
 }: {
   language: Language;
-  classNames: TYPE_CLASSNAMES;
+  sectionClassNames: TYPE_SECTION_CLASSNAMES;
+  btnClassNames: TYPE_BUTTON_CLASSNAMES;
   displayPending: (pendingMsg: string) => void;
   handleStateChange: (state: FormStateAccount) => void;
 }) {
@@ -467,10 +517,11 @@ function CloseAccount({
     setIsClicked(true);
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
 
     startTransition(() => action(new FormData(e.currentTarget)));
+    // localStorage.clear();
 
     router.push(`/${language}/account-closed`);
   }
@@ -488,21 +539,23 @@ function CloseAccount({
 
   return (
     <form onSubmit={handleSubmit}>
-      <h3 className={classNames.h3ClassName}>
+      <h3 className={sectionClassNames.smallHeaderClassName}>
         {language === "en" ? "Close Account" : "退会する"}
       </h3>
       {!isClicked ? (
         <button
           data-testid="btnCloseAccount"
           type="button"
-          className={`${classNames.buttonClassName} bg-red-500 hover:bg-red-400`}
+          className={`${btnClassNames.buttonClassName} bg-red-500 hover:bg-red-400`}
           onClick={handleClickClose}
         >
           {language === "en" ? "Close" : "退会"}
         </button>
       ) : (
         <>
-          <p className={`${classNames.pClassName} text-red-600 leading-tight`}>
+          <p
+            className={`${sectionClassNames.pClassName} text-red-600 leading-tight`}
+          >
             ※{" "}
             {language === "en"
               ? "Once you close your accound, you can not undo this action."
@@ -510,12 +563,31 @@ function CloseAccount({
           </p>
           <button
             type="submit"
-            className={`${classNames.buttonClassName} bg-red-600 hover:bg-red-400 mt-0`}
+            className={`${btnClassNames.buttonClassName} bg-red-600 hover:bg-red-400 mt-0`}
           >
             {language === "en" ? "I understand" : "理解しました"}
           </button>
         </>
       )}
     </form>
+  );
+}
+
+function AppInfo({
+  language,
+  sectionClassNames,
+}: {
+  language: Language;
+  sectionClassNames: TYPE_SECTION_CLASSNAMES;
+}) {
+  return (
+    <div className={`${sectionClassNames.containerClassName} my-2`}>
+      <h3 className={`${sectionClassNames.smallHeaderClassName} bg-yellow-200`}>
+        {language === "en" ? "Privacy Policy" : "プライバシーポリシー"}
+      </h3>
+      <p className={sectionClassNames.pClassName}>
+        <LinkPrivacyPolicy textSizeClassName="text-sm" />
+      </p>
+    </div>
   );
 }

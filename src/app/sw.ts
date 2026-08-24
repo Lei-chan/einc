@@ -176,9 +176,6 @@ export function getCollectionIdData(): Promise<null | string[]> {
     req.onsuccess = (e) => {
       const db = (e.target as IDBOpenDBRequest).result;
 
-      // if database doens't have any object stores, then do nothing
-      // if (!db.objectStoreNames.contains("collections")) resolve(null);
-
       const transaction = db.transaction(["collections"], "readonly");
       const objStore = transaction.objectStore("collections");
 

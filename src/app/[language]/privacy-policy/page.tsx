@@ -50,6 +50,17 @@ export default function PrivacyPolicy() {
               ? " - journals that you registered within the app and related data such as journal dates"
               : " - ユーザーが登録したジャーナルとそれに関連するジャーナル日等のデータ"}
           </p>
+          <p>
+            <span className={spanClassName}>
+              •{" "}
+              {language === "en"
+                ? "Dictionary settings data"
+                : "辞書設定のデータ"}
+            </span>
+            {language === "en"
+              ? " - your preferred dictionary and search languages that you selected in the dictionary"
+              : " - ユーザーが選択した辞書内の言語と検索言語のデータ"}
+          </p>
         </div>
         {/* section 2 */}
         <div className={sectionClassName}>
