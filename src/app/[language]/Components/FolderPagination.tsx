@@ -496,7 +496,7 @@ function Selector({
 
   return (
     IsOnline() && (
-      <div className="w-[95%] flex flex-row justify-end gap-2 md:gap-3 lg:gap-4 text-sm items-center">
+      <div className="relative w-[95%] flex flex-row justify-end gap-2 md:gap-3 lg:gap-4 text-sm items-center">
         {
           <>
             {!isSelected ? (
@@ -510,6 +510,16 @@ function Selector({
               </button>
             ) : (
               <>
+                {(isEdited || isDeleted) && (
+                  <label className="absolute top-0 left-0 w-fit h-full flex flex-row items-center">
+                    {language === "en" ? "Select all" : "全てを選択"}:&nbsp;
+                    <input
+                      type="checkbox"
+                      className="w-4 aspect-square"
+                      onChange={onChangeSelectAll}
+                    ></input>
+                  </label>
+                )}
                 {!isDeleted &&
                   (!isEdited ? (
                     <button
@@ -544,16 +554,6 @@ function Selector({
                       onClick={handleToggleConfirmation}
                     ></button>
                   ))}
-                {(isEdited || isDeleted) && (
-                  <label className="w-fit h-full flex flex-row items-center">
-                    {language === "en" ? "Select all" : "全てを選択"}:&nbsp;
-                    <input
-                      type="checkbox"
-                      className="w-4 aspect-square"
-                      onChange={onChangeSelectAll}
-                    ></input>
-                  </label>
-                )}
               </>
             )}
             <button
