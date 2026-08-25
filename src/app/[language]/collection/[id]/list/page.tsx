@@ -465,10 +465,14 @@ function WordLists({
         >
           {isSelected && areWordsChecked?.at(i) && (
             <input
+              key={nanoid()}
               type="checkbox"
               checked={areWordsChecked[i].checked}
               className="w-5"
-              onChange={() => onChangeInput(i)}
+              onChange={(e) => {
+                e.preventDefault();
+                onChangeInput(i);
+              }}
             ></input>
           )}
           <WordCard type="list" word={word} handleUpdateUI={handleUpdateUI} />

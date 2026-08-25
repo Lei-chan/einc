@@ -1,6 +1,7 @@
 "use client";
 import { getLanguageFromPathname } from "@/app/lib/helper";
 import { usePathname } from "next/navigation";
+import ButtonGoBack from "../Components/ButtonGoBack";
 
 export default function PrivacyPolicy() {
   const pathname = usePathname();
@@ -233,6 +234,7 @@ export default function PrivacyPolicy() {
           </p>
         </div>
       </div>
+      <ButtonGoBack language={language} navigateTo="previous" />
     </div>
   );
 }
