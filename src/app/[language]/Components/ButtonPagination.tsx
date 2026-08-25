@@ -12,9 +12,9 @@ export default function ButtonPagination({
   onClickPagination: (type: ActionPaginationType) => void;
 }) {
   const btnClassName =
-    "absolute bg-gradient-to-l from-orange-700 to-orange-700/80 py-1 px-[6px] md:px-2 rounded-[50%] text-sm lg:text-base";
+    "absolute bg-gradient-to-l from-orange-700 to-orange-700/80 py-1 px-[6px] md:px-2 rounded-[50%] text-sm mb-2 lg:text-base";
   return (
-    <div className="relative w-full md:w-[90%] lg:w-[85%] xl:w-[80%] 2xl:w-[75%] flex-[0.5] text-white mb-2">
+    <div className="relative w-full md:w-[90%] lg:w-[85%] xl:w-[80%] 2xl:w-[75%] h-10  text-white mb-2">
       {curPage > 1 && (
         <button
           type="button"

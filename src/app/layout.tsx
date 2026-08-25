@@ -9,6 +9,7 @@ import {
   METADATA_BASE,
 } from "./lib/config/settings";
 import { SerwistProvider } from "./serwist";
+import { MessageProvider } from "./lib/contexts/messageContext";
 
 const sawarabiGothic = Sawarabi_Gothic({
   weight: "400",
@@ -101,7 +102,7 @@ export default function RootLayout({
           <GoogleOAuthProvider
             clientId={process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID || ""}
           >
-            {children}
+            <MessageProvider>{children}</MessageProvider>
           </GoogleOAuthProvider>
         </SerwistProvider>
       </body>

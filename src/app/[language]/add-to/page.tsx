@@ -9,6 +9,8 @@ import {
   useState,
   useTransition,
 } from "react";
+// context
+import { useMessage } from "@/app/lib/contexts/messageContext";
 // component
 import FolderPagination from "@/app/[language]/Components/FolderPagination";
 import {
@@ -20,8 +22,8 @@ import {
 import {
   getGenericErrorMessage,
   getLanguageFromPathname,
+  getMessagesFromFieldError,
   getNextReviewDate,
-  wait,
 } from "@/app/lib/helper";
 import PMessage from "../Components/PMessage";
 import { DisplayMessage, WordBeforeSent } from "@/app/lib/config/types/others";
@@ -37,6 +39,8 @@ export default function AddTo() {
   const language = getLanguageFromPathname(pathname);
   const searchParams = useSearchParams();
 
+  const { showMessage } = useMessage();
+
   const [collectionId, setCollectionId] = useState("");
   const [messageData, setMessageData] = useState<DisplayMessage>();
 
@@ -44,7 +48,6 @@ export default function AddTo() {
     FormStateWordJournal,
     WordBeforeSent[]
   >(addWords, undefined);
-  const alreadyHandledRef = useRef<boolean>(false);
 
   const getWordDataFromParams = (searchParams: ReadonlyURLSearchParams) => {
     const definitions = searchParams.get("definitions");
@@ -67,69 +70,45 @@ export default function AddTo() {
   };
 
   const handleClickCollection = useCallback(
-    async (collectionId: string) => {
-      try {
-        const wordData = getWordDataFromParams(searchParams);
+    (collectionId: string) => {
+      const wordData = getWordDataFromParams(searchParams);
 
-        // reset message data
-        setMessageData(undefined);
+      // reset message data
+      setMessageData(undefined);
 
-        const wordDataWithId = { ...wordData, collectionId };
+      const wordDataWithId = { ...wordData, collectionId };
 
-        startTransition(() => action([wordDataWithId]));
-      } catch (err) {
-        console.error("Error", err);
-        setMessageData({
-          type: "error",
-          message: getGenericErrorMessage(language),
+      // adding words async in the background; message will appear with the showMessage context
+      addWords(undefined, [wordDataWithId])
+        .then(async (result) => {
+          if ("error" in result && result.error.message) {
+            showMessage("error", result.error.message[language]);
+            return;
+          }
+
+          if ("errors" in result && result.errors) {
+            showMessage(
+              "error",
+              getMessagesFromFieldError(language, result.errors),
+            );
+            return;
+          }
+
+          if ("data" in result && result.data)
+            await registerData("words", result.data);
+
+          if ("message" in result && result.message)
+            showMessage("success", result.message[language]);
+        })
+        .catch((err) => {
+          console.error("Error", err);
+          showMessage("error", getGenericErrorMessage(language));
         });
-      }
+
+      router.push(`/${language}/dictionary#${collectionId}`);
     },
-    [action, language, searchParams],
+    [language, searchParams, router, showMessage],
   );
-
-  useEffect(() => {
-    if (!state?.message || alreadyHandledRef.current) return;
-    alreadyHandledRef.current = true;
-
-    const redirect = async () => {
-      try {
-        if (!state.message) return;
-
-        if (state.data) await registerData("words", state.data);
-
-        setMessageData({
-          type: "success",
-          message: state.message[language],
-        });
-
-        await wait(1.5);
-
-        setMessageData({
-          type: "pending",
-          message:
-            language === "en"
-              ? "Redirecting to the dictionary page..."
-              : "辞書ページに移動中...",
-        });
-      } catch (err) {
-        console.error("Error", err);
-        setMessageData({
-          type: "error",
-          message:
-            language === "en"
-              ? "Unexpected error occured 🙇‍♂️ There was possibility that the word wasn't registered properly in local database. Please check the collection later."
-              : "予期せぬエラーが発生しました🙇‍♂️単語がローカルデータベースに正しく保存されなかった可能性があります。後ほどコレクションをご確認ください。",
-        });
-      } finally {
-        await wait(2);
-
-        router.push(`/${language}/dictionary#${collectionId}`);
-      }
-    };
-
-    redirect();
-  }, [state, language, router, collectionId]);
 
   // If there is a collectionId in hash => use it to add a word
   useEffect(() => {
@@ -142,7 +121,7 @@ export default function AddTo() {
       if (!collectionIdFromHash) return;
       setCollectionId(collectionIdFromHash);
 
-      await handleClickCollection(collectionIdFromHash);
+      handleClickCollection(collectionIdFromHash);
     };
 
     getSetCollectionId();
@@ -150,30 +129,11 @@ export default function AddTo() {
 
   return (
     <>
-      {collectionId && (
+      {/* {collectionId && (
         <div className="w-full h-[100dvh] overflow-hidden bg-black/30 cursor-wait z-0 fixed top-0 left-0"></div>
-      )}
+      )} */}
       <div className="w-full h-[100dvh] overflow-hidden">
         <div className="relative w-full h-full flex flex-col items-center">
-          {messageData && (
-            <PMessage type={messageData.type} message={messageData.message} />
-          )}
-          {isPending && (
-            <PMessage
-              type="pending"
-              message={
-                language === "en"
-                  ? "Adding to the collection..."
-                  : "コレクションに追加中..."
-              }
-            />
-          )}
-          {state?.error?.message && (
-            <PMessage type="error" message={state.error.message[language]} />
-          )}
-          {state?.errors?.message && (
-            <PMessage type="error" message={state.errors.message[language]} />
-          )}
           {!collectionId && (
             <h1 className="text-xl w-[85%] mt-3">
               {language === "en"
@@ -186,7 +146,7 @@ export default function AddTo() {
             onClickCollection={handleClickCollection}
           />
         </div>
-        {!collectionId && !messageData && !isPending && (
+        {!collectionId && (
           <ButtonGoBack language={language} navigateTo="previous" />
         )}
       </div>
