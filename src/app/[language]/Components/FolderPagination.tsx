@@ -1,6 +1,14 @@
 "use client";
 // react
-import { useActionState, useEffect, useReducer, useRef, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 // components
 import CreateFolder from "./CreateFolder";
 import ButtonPagination from "./ButtonPagination";
@@ -39,6 +47,7 @@ import { FormStateCollection } from "../../lib/config/types/formState";
 import { nanoid } from "nanoid";
 import { usePathname, useRouter } from "next/navigation";
 import { IsOnline } from "@/app/lib/hooks";
+import Confirmation from "./Confirmation";
 
 export default function FolderPagination({
   type,
@@ -256,6 +265,7 @@ function FolderContainer({
             <Selector
               language={language}
               isSelected={isSelected}
+              isAllSelected={isAllSelected}
               isEdited={isEdited}
               isDeleted={isDeleted}
               onClickSelect={onClickSelected}
@@ -300,6 +310,7 @@ function FolderContainer({
 function Selector({
   language,
   isSelected,
+  isAllSelected,
   isEdited,
   isDeleted,
   onClickSelect,
@@ -313,6 +324,7 @@ function Selector({
 }: {
   language: Language;
   isSelected: boolean;
+  isAllSelected: boolean;
   isEdited: boolean;
   isDeleted: boolean;
   onClickSelect: () => void;
@@ -329,6 +341,8 @@ function Selector({
   const btnEditClassName =
     "bg-purple-500 text-white py-[1px] px-1 mr-1 rounded";
 
+  const [isDeleteBtnClicked, setIsDeleteBtnClicked] = useState(false);
+
   // action state for update
   const [updateState, updateAction, updateIsPending] = useActionState<
     FormStateCollection,
@@ -344,6 +358,23 @@ function Selector({
   >(deleteCollection, undefined);
   const prevDeletePendingRef = useRef(false);
   const lastHandledDeleteStateRef = useRef<FormStateCollection | null>(null);
+
+  const handleToggleConfirmation = useCallback(
+    () => setIsDeleteBtnClicked(!isDeleteBtnClicked),
+    [isDeleteBtnClicked],
+  );
+
+  const getHowManyChecked = () => {
+    // get all checked checkboxes and counts them
+    const numberOfChecked = (
+      Array.from(
+        document.querySelectorAll('input[type="checkbox"]'),
+      ) as HTMLInputElement[]
+    ).filter((box) => box.checked).length;
+
+    // if all select checkbox is also checked, remove it
+    return isAllSelected ? numberOfChecked - 1 : numberOfChecked;
+  };
 
   useEffect(() => {
     if (!prevUpdatePendingRef.current && updateIsPending)
@@ -421,6 +452,9 @@ function Selector({
 
     lastHandledDeleteStateRef.current = deleteState;
 
+    // close the confirmation overlay
+    handleToggleConfirmation();
+
     const handleSuccessDelete = async () => {
       try {
         if (deleteState.error?.message) {
@@ -451,7 +485,14 @@ function Selector({
     };
 
     handleSuccessDelete();
-  }, [deleteState, deleteIsPending, language, displayMessage, handleUpdate]);
+  }, [
+    deleteState,
+    deleteIsPending,
+    handleToggleConfirmation,
+    language,
+    displayMessage,
+    handleUpdate,
+  ]);
 
   return (
     IsOnline() && (
@@ -498,9 +539,9 @@ function Selector({
                     </button>
                   ) : (
                     <button
-                      type="submit"
+                      type="button"
                       className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
-                      formAction={deleteAction}
+                      onClick={handleToggleConfirmation}
                     ></button>
                   ))}
                 {(isEdited || isDeleted) && (
@@ -525,6 +566,15 @@ function Selector({
             </button>
           </>
         }
+        {isDeleteBtnClicked && (
+          <Confirmation
+            language={language}
+            whatToDelete="collections"
+            howManyToDelete={getHowManyChecked()}
+            onClickClose={handleToggleConfirmation}
+            deleteAction={deleteAction}
+          />
+        )}
       </div>
     )
   );

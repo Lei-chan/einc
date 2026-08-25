@@ -49,6 +49,7 @@ import { IsOnline } from "@/app/lib/hooks";
 import ButtonGoBack from "@/app/[language]/Components/ButtonGoBack";
 // library
 import { nanoid } from "nanoid";
+import Confirmation from "@/app/[language]/Components/Confirmation";
 
 export default function List({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -171,6 +172,7 @@ function Bottom({
   const [areWordsChecked, setAreWordsChecked] = useState<
     { _id: string; checked: boolean }[] | undefined
   >();
+  const [isDeleteBtnClicked, setIsDeleteBtnClicked] = useState(false);
 
   const [messageData, setMessageData] = useState<undefined | DisplayMessage>();
   const lastHandledDeleteRef = useRef<FormStateWordJournal>(null);
@@ -220,12 +222,18 @@ function Bottom({
     });
   }
 
+  function handleToggleConfirmation() {
+    setIsDeleteBtnClicked(!isDeleteBtnClicked);
+  }
+
   function handleClickPagination(type: ActionPaginationType) {
     dispatch(type);
   }
 
   function handleClickDelete() {
     if (!areWordsChecked) return;
+
+    handleToggleConfirmation();
 
     startTransition(() =>
       action({ collectionId, checkedData: areWordsChecked }),
@@ -286,8 +294,6 @@ function Bottom({
     lastHandledDeleteRef.current = state;
   }, [state, language, handleUpdateUI, areWordsChecked, dispatch]);
 
-  console.log(data);
-
   return (
     <div className="w-[90%] sm:w-[85%] md:w-[70%] xl:w-[60%] 2xl:w-[50%] min-h-[80vh] max-h-fit flex flex-col items-center justify-center">
       {!data && <p>{language === "en" ? "Loading..." : "ロード中..."}</p>}
@@ -325,8 +331,13 @@ function Bottom({
           <Selector
             language={language}
             isSelected={isSelected}
+            isDeleteBtnClicked={isDeleteBtnClicked}
+            howManyChecked={
+              areWordsChecked?.filter((data) => data.checked).length || 0
+            }
             onClickSelected={handleToggleSelected}
             onChangeSelectAll={handleChangeAllSelected}
+            onClickTrash={handleToggleConfirmation}
             onClickDelete={handleClickDelete}
           />
           <WordLists
@@ -374,14 +385,20 @@ function NumberOfLists({
 function Selector({
   language,
   isSelected,
+  isDeleteBtnClicked,
+  howManyChecked,
   onClickSelected,
   onChangeSelectAll,
+  onClickTrash,
   onClickDelete,
 }: {
   language: Language;
   isSelected: boolean;
+  isDeleteBtnClicked: boolean;
+  howManyChecked: number;
   onClickSelected: () => void;
   onChangeSelectAll: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onClickTrash: () => void;
   onClickDelete: () => void;
 }) {
   return (
@@ -392,7 +409,7 @@ function Selector({
             <button
               type="button"
               className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
-              onClick={onClickDelete}
+              onClick={onClickTrash}
             ></button>
             <label className="w-fit h-full flex flex-row items-center">
               {language === "en" ? "Select all" : "全てを選択"}:&nbsp;
@@ -412,6 +429,15 @@ function Selector({
           {isSelected && (language === "en" ? "Finish" : "終了")}
           {!isSelected && (language === "en" ? "Select" : "選択")}
         </button>
+        {isDeleteBtnClicked && (
+          <Confirmation
+            language={language}
+            whatToDelete="words"
+            howManyToDelete={howManyChecked}
+            onClickClose={onClickTrash}
+            deleteAction={onClickDelete}
+          />
+        )}
       </div>
     )
   );
