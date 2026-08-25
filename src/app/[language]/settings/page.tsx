@@ -587,6 +587,12 @@ function AppInfo({
       </h3>
       <p className={sectionClassNames.pClassName}>
         <LinkPrivacyPolicy textSizeClassName="text-sm" />
+        <br />
+        <span className="text-sm">
+          {language === "en" ? "(Last Updated: " : "(最終更新日： "}
+          {new Intl.DateTimeFormat(language).format(new Date("8/24/2026")) +
+            ")"}
+        </span>
       </p>
     </div>
   );
