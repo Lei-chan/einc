@@ -20,11 +20,7 @@ import { paginationReducer } from "@/app/lib/reducers";
 // action
 import { deleteWords } from "@/app/actions/auth/words";
 // dal
-// import { getMatchedWordsCurPage } from "@/app/lib/dal"；
-import {
-  getAllIndexedDBData,
-  getMatchedWordsCurPage,
-} from "@/app/lib/indexedDB/database";
+import { getMatchedWordsCurPage } from "@/app/lib/indexedDB/database";
 // methods
 import {
   getGenericErrorMessage,
@@ -407,11 +403,15 @@ function Selector({
         {isSelected && (
           <>
             <button
+              name="btnTrash"
               type="button"
               className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
               onClick={onClickTrash}
             ></button>
-            <label className="absolute top-0 left-0 w-fit h-full flex flex-row items-center">
+            <label
+              data-testid="selectAll"
+              className="absolute top-0 left-0 w-fit h-full flex flex-row items-center"
+            >
               {language === "en" ? "Select all" : "全てを選択"}:&nbsp;
               <input
                 type="checkbox"
@@ -422,6 +422,7 @@ function Selector({
           </>
         )}
         <button
+          name="btnSelectAndFinish"
           type="button"
           className="bg-orange-500 hover:bg-yellow-500 transition-all duration-300 text-white rounded py-[2px] px-1"
           onClick={onClickSelected}
@@ -457,7 +458,10 @@ function WordLists({
   handleUpdateUI: () => void;
 }) {
   return (
-    <ul className="w-[17rem] sm:w-[19rem] md:w-[22rem] lg:w-[27rem] xl:w-[30rem] flex flex-col gap-5 sm:gap-7 lg:gap-8 py-5">
+    <ul
+      data-testid="wordsContainer"
+      className="w-[17rem] sm:w-[19rem] md:w-[22rem] lg:w-[27rem] xl:w-[30rem] flex flex-col gap-5 sm:gap-7 lg:gap-8 py-5"
+    >
       {data.map((word, i) => (
         <div
           key={nanoid()}

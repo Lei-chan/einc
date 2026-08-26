@@ -28,10 +28,10 @@ import {
 } from "./config/types/others";
 // library
 import { translate } from "@vitalets/google-translate-api";
-import JapaneseDictionary from "japaneasy";
+// import JapaneseDictionary from "japaneasy";
 import JishoAPI from "unofficial-jisho-api";
 
-const NUM_WORDS_PER_PAGE_DICTIONARY = 10;
+// const NUM_WORDS_PER_PAGE_DICTIONARY = 10;
 
 export const verifySession = cache(async () => {
   const cookie = (await cookies()).get("session")?.value;
@@ -195,10 +195,10 @@ export const sendIndexedDBToMongoDB = async (data: IndexedDBData) => {
     await dbConnect();
 
     if (collections) {
-      const collectionsWithoutId = collections.map((col) => {
-        const { _id, ...others } = col;
-        return { ...others };
-      });
+      // const collectionsWithoutId = collections.map((col) => {
+      //   const { _id, ...others } = col;
+      //   return { ...others };
+      // });
 
       const user = await User.findById(userId).select("collections");
       user.collections = collections;

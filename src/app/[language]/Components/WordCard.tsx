@@ -18,6 +18,10 @@ import PMessage from "./PMessage";
 import ButtonAudio from "./ButtonAudio";
 // actions
 import { updateWord } from "../../actions/auth/words";
+// hooks
+import { IsOnline } from "@/app/lib/hooks";
+// indexedDB
+import { updateData } from "@/app/lib/indexedDB/database";
 // methods
 import {
   convertBufferToFile,
@@ -31,9 +35,6 @@ import {
 // types
 import { WordData, WordBeforeSent } from "../../lib/config/types/others";
 import { FormStateWordJournal } from "../../lib/config/types/formState";
-import { IsOnline } from "@/app/lib/hooks";
-import { updateData } from "@/app/lib/indexedDB/database";
-import { workerData } from "worker_threads";
 
 export default function WordCard({
   type,
@@ -245,6 +246,7 @@ export default function WordCard({
               onClickRemove={handleClickRemove}
             />
             <button
+              name="btnSubmit"
               type="submit"
               className="w-fit bg-green-500 self-center text-white px-1 rounded hover:bg-green-300 lg:mt-1"
             >

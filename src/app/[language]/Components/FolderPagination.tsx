@@ -1,7 +1,6 @@
 "use client";
 // react
 import {
-  startTransition,
   useActionState,
   useCallback,
   useEffect,
@@ -417,7 +416,7 @@ function Selector({
 
           handleUpdate();
         }
-      } catch (err) {
+      } catch (_) {
         displayMessage({
           type: "error",
           message: getIndexedDBSaveError(language),
@@ -476,7 +475,7 @@ function Selector({
 
           handleUpdate();
         }
-      } catch (err) {
+      } catch (_) {
         displayMessage({
           type: "error",
           message: getIndexedDBSaveError(language),
