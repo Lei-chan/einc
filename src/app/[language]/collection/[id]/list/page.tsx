@@ -403,7 +403,7 @@ function Selector({
         {isSelected && (
           <>
             <button
-              name="btnTrash"
+              data-testid="btnTrash"
               type="button"
               className="bg-[url('/icons/trash.svg')] w-5 aspect-square bg-no-repeat bg-center bg-contain"
               onClick={onClickTrash}
@@ -422,7 +422,7 @@ function Selector({
           </>
         )}
         <button
-          name="btnSelectAndFinish"
+          data-testid="btnSelectAndFinish"
           type="button"
           className="bg-orange-500 hover:bg-yellow-500 transition-all duration-300 text-white rounded py-[2px] px-1"
           onClick={onClickSelected}

@@ -41,7 +41,7 @@ export default function Confirmation({
     >
       <p className="relative w-[80%] sm:w-[70%] md:w-[50%] lg:w-[40%] xl:w-[30%] 2xl:w-[20%] text-sm md:text-base bg-gradient-to-tl from-yellow-100 to-yellow-50 aspect-[2/1] rounded-md text-center p-2 flex flex-col justify-center items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 2xl:gap-7">
         <button
-          name="btnX"
+          data-testid="btnX"
           type="button"
           className="absolute right-1.5 -top-1 text-2xl md:text-3xl hover:text-amber-700"
           onClick={onClickClose}
@@ -70,7 +70,7 @@ export default function Confirmation({
               </button>
             ) : (
               <button
-                name="btnDeleteWords"
+                data-testid="btnDeleteWords"
                 type="button"
                 className={btnClassName}
                 onClick={deleteAction as TYPE_WORDS_ACTION}

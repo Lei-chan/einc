@@ -1,4 +1,3 @@
-import { register } from "module";
 import { FLASHCARD_QUIZ_ONE_TURN, LISTS_ONE_PAGE } from "../config/settings";
 import {
   DefinitionsDataQuiz,

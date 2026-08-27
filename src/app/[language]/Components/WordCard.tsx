@@ -185,6 +185,7 @@ export default function WordCard({
       return (
         <>
           <form
+            data-testid="form"
             className="flex flex-col gap-2 md:gap-3 p-3 md:p-4"
             onSubmit={handleSubmit}
           >
@@ -359,7 +360,7 @@ export default function WordCard({
       </div>
       {type === "list" && IsOnline() && (
         <button
-          name="btnEdit"
+          data-testid="btnEdit"
           type="button"
           className="absolute w-4 aspect-square bg-[url('/icons/edit.svg')] bg-center bg-contain bg-no-repeat right-3 top-2 transition-all duration-150 hover:translate-y-[-2px]"
           onClick={handleToggleEdit}

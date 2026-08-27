@@ -9,8 +9,7 @@ import ButtonPagination from "@/app/[language]/Components/ButtonPagination";
 import WordCard from "@/app/[language]/Components/WordCard";
 // reducers
 import { paginationReducer } from "@/app/lib/reducers";
-// dal
-// import { getRandomWordsFlashcard } from "@/app/lib/dal";
+// indexedDB
 import { getRandomWordsFlashcard } from "@/app/lib/indexedDB/database";
 // methods
 import {
@@ -107,7 +106,10 @@ function RemainingWords({
   numberOfWords: number;
 }) {
   return (
-    <p className="absolute top-2 right-3 lg:top-3 lg:right-4 xl:top-4 xl:right-6 xl:text-lg 2xl:text-xl">
+    <p
+      data-testid="remainingWords"
+      className="absolute top-2 right-3 lg:top-3 lg:right-4 xl:top-4 xl:right-6 xl:text-lg 2xl:text-xl"
+    >
       {curCard} / {numberOfWords}
     </p>
   );

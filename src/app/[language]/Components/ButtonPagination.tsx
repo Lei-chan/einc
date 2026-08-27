@@ -29,6 +29,7 @@ export default function ButtonPagination({
       )}
       {numberOfPages > curPage && (
         <button
+          data-testid="btnAdd"
           type="button"
           className={`${btnClassName} right-4`}
           onClick={() => onClickPagination("add")}

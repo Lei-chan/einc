@@ -1,8 +1,13 @@
-import { Collection, Collections } from "@/app/lib/config/types/others";
-import dbConnect from "@/app/lib/database";
-import User from "@/app/lib/models/User";
+// test
 import { test, expect } from "@playwright/test";
+// mongoDB
+import dbConnect from "@/app/lib/database";
 import { ObjectId } from "mongoose";
+import User from "@/app/lib/models/User";
+// indexedDB
+import { getAllData } from "@/app/lib/indexedDB/database";
+// types
+import { Collection, Collections } from "@/app/lib/config/types/others";
 
 const email = process.env.TEST_EMAIL || "";
 const languagePath = process.env.TEST_LANGUAGE_PATH || "";
@@ -10,10 +15,14 @@ const languagePath = process.env.TEST_LANGUAGE_PATH || "";
 test.describe("main", async () => {
   test.use({ storageState: "playwright/.auth/.user.json" });
 
-  test.describe("navigation", () => {
-    test("navigate to dictionary", async ({ page }) => {
-      await page.goto(`${languagePath}/main`);
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`${languagePath}/main`);
+    // wait for the result to come up
+    await page.waitForTimeout(10000);
+  });
 
+  test.describe("navigation", async () => {
+    test("navigate to dictionary", async ({ page }) => {
       const dictionaryUrl = `${languagePath}/dictionary`;
 
       await Promise.all([
@@ -25,7 +34,6 @@ test.describe("main", async () => {
     });
 
     test("navigate to add", async ({ page }) => {
-      await page.goto(`${languagePath}/main`);
       const addUrl = `${languagePath}/add`;
 
       await Promise.all([
@@ -37,7 +45,6 @@ test.describe("main", async () => {
     });
 
     test("navigate to account", async ({ page }) => {
-      await page.goto(`${languagePath}/main`);
       const accountUrl = `${languagePath}/account`;
 
       await Promise.all([
@@ -51,8 +58,6 @@ test.describe("main", async () => {
     });
 
     test("navigate to collection page", async ({ page }) => {
-      await page.goto(`${languagePath}/main`);
-
       await dbConnect();
       const collections = (
         (await User.findOne({ email }).select("collections").lean()) as {
@@ -73,25 +78,77 @@ test.describe("main", async () => {
 
       await expect(page).toHaveURL(collectionUrl);
     });
+  });
 
-    test("logout", async ({ page, context }) => {
-      await page.goto(`${languagePath}/main`);
-      // wait for the contents to load
-      await page.waitForTimeout(5000);
+  test("main pagination", async ({ page }) => {
+    test.slow();
 
-      await page
-        .getByRole("button", {
-          name: languagePath === "/en" ? "Logout" : "ログアウト",
-        })
-        .click();
+    // get all user collections
+    await dbConnect();
+    const collections = (
+      (await User.findOne({ email }).select("collections")) as {
+        _id: ObjectId;
+        collections: Collections;
+      }
+    ).collections;
 
-      await page.waitForURL(languagePath, { timeout: 10000 });
-      await expect(page).toHaveURL(languagePath);
+    // if number of collections is less than 25, display error
+    if (collections.length <= 25) {
+      console.error(
+        "Please register more than 25 collections to test pagination",
+      );
+      return;
+    }
 
-      const cookies = await context.cookies();
-      const sessionCookie = cookies.find((cookie) => cookie.name === "session");
-      expect(sessionCookie).toBe(undefined);
-    });
+    // expect the first page has collection "All"
+    const collectionAll = page.getByText(
+      languagePath === "/en" ? "All" : "全て",
+    );
+    await expect(collectionAll).toBeVisible();
+
+    //  expect pagination container and next page button are visible
+    const paginationContainer = page.getByTestId("paginationContainer");
+    const nextPageBtn = paginationContainer.getByText("2");
+
+    await expect(paginationContainer).toBeVisible();
+    await expect(nextPageBtn).toBeVisible();
+
+    // click next page button and wait for the page to load
+    await nextPageBtn.click();
+    await page.waitForTimeout(3000);
+
+    // expect the second page doesn't have collection "All"
+    await expect(collectionAll).not.toBeVisible();
+
+    //  expect back button is visible => click back button
+    const backPageBtn = paginationContainer.getByText("1");
+    await expect(backPageBtn).toBeVisible();
+    await backPageBtn.click();
+
+    // wait for the page to load
+    await page.waitForTimeout(3000);
+
+    // expct next button is visible
+    await expect(nextPageBtn).toBeVisible();
+
+    // await page.screenshot({ path: "screenshot2.png" });
+    // expect the first page has collection "All" again
+    await expect(collectionAll).toBeVisible();
+  });
+
+  test("logout", async ({ page, context }) => {
+    await page
+      .getByRole("button", {
+        name: languagePath === "/en" ? "Logout" : "ログアウト",
+      })
+      .click();
+
+    await page.waitForURL(languagePath, { timeout: 10000 });
+    await expect(page).toHaveURL(languagePath);
+
+    const cookies = await context.cookies();
+    const sessionCookie = cookies.find((cookie) => cookie.name === "session");
+    expect(sessionCookie).toBe(undefined);
   });
 
   test("create new collection", async ({ page }) => {

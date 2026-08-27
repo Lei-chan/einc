@@ -156,8 +156,6 @@ test.describe("add", () => {
   });
 
   test("register dictionary", async ({ page }) => {
-    test.slow();
-
     await page.goto(`${languagePath}/main`);
     await page.waitForTimeout(10000);
     // await page.screenshot({ path: "screenshot.png" });
@@ -170,7 +168,7 @@ test.describe("add", () => {
     await page.getByTestId("searchLanguage").selectOption("en");
     await page.getByTestId("dictionaryLanguage").selectOption("en");
     await page.getByTestId("inputSearch").fill(newWordDictionary);
-    await page.click('button[type="submit"]');
+    await page.locator('button[type="submit"]').click();
 
     // wait for the result to come up
     await page.getByTestId("ulDictionary").waitFor({ timeout: 7000 });
@@ -221,11 +219,11 @@ test.describe("add", () => {
       { timeout: 7000 },
     );
 
-    await page.fill("[type=search]", newWordDictionary);
-    await page.locator("[type=submit]").click();
+    await page.locator("input[type=search]").fill(newWordDictionary);
+    await page.locator("button[type=submit]").click();
 
     // wait for the result to come up
     await page.waitForTimeout(7000);
-    expect(await page.getByText(newWordDictionary).count()).toBe(1);
+    await expect(page.getByText(newWordDictionary)).toHaveCount(1);
   });
 });
