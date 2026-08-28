@@ -12,13 +12,13 @@ test.describe("navigation", () => {
   // Homepage
   test("To the sign-up page", async ({ page }) => {
     // Find an element with the text 'Login' and click on it
-    await page.click("text=Sign-up");
+    await page.getByText(languagePath === "/en" ? "Sign-up" : "登録").click();
     // The new URL should be "/login" (baseURL is used there)
     await expect(page).toHaveURL(`${languagePath}/sign-up`);
   });
 
   test("To the login page", async ({ page }) => {
-    await page.click("text=Login");
+    await page.getByText(languagePath === "/en" ? "Login" : "ログイン").click();
 
     await expect(page).toHaveURL(`${languagePath}/login`);
   });

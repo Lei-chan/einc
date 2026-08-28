@@ -28,6 +28,7 @@ export default function ButtonGoBack({
 
   return (
     <button
+      data-testid="btnGoBack"
       type="button"
       className="fixed z-50 left-5 bottom-5 bg-black/30 rounded text-white text-xs xl:text-sm  2xl:text-base leading-tight p-1.5 xl:p-2 2xl:p-2.5 transition-all duration-150 hover:-translate-y-1 hover:bg-black/40"
       onClick={handleClick}

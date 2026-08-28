@@ -177,6 +177,7 @@ export default function Dictionary({
 
   return (
     <div
+      data-testid="dictionary"
       ref={dictionaryRef}
       className={`${widthClassName} ${heightClassName} z-10 flex flex-col items-center`}
     >

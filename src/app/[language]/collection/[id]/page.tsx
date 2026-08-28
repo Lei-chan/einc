@@ -122,9 +122,11 @@ function LinkContent({
   name: Message;
 }) {
   const href = `${pathname}/${name.en.toLowerCase()}`;
+  const nameForEn = name["en"];
 
   return (
     <Link
+      data-testid={`link${nameForEn.at(0)?.toUpperCase() + nameForEn.slice(1)}`}
       href={href}
       className="w-[85%] aspect-square text-center flex flex-col justify-center bg-gradient-to-l from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 rounded-md text-white text-xl font-semibold tracking-widest shadow-md shadow-black/20"
     >

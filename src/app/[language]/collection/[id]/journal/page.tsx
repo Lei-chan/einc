@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 // components
 import Dictionary from "@/app/[language]/Components/Dictionary";
 import PMessage from "@/app/[language]/Components/PMessage";
+import ButtonGoBack from "@/app/[language]/Components/ButtonGoBack";
 // action
 import { addUpdateJournal } from "@/app/actions/auth/journal";
 // methods
@@ -27,10 +28,9 @@ import {
 // settings
 import { MILLISECONDS_A_DAY } from "@/app/lib/config/settings";
 // types
-
 import { FormStateWordJournal } from "@/app/lib/config/types/formState";
 import { JournalDatabase, Language } from "@/app/lib/config/types/others";
-import ButtonGoBack from "@/app/[language]/Components/ButtonGoBack";
+import { useMessage } from "@/app/lib/contexts/messageContext";
 
 export default function Journal({
   params,
@@ -94,6 +94,8 @@ function Middle({
       content: [],
     },
   });
+  const { showMessage } = useMessage();
+
   const journalContent = journalDataDate.journal.content;
 
   const [isContentEditableFocused, setIsContentEditableFocused] =
@@ -135,14 +137,46 @@ function Middle({
     setIsContentEditableFocused(!isContentEditableFocused);
   }
 
-  function handleBlurContentEditable() {
+  async function handleBlurContentEditable() {
     handleToggleFocusContentEditable();
 
     const { journal, ...others } = journalDataDate;
 
-    startTransition(() =>
-      action({ journal: { date, content: journal.content }, ...others }),
-    );
+    addUpdateJournal(undefined, {
+      journal: { date, content: journal.content },
+      ...others,
+    })
+      .then((result) => {
+        if (!result) {
+          showMessage("error", getGenericErrorMessage(language));
+          console.error("Error: Journal content is invalid");
+          return;
+        }
+
+        if ("error" in result && result.error.message) {
+          showMessage("error", result.error.message[language]);
+          return;
+        }
+
+        if ("errors" in result && result.errors) {
+          showMessage(
+            "error",
+            getMessagesFromFieldError(language, result.errors),
+          );
+          return;
+        }
+
+        if ("message" in result && result.message)
+          showMessage("success", result.message[language]);
+      })
+      .catch((err) => {
+        console.error("Error", err);
+        showMessage("error", getGenericErrorMessage(language));
+      });
+
+    // startTransition(() =>
+    //   action(),
+    // );
   }
 
   useEffect(() => {
@@ -190,14 +224,16 @@ function Middle({
       >
         <div className="flex flex-row justify-center gap-10">
           <button
+            data-testid="btnPrev"
             name="prev"
             className={`${arrowButtonClassName} rotate-180`}
             onClick={handleChangeDate}
           ></button>
-          <p className="text-center">
+          <p data-testid="date" className="text-center">
             {formatDate(new Date(date), language, true)}
           </p>
           <button
+            data-testid="btnNext"
             name="next"
             className={`${arrowButtonClassName} ${areDatesSame(new Date(), date) ? "opacity-0 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
             onClick={handleChangeDate}
@@ -215,6 +251,7 @@ function Middle({
       {!isDictionaryOpen ? (
         <div className="flex-[0.3] flex flex-col justify-center">
           <button
+            data-testid="btnOpenDict"
             className="w-fit h-fit bg-green-400 hover:bg-green-300 text-white px-2 rounded"
             onClick={onClickDictionary}
           >
@@ -226,6 +263,7 @@ function Middle({
       ) : (
         <div className="flex flex-col items-end overflow-y-auto overflow-x-hidden flex-[1.2] w-full h-full">
           <button
+            data-testid="btnCloseDict"
             className="text-sm hover:text-amber-700 mr-1 transition-all duration-500 translate-x-[90%] hover:translate-x-0"
             onClick={onClickDictionary}
           >

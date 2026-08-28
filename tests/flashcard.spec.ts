@@ -19,7 +19,7 @@ test.describe("flashcard page", () => {
       { timeout: 10000 },
     );
 
-    // go to list page
+    // go to flashcard page
     await page
       .getByText(languagePath === "/en" ? "Flashcard" : "暗記帳")
       .click();

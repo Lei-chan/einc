@@ -27,7 +27,9 @@ test.describe("list page", () => {
     // go to list page
     await page.getByText(languagePath === "/en" ? "List" : "リスト").click();
     await page.waitForURL(
-      languagePath === "/en" ? /\/en\/collection\/.+/ : /\/ja\/collection\/.+/,
+      languagePath === "/en"
+        ? /\/en\/collection\/.+\/list/
+        : /\/ja\/collection\/.+\/list/,
       { timeout: 10000 },
     );
   });
@@ -280,13 +282,7 @@ test.describe("list page", () => {
     if (numberOfMatchedWords === 1) {
       await expect(page.getByText(wordToDelete)).not.toBeVisible();
 
-      await expect(
-        page.getByText(
-          languagePath === "/en"
-            ? "No words found"
-            : "単語が見つかりませんでした",
-        ),
-      ).toBeVisible();
+      await expect(page.getByTestId("msgNoWords")).toBeVisible();
 
       return;
     }

@@ -354,7 +354,10 @@ function Bottom({
         </>
       )}
       {Array.isArray(data) && isArrayEmpty(data) && (
-        <p className="w-full text-center text-lg text-amber-800/90">
+        <p
+          data-testid="msgNoWords"
+          className="w-full text-center text-lg text-amber-800/90"
+        >
           {language === "en" ? "No words found" : "単語が見つかりませんでした"}
         </p>
       )}

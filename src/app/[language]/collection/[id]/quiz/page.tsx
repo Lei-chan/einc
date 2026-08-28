@@ -119,7 +119,10 @@ export default function Quiz({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="w-screen min-h-[100dvh] max-h-fit flex flex-col items-center justify-center py-10">
       {quiz && numberOfQuiz > 0 && (
-        <p className="absolute top-2 right-3 lg:top-3 lg:right-4 xl:text-lg xl:top-4 xl:right-6 2xl:text-xl 2xl:top-5 2xl:right-7">
+        <p
+          data-testid="numberOfWords"
+          className="absolute top-2 right-3 lg:top-3 lg:right-4 xl:text-lg xl:top-4 xl:right-6 2xl:text-xl 2xl:top-5 2xl:right-7"
+        >
           {curQuizPage} / {numberOfQuiz}
         </p>
       )}
@@ -329,12 +332,14 @@ function QuizAnswerForm({
       )}
       {question?.name ? (
         <textarea
+          data-testid="textbox"
           name="answer"
           placeholder={language === "en" ? "Your answer here" : "答えを入力"}
           className={`${textareaInputClassName} w-full aspect-[1/0.4] resize-none`}
         ></textarea>
       ) : (
         <input
+          data-testid="textbox"
           name="answer"
           placeholder={language === "en" ? "Your answer here" : "答えを入力"}
           className={`${textareaInputClassName} w-52`}
@@ -371,7 +376,8 @@ function QuizResult({
   onClickNext: () => void;
   onClickAddDefinitions: () => void;
 }) {
-  const pAnswerClassName = "w-full text-xl";
+  const pAnswerClassName =
+    "h-fit w-full text-xl flex flex-row items-center gap-1";
   const buttonClassName =
     "transition-all duration-150 rounded leading-none w-fit text-sm";
   const pathnameToFolder = usePathname().replace("/quiz", "");
@@ -379,7 +385,7 @@ function QuizResult({
   if (!answer) return;
 
   return (
-    <div className="w-[15rem] xl:w-[18rem] h-fit">
+    <div data-testid="quizResult" className="w-[15rem] xl:w-[18rem] h-fit">
       <p
         className={`text-2xl text-center ${isCorrect ? "text-red-500" : "text-blue-500"}`}
       >
@@ -388,6 +394,7 @@ function QuizResult({
       </p>
       <div className="relative w-full min-h-56 max-h-fit mt-3 flex flex-col items-center justify-center gap-1 lg:gap-2 xl:gap-3 2xl:gap-4">
         <Image
+          data-testid="imgBackground"
           src={`/icons/${isCorrect ? "circle" : "cross"}.svg`}
           alt={
             isCorrect && language === "en"
@@ -403,13 +410,11 @@ function QuizResult({
           className="absolute w-[85%] aspect-square object-contain -z-10 opacity-55"
         ></Image>
         <div>
-          <div className="flex flex-row items-center">
-            <p className={pAnswerClassName}>
-              {language === "en" ? "Correct answer" : "正しい回答"}:{" "}
-              {answer.name || joinWithCommas(answer.definitions || [])}
-              {answer?.audio && <ButtonAudio src={answer.audio.data} />}
-            </p>
-          </div>
+          <p className={pAnswerClassName}>
+            {language === "en" ? "Correct answer" : "正しい回答"}:{" "}
+            {answer.name || joinWithCommas(answer.definitions || [])}
+            {answer?.audio && <ButtonAudio src={answer.audio.data} />}
+          </p>
           <p className={pAnswerClassName}>
             {language === "en" ? "Your answer" : "あなたの回答"}:{" "}
             {joinWithCommas(userAnswer)}
@@ -430,6 +435,7 @@ function QuizResult({
         <div className="h-fit flex flex-row items-center gap-3 lg:gap-4 xl:gap-5 2xl:gap-6 mt-5 text-white">
           {isCorrect ? (
             <button
+              data-testid="btnMarkWrong"
               className={`${buttonClassName} bg-blue-500 hover:bg-blue-300 py-1 px-2`}
               onClick={() => onClickCorrect(false)}
             >
@@ -440,6 +446,7 @@ function QuizResult({
           ) : (
             <>
               <button
+                data-testid="btnMarkCorrect"
                 className={`${buttonClassName} bg-red-500 hover:bg-orange-500 py-1 px-2`}
                 onClick={() => onClickCorrect(true)}
               >
@@ -449,6 +456,7 @@ function QuizResult({
               </button>
               {answer?.definitions && userAnswer.length > 0 && (
                 <button
+                  data-testid="btnAddDefinition"
                   className={`${buttonClassName} bg-orange-500 hover:bg-yellow-500 p-1`}
                   onClick={onClickAddDefinitions}
                 >
@@ -461,6 +469,7 @@ function QuizResult({
           )}
           {!isQuizFinished ? (
             <button
+              data-testid="btnNext"
               className={`${buttonClassName} bg-green-500 hover:bg-yellow-500 p-2`}
               onClick={onClickNext}
             >
@@ -468,6 +477,7 @@ function QuizResult({
             </button>
           ) : (
             <Link
+              data-testid="linkFinish"
               href={pathnameToFolder}
               className={`${buttonClassName} bg-purple-500 hover:bg-pink-400 p-2`}
               onClick={onClickNext}
