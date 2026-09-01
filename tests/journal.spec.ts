@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const languagePath = process.env.TEST_LANGUAGE_PATH || "";
-const journalText = "pingpong";
+const journalText = "😊";
 
 test.describe("journal page", () => {
   test.slow();
@@ -98,7 +98,6 @@ test.describe("journal page", () => {
     await expect(btnCloseDict).toBeHidden();
   });
 
-  // Next!!
   // one browser at a time by changing the journalText after every time you test it
   test("write journal", async ({ page }) => {
     // click previous button to go to yesterday's journal
@@ -109,10 +108,10 @@ test.describe("journal page", () => {
     await btnNext.waitFor();
     await expect(btnNext).toBeVisible();
 
-    // fill textarea with journal text and unfocus it
+    // fill textarea with journal text and unfocus it after the original journal in textarea is fetched
     const textarea = page.locator("textarea");
+    await expect(textarea).not.toBeEmpty({ timeout: 5000 });
     await textarea.fill(journalText);
-    await page.screenshot({ path: "screenshot.png" });
     await page.locator("h1").click();
 
     // click go back to previous page button to go to collection page
@@ -135,11 +134,8 @@ test.describe("journal page", () => {
     await btnPrev.waitFor();
     await btnPrev.click();
 
-    await page.screenshot({ path: "screenshot1.png" });
-
     // expect the added journal text is stored correctly
     await btnNext.waitFor();
-    await page.screenshot({ path: "screenshot2.png" });
     await expect(textarea).toHaveValue(journalText, { timeout: 10000 });
   });
 });

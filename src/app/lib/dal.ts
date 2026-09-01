@@ -30,6 +30,7 @@ import {
 import { translate } from "@vitalets/google-translate-api";
 // import JapaneseDictionary from "japaneasy";
 import JishoAPI from "unofficial-jisho-api";
+import { englishDictionary } from "./dictionary/Dictionary";
 
 // const NUM_WORDS_PER_PAGE_DICTIONARY = 10;
 
@@ -242,9 +243,75 @@ export const dictionary = cache(
 
       if (!word) return;
 
-      if (dictionaryLanguage === "ja") {
+      // if user searched in language other than dictionary language => translate it first to dictionary language
+      const translatedWord =
+        searchLanguage === dictionaryLanguage
+          ? word
+          : (await translate(word, { to: dictionaryLanguage })).text;
+
+      if (dictionaryLanguage === "ja" && searchLanguage === "ja") {
+        const res = await fetch(
+          `https://api.dictionaryapi.dev/${translatedWord}`,
+        );
+        const data = res.ok ? await res.json() : null;
+
+        if (!data || data?.title)
+          return {
+            totalNumberOfResults: 0,
+            results: [],
+          };
+
+        const dataCurPage = data.slice(indexFrom, indexTo);
+
+        return {
+          totalNumberOfResults: data.length,
+          results: dataCurPage.map(
+            (data: {
+              word: string;
+              phonetic: string;
+              phonetics: { text: string; audio?: string }[];
+              origin: string;
+              meanings: {
+                partOfSpeech: string;
+                definitions: {
+                  definition: string;
+                  example: string;
+                  synonyms: string[];
+                  antonyms: [];
+                }[];
+              }[];
+            }) => {
+              const phoneticTexts = data.phonetics.map(
+                (phonetic) => phonetic.text,
+              );
+              const definitions = data.meanings.map(
+                (m) => m.definitions[0].definition,
+              );
+              const examples = data.meanings.map(
+                (m) => m.definitions[0].example,
+              );
+              const synonyms = data.meanings.flatMap(
+                (m) => m.definitions[0].synonyms,
+              );
+
+              return {
+                name: data.word,
+                pronunciationString: phoneticTexts.join(" "),
+                pronunciationAudio: data.phonetics[0]?.audio || "",
+                definitions,
+                examples,
+                synonyms,
+              };
+            },
+          ),
+        };
+      }
+
+      if (dictionaryLanguage === "ja" && searchLanguage === "en") {
         const dict = new JishoAPI();
-        const wordData = (await dict.searchForPhrase(word)) as unknown as {
+        const wordData = (await dict.searchForPhrase(
+          translatedWord,
+        )) as unknown as {
           meta: { status: number };
           data: {
             slug: string;
@@ -344,69 +411,66 @@ export const dictionary = cache(
         };
       }
 
-      if (dictionaryLanguage === "en") {
-        // if user searched in languages other than English => translate it first to English
-        const englishWord =
-          searchLanguage === "en"
-            ? word
-            : (await translate(word, { to: "en" })).text;
+      // audio not working because of server down of the api
+      // search not working sometimes either probably because of the same reason?
 
-        const res = await fetch(
-          `https://api.dictionaryapi.dev/api/v2/entries/en/${englishWord}`,
-        );
-        const data = await res.json();
+      // when I add this, => error occurs the middleware cannot be found
+      // if (dictionaryLanguage === "en") {
+      //   console.log(englishDictionary.lookup("fine"));
+      //   return {
+      //     totalNumberOfResults: 0,
+      //     results: [],
+      //   };
 
-        if (!data || data?.title)
-          return {
-            totalNumberOfResults: 0,
-            results: [],
-          };
-
-        const dataCurPage = data.slice(indexFrom, indexTo);
-
+      const res = await fetch(
+        `https://api.dictionaryapi.dev/api/v2/entries/en/${translatedWord}`,
+      );
+      const data = res.ok ? await res.json() : null;
+      if (!data || data?.title)
         return {
-          totalNumberOfResults: data.length,
-          results: dataCurPage.map(
-            (data: {
-              word: string;
-              phonetic: string;
-              phonetics: { text: string; audio?: string }[];
-              origin: string;
-              meanings: {
-                partOfSpeech: string;
-                definitions: {
-                  definition: string;
-                  example: string;
-                  synonyms: string[];
-                  antonyms: [];
-                }[];
-              }[];
-            }) => {
-              const phoneticTexts = data.phonetics.map(
-                (phonetic) => phonetic.text,
-              );
-              const definitions = data.meanings.map(
-                (m) => m.definitions[0].definition,
-              );
-              const examples = data.meanings.map(
-                (m) => m.definitions[0].example,
-              );
-              const synonyms = data.meanings.flatMap(
-                (m) => m.definitions[0].synonyms,
-              );
-
-              return {
-                name: data.word,
-                pronunciationString: phoneticTexts.join(" "),
-                pronunciationAudio: data.phonetics[0]?.audio || "",
-                definitions,
-                examples,
-                synonyms,
-              };
-            },
-          ),
+          totalNumberOfResults: 0,
+          results: [],
         };
-      }
+      const dataCurPage = data.slice(indexFrom, indexTo);
+      return {
+        totalNumberOfResults: data.length,
+        results: dataCurPage.map(
+          (data: {
+            word: string;
+            phonetic: string;
+            phonetics: { text: string; audio?: string }[];
+            origin: string;
+            meanings: {
+              partOfSpeech: string;
+              definitions: {
+                definition: string;
+                example: string;
+                synonyms: string[];
+                antonyms: [];
+              }[];
+            }[];
+          }) => {
+            const phoneticTexts = data.phonetics.map(
+              (phonetic) => phonetic.text,
+            );
+            const definitions = data.meanings.map(
+              (m) => m.definitions[0].definition,
+            );
+            const examples = data.meanings.map((m) => m.definitions[0].example);
+            const synonyms = data.meanings.flatMap(
+              (m) => m.definitions[0].synonyms,
+            );
+            return {
+              name: data.word,
+              pronunciationString: phoneticTexts.join(" "),
+              pronunciationAudio: data.phonetics[0]?.audio || "",
+              definitions,
+              examples,
+              synonyms,
+            };
+          },
+        ),
+      };
     } catch (err) {
       console.error("Error", err);
       return null;
@@ -423,13 +487,13 @@ export const translator = async (
       result.definitions.map((def) => translate(def, { to: outputLanguage })),
     );
 
-    const translatedExamples = await Promise.all(
-      result.examples.map((exam) => translate(exam, { to: outputLanguage })),
-    );
+    // const translatedExamples = await Promise.all(
+    //   result.examples.map((exam) => translate(exam, { to: outputLanguage })),
+    // );
 
     const newResult = { ...result };
     newResult.definitions = translatedDefinitions.map((def) => def.text);
-    newResult.examples = translatedExamples.map((exam) => exam.text);
+    // newResult.examples = translatedExamples.map((exam) => exam.text);
     return newResult;
   } catch (err) {
     console.error("Error", err);

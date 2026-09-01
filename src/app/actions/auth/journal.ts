@@ -21,6 +21,8 @@ export async function addUpdateJournal(
   try {
     const { _id, ...others } = journalData;
 
+    console.log("_id: ", _id, "journal content: ", journalData.journal.content);
+
     // if the journal hasn't been created yet and content is empty => do nothing
     if (!_id && isArrayEmpty(journalData.journal.content)) return;
 
@@ -33,6 +35,7 @@ export async function addUpdateJournal(
 
     await dbConnect();
     // if _id isn't set (means the journal hasn't been created yet) => create the data, otherwise => update
+    console.log("id: (this should exist)", _id);
     if (!_id) await Journal.create(journalDataForDatabase);
     if (_id) await Journal.findByIdAndUpdate(_id, journalDataForDatabase);
 
